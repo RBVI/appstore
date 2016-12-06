@@ -8,8 +8,8 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'CyAppStore.views.home', name='home'),
-    # url(r'^CyAppStore/', include('CyAppStore.foo.urls')),
+    # url(r'^$', 'cxtoolshed.views.home', name='home'),
+    # url(r'^cxtoolshed/', include('cxtoolshed.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     url(r'^users/',      include('users.urls')),
     url(r'^help/',       include('help.urls')),
     url(r'^backend/',    include('backend.urls')),
+    url(r'^pypi',       'apps.pypi.handler', name='pypi'),
 )
 
 if settings.DJANGO_STATIC_AND_MEDIA:

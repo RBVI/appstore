@@ -1,0 +1,105 @@
+Install Cytoscape App Store on RHEL 6.8 (28sep2016)
+
+Using instructions in http://wiki.cytoscape.org/AppStore
+
+App Store Dependencies
+======================
+
+Python 2.6 - preinstalled.
+xapian 1.2.13 - could not find in yum
+xapian-bindings 1.2.13 - found 1.2.7 in @epel
+libjpeg 8d - could not find in yum (perhaps openjpeg, openjpeg2 or turbojpeg?)
+libpng 1.5.14 - found 2:1.2.49 in @updates
+GeoIP 1.4.8 - found 1.6.5 in epel
+
+Django 1.4.5 - found 1.4.21 in epel
+MySQL-Python - found 1.2.7 in PyPI but using installed 1.2.3
+PIL 1.1.7 - found m3-PIL 1.1.7 in PyPI
+django-social-auth 0.7.23 - found django-social-auth 0.7.28 in PyPI
+IPython - ignored
+
+Testing App Store Software Dependencies
+---------------------------------------
+python external_scripts/test_dependencies.py
+	- Fails for Python and maven
+	- Python test compares ints with strings
+	  (change line 22 to compare string representations)
+	- maven is not installed
+	- unzip generates a lot of junk output
+python manage.py test_geoip
+	- works fine after Django configuration as noted
+
+Migration
+=========
+1. Installed prerequisites
+2. Checked out repository
+3. Copied conf templates
+	- apikeys.py
+		SECRET_KEY generated using https://gist.github.com/ndarville/3452907
+		Google parameters filled in from Google project "ChimeraX Toolshed"
+		Scooter and Conrad have access to https://console.developers.google.com
+	- dbs.py
+		Made sure user/password matches MySQL database
+		Added HOST and PORT for MySQL connection
+	- emails.py
+		Created new user for App Store
+		Forwarded mail to admins
+	- geoip.py
+		GEOIP_LIBRARY_PATH set to /usr/lib64/libGeoIP.so.1
+			(Does not match comment requiring .a)
+		XXX: Does this work?
+		"test_geoip" test above passed
+	- mvn.py
+		Maven not installed
+		Left MVN_BIN_PATH empty
+		XXX: Does this work?
+	- paths.py
+		Changed SITE_DIR to match git checkout location
+		Set SITE_URL to match Apache configuration
+4. "make -C download/geolite" worked
+5. XXX: Did not create daily cron jobs
+6. Built mysql database
+	- Created mysql user and database for App Store
+	- Filled database using private test data because there is no
+	  initialization script
+7. Created Apache configuration file using sample from Alex
+	- Added WSGIDaemonProcess directive to set effective UID for
+	  WSGI process
+	- Used default "processes" and "threads" option values because
+	  "processes=1 threads=25" caused very odd problems (like reloading
+	  a page can give different results, including a traceback)
+8. Restarted Apache and got a page matching private data
+	- "Submit a 3.0 App" link generates an error
+	- "Submit a 2.x Plugin" link does not
+	- "Sign In" generates an error:
+		WrongBackend
+		Incorrect authentication service "google-oauth2"
+	  Fixed by correcting Apache configuration WSGIProcess directive
+	  (see 7 above) and updating apikeys.py with values from
+	  Google (see 3 above).
+
+********************************************************************************
+
+Customization for ChimeraX
+==========================
+
+0. SITE = URL for AppStore
+   DB = MySQL DB for AppStore Django backend
+1. Create empty MySQL database and fill by either
+	a. load MySQL dump (setup/cxtoolshed_init.sql) by
+	   using "mysql OPTION DB < setup/cxtoolshed_init.sql", or
+	b. load Django data dump (setup/cxtoolshed_init.django) by
+	   using "python manage.py loaddata".
+2. Install Apache configuration file and reload/restart httpd
+3. Try visiting the home page to make sure it runs
+4. Try logging in using Google account
+5. Create superuser account with "python manage.py createsuperuser"
+6. Turn Google account into superuser/staff by
+	1. visiting SITE/admin page and logging in as superuser, 
+	2. click "Users" to get list of users, which should list
+	   the superuser and the Google account from 4 above,
+	3. delete any remnant accounts from the initial data load
+	   (i.e., any account other than the two mentioned above),
+	4. click on the Google account,
+	5. check "Staff status" and "Superuser status" and click
+	   "Save" at the bottom of the page

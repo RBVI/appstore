@@ -21,7 +21,7 @@ def _unescape_and_unquote(s):
 # ============================================
 
 class _NavPanelConfig:
-	min_tag_count = 3
+	min_tag_count = 0
 	num_of_top_tags = 20
 	tag_cloud_max_font_size_em = 2.0
 	tag_cloud_min_font_size_em = 1.0
@@ -46,8 +46,11 @@ def _nav_panel_context(request):
            	sorted_tags.insert(0, tag)
 	except Http404:
     		idx = 0
-	max_count = sorted_tags[0].count
-	min_count = sorted_tags[-1].count
+	if sorted_tags:
+		max_count = sorted_tags[0].count
+		min_count = sorted_tags[-1].count
+	else:
+		max_count = min_count = 0
 	count_delta = float(max_count - min_count)
 	top_tags = sorted_tags[:_NavPanelConfig.num_of_top_tags]
 	not_top_tags = sorted_tags[_NavPanelConfig.num_of_top_tags:]

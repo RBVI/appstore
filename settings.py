@@ -8,7 +8,7 @@ from conf.apikeys import *
 from conf.socialauth import *
 from conf.geoip import *
 
-# Django settings for CyAppStore project.
+# Django settings for cxtoolshed project.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -96,7 +96,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'CyAppStore.urls'
+ROOT_URLCONF = 'cxtoolshed.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -113,16 +113,16 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admindocs',
     'social_auth',
-    'CyAppStore', # this must be included to find root templates
-    'CyAppStore.apps',
-    'CyAppStore.search',
-    'CyAppStore.submit_app',
-    'CyAppStore.users',
-    'CyAppStore.help',
-    'CyAppStore.backend',
-    'CyAppStore.download',
+    'cxtoolshed', # this must be included to find root templates
+    'cxtoolshed.apps',
+    'cxtoolshed.search',
+    'cxtoolshed.submit_app',
+    'cxtoolshed.users',
+    'cxtoolshed.help',
+    'cxtoolshed.backend',
+    'cxtoolshed.download',
 )
 
 AUTHENTICATION_BACKENDS = (

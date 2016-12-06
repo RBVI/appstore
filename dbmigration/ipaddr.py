@@ -12,7 +12,7 @@ trg_col = 'ip4addr'
 
 con = None
 try:
-    con = mdb.connect('localhost', 'root', '', 'CyAppStore')
+    con = mdb.connect('localhost', 'root', '', 'cxtoolshed')
     cur = con.cursor()
     cur.execute('SELECT id, {0} FROM {1}'.format(src_col, tbl))
     for (id, old) in list(cur.fetchall()):

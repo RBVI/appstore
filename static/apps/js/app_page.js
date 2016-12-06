@@ -5,7 +5,7 @@ var AppPage = (function($) {
      ================================================================
 	*/
 
-	var AppManagerURL = 'http://localhost:2607/';
+	var AppManagerURL = 'https://localhost:2607/';
 
 	function is_manager_running(callback) {
 		$.ajax(AppManagerURL + 'status/',

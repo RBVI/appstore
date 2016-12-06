@@ -17,7 +17,7 @@
   
   {% block more_head %}{% endblock %}
 
-  <title>Cytoscape App Store {% block title %}{% endblock %}</title>
+  <title>ChimeraX Toolshed {% block title %}{% endblock %}</title>
 
   {# Google Analytics Snippet #}
   <script type="text/javascript">
@@ -41,20 +41,19 @@
       <div class="container">
         <a href="{% url 'default-page' %}"><img src="{% get_static_prefix %}common/img/logo.png"></a>
         <ul class="nav pull-right">
-          {# Submit App menu #}
+          {# Submit Bundle menu #}
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Submit an App <b class="caret"></b></a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Submit a Bundle<b class="caret"></b></a>
             <ul class="dropdown-menu">
-              <li><a href="{% url 'submit-app' %}">Submit a 3.0 App</a></li>
-              <li><a href="http://www.cytoscape.org/plugin_submit.html" target="_blank">Submit a 2.x Plugin</a></li>
+              <li><a href="{% url 'submit-app' %}">Submit a ChimeraX Bundle</a></li>
               <li class="divider"></li>
-              <li><a target="_blank" href="http://wiki.cytoscape.org/Cytoscape_3/AppDeveloper">Guide to 3.0 App Development</a></li>
+              <li><a target="_blank" href="http://www.cgl.ucsf.edu/chimerax/docs/devel/index.html">Guide to ChimeraX Development</a></li>
             </ul>
           </li>
           {# Search field #}
           <li>
             <form action="{% url 'search' %}" method="get" class="navbar-search pull-right">
-              <input type="text" name="q" value="{{ search_query }}" class="search-query" placeholder="Search the App Store">
+              <input type="text" name="q" value="{{ search_query }}" class="search-query" placeholder="Search">
             </form>
           </li>
           {# User menu #}
@@ -65,8 +64,7 @@
               </a>
               <ul class="dropdown-menu">
                 {% if user.is_staff %}
-                  <li><a href="{% url 'pending-apps' %}">Pending Apps</a></li>
-                  <li><a href="{% url 'cy2x-plugins' %}">2.x Plugins Management</a></li>
+                  <li><a href="{% url 'pending-apps' %}">Pending Bundles</a></li>
                 {% endif %}
                 <li><a href="{% url 'logout' %}?next={{ request.get_full_path|escape }}">Sign out</a></li>
               </ul>
@@ -96,7 +94,7 @@
 
       <span class="footer-divider"></span>
 
-      <a href="{% url 'wall_of_apps' %}">Wall of Apps</a>
+      <a href="{% url 'wall_of_apps' %}">Wall of Bundles</a>
       &bull;
       <a href="{% url 'all_stats' %}">All Stats</a>
     </footer>

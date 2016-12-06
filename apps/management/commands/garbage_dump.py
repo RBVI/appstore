@@ -69,8 +69,8 @@ class Command(BaseCommand):
 			print '  ' + author
 		print
 
-    '''
+	        '''
 		print 'Media:'
 		for file_path in rm_unused_media_files():
 			print '  ' + file_path
-    '''
+		'''

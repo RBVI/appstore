@@ -8,6 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadReque
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 from util.view_util import html_response, json_response, get_object_or_none
 from util.id_util import fullname_to_name
@@ -15,7 +16,7 @@ from apps.models import Release, App, Author, OrderedAuthor
 from apps.views import _parse_iso_date
 from models import AppPending
 from .pomparse import PomAttrNames, parse_pom
-from .processjar import process_jar
+from .processwheel import process_wheel
 
 # Presents an app submission form and accepts app submissions.
 @login_required
@@ -26,7 +27,7 @@ def submit_app(request):
         f = request.FILES.get('file')
         if f:
             try:
-                fullname, version, works_with, app_dependencies, has_export_pkg = process_jar(f, expect_app_name)
+                fullname, version, works_with, app_dependencies, has_export_pkg = process_wheel(f, expect_app_name)
                 pending = _create_pending(request.user, fullname, version, works_with, app_dependencies, f)
                 _send_email_for_pending(pending)
                 if has_export_pkg:
@@ -209,6 +210,7 @@ _PendingAppsActions = {
     'decline': _pending_app_decline,
 }
 
+@ensure_csrf_cookie
 @login_required
 def pending_apps(request):
     if not request.user.is_staff:

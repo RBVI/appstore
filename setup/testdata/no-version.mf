@@ -1,0 +1,3 @@
+Cytoscape-App-Name: Tester
+Cytoscape-App-Version: 1.0
+Cytoscape-API-Compatibility: 3.0

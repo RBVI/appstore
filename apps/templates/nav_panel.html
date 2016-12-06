@@ -23,9 +23,9 @@
             <td>
               <h4 style="margin: 0">
                 {% ifequal navbar_selected_link "all" %} 
-                  All Apps
+                  All Bundles
                 {% else %}
-                  <a href="{% url 'all_apps' %}">All Apps</a>
+                  <a href="{% url 'all_apps' %}">All Bundles</a>
                 {% endifequal %}
               </h4>
             </td>
@@ -73,9 +73,14 @@
         {% endfor %}
       </div>
     </div>
+    <div class="row">
+      <div class="span4" style="text-align: left; margin-top: 1.0em;">
+	<a href="{% url 'getstarted' %}" class="btn btn-warning">Get Started with the Toolshed &raquo;</a>
+      </div>
+    </div>
   </div>
       
-  <div class="span8">
+  <div class="span4">
     {% block main %}{% endblock %}
   </div>
 </div>
