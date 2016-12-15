@@ -117,6 +117,7 @@ var AppPage = (function($) {
 	function setup_install(app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
         set_install_btn_to_download(latest_release_url);
 
+		/* Do not bother checking if ChimeraX is running
 		is_manager_running(function(is_running) {
 			if (is_running) {
 				get_app_status(app_fullname, function(app_status) {
@@ -136,6 +137,7 @@ var AppPage = (function($) {
 				CyMsgs.add_msg('Want an easier way to install apps? <a href="' + install_app_help_url + '" target="_blank">Click here</a> to learn how!', 'info');
 			}
 		});
+		*/
 	}
 
 	function setup_cy_2x_download_popover(plugins_dir_img) {
