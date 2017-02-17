@@ -99,6 +99,10 @@ class App(models.Model):
         return user in self.editors.all()
 
     @property
+    def display_name(self):
+        return self.fullname.replace("ChimeraX_", "")
+
+    @property
     def stars_percentage(self):
         return 100 * self.stars / self.votes / 5 if self.votes != 0 else 0
 

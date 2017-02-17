@@ -12,7 +12,7 @@
 <script type="text/javascript" src="{% get_static_prefix %}common/js/markdown_util.js"></script>
 {% endblock %}
 
-{% block title %}- {{ app.fullname }}{% endblock %}
+{% block title %}- {{ app.display_name }}{% endblock %}
 
 {% block content %}
 {% csrf_token %}
@@ -35,7 +35,7 @@
 	{# App name and description #}
 	<div class="span7">
 		<h2 id="app-name">
-			{{ app.fullname }}
+			{{ app.display_name }}
 		</h2>
 		{% if app.description %}<b>{{ app.description }}</b>{% endif %}
 	</div>
@@ -51,7 +51,7 @@
 			</a>
 			<ul class="dropdown-menu pull-right">
 				<li><a href="{% url 'app_page_edit' app.name %}">Edit this page</a></li>
-				<li><a href="{% url 'submit-app' %}?expect_app_name={{ app.fullname }}">Submit a bundle release</a></li>
+				<li><a href="{% url 'submit-app' %}?expect_app_name={{ app.display_name }}">Submit a bundle release</a></li>
 				<li class="divider"></li>
 				<li><a data-toggle="modal" href="#delete_ratings_modal">Delete all ratings</a></li>
 			</ul>
@@ -231,7 +231,7 @@
 							<strong>Bundles that depend on this release</strong>
 							<ul>
 								{% for dependent in release.dependents.all %}
-								<li><a href="{% url 'app_page' dependent.app.name %}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}</li>
+								<li><a href="{% url 'app_page' dependent.app.name %}" target="_blank">{{ dependent.app.display_name }}</a> {{ dependent.version }}</li>
 								{% endfor %}
 							</ul>
 						</p>
@@ -319,7 +319,7 @@
 				<li>
 				[Searching help desk answers not available yet]
 				<!--
-				<a href="https://groups.google.com/forum/?fromgroups#!searchin/cytoscape-helpdesk/{{ app.fullname }}" target="_blank">
+				<a href="https://groups.google.com/forum/?fromgroups#!searchin/cytoscape-helpdesk/{{ app.display_name }}" target="_blank">
 					<i class="icon-comment"></i>
 					Search posts
 				</a>
@@ -420,7 +420,7 @@
 $('.has-tooltip').tooltip();
 {% if app.has_releases %}
 AppPage.setup_install("{{ app.name|escapejs }}",
-	"{{ app.fullname|escapejs }}",
+	"{{ app.display_name|escapejs }}",
 	"{% url 'release_download' app.name cy3_latest_release.version %}", 
 	"{{ cy3_latest_release.version }}",
 	"{% url 'getstarted_app_install' %}");

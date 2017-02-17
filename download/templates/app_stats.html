@@ -7,14 +7,14 @@
   <script type="text/javascript" src="{% get_static_prefix %}download/js/app_stats.js"></script>
 {% endblock %}
 
-{% block title %} - {{ app.fullname }} - Download Statistics{% endblock %}
+{% block title %} - {{ app.display_name }} - Download Statistics{% endblock %}
 
 {% block content %}
 <div class="row">
   <div class="span12">
     <div class="page-header">
       <h1>
-        {{ app.fullname }}
+        {{ app.display_name }}
         <small>Download Statistics</small>
       </h1>
       <h3>Total downloads: {{ app.downloads }}</h3>
