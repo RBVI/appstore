@@ -41,15 +41,22 @@
               </tr>
               <tr>
                 <td><b>Bundle Name</b></td>
-                <td>{{ pending.fullname }}
-		  <br/>(A <b>ChimeraX_</b> prefix
-		  for the bundle is recommended to avoid
-		  name clash with Python distributions
-		  from <a href="http://pypi.python.org">pypi.python.org</a>.
-		  The prefix will not be displayed in
-		  the toolshed browsing and download pages
-		  to make the output easier to read but
-		  is required for all other purposes.)</td>
+                <td>
+                  {{ pending.fullname }}<br/>
+                  {% if "ChimeraX_" in pending.fullname %}
+                    (The <b>ChimeraX_</b> prefix will not be displayed in
+                    the toolshed browsing and download pages to simplify the
+                    output but is required for all other purposes.)
+                  {% else %}
+                    {{ pending.fullname }}
+                    (A <b>ChimeraX_</b> prefix for the bundle is recommended
+                    to avoid name clash with Python distributions from
+                    <a href="http://pypi.python.org">pypi.python.org</a>.
+                    The prefix will not be displayed in the toolshed browsing
+                    and download pages to simplify the output but
+                    is required for all other purposes.)
+                  {% endif %}
+                </td>
               </tr>
               <tr>
                 <td><b>Bundle Version</b></td>
