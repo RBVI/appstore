@@ -4,6 +4,9 @@
 # "handler" is referenced from ../urls.py
 #
 from django.views.decorators.csrf import csrf_exempt
+import logging
+
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def handler(request):
@@ -29,8 +32,12 @@ def handler(request):
         from django.http import HttpResponse
         d = _get_dispatcher(request)
         data = request.body
-        response = HttpResponse(d._marshaled_dispatch(data),
-                                content_type='text/xml')
+        try:
+            response = HttpResponse(d._marshaled_dispatch(data),
+                                    content_type='text/xml')
+        except Exception, e:
+            logger.exception(e)
+            raise
     else:
         path_parts = request.path_info.split('/')
         # 0 = empty, since path always starts with /
@@ -136,7 +143,7 @@ def _get_release_info(r, attr):
     elif attr == "license":
         values = [r.app.license_text]
     elif attr == "summary":
-        values = [r.app.description]
+        values = [str(r.app.description)]
     elif attr == "description":
         values = [r.app.details]
     elif attr == "keywords":
@@ -144,7 +151,7 @@ def _get_release_info(r, attr):
     elif attr == "platform":
         values = _get_wheel_info(r)["platform"]
     elif attr == "download_url":
-        values = _server_url + r.release_download_url
+        values = _release_url(_server_url, r)
     # elif attr == "classifiers":
     # elif attr == "requires":
     # elif attr == "requires_dist":
@@ -164,6 +171,12 @@ def _get_release_info(r, attr):
         return values[0]
     else:
         return values
+
+def _release_url(server_url, r):
+    return server_url + r.release_download_url
+    # Include hash information with URL
+    #name, digest = r.hexchecksum.split(':')
+    #return server_url + r.release_download_url + '#' + name + '=' + digest
 
 def _search_matches(tvlist, vlist):
     vlist = [v.lower() for v in vlist]
@@ -318,7 +331,7 @@ def release_urls(package_name, release_version):
         full_path = settings.SITE_DIR + r.release_file_url
         sbuf = os.stat(full_path)
         d["size"] = sbuf.st_size
-        d["url"] = _server_url + r.release_download_url
+        d["url"] = _release_url(_server_url, r)
         d["comment_text"] = r.notes or ""
         # These are not useful but we have the information
         # TODO: Need to get MD5 digest from somewhere
@@ -385,7 +398,7 @@ def search(spec, operator="and"):
     for r in container:
         results.append({"name":r.app.fullname,
                         "version":r.version,
-                        "summary":r.app.description})
+                        "summary":str(r.app.description)})
     return results
 
 @implemented

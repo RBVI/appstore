@@ -65,21 +65,21 @@ STATIC_URL = urljoin(SITE_URL, 'static/')
 ALLOWED_HOSTS = ['*']
 
 if DJANGO_STATIC_AND_MEDIA:
-	# Additional locations of static files
-	STATICFILES_DIRS = (
-	    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-	    # Always use forward slashes, even on Windows.
-	    # Don't forget to use absolute paths, not relative paths.
-	    filejoin(SITE_DIR, 'static'),
-	)
+    # Additional locations of static files
+    STATICFILES_DIRS = (
+        # Put strings here, like "/home/html/static" or "C:/www/django/static".
+        # Always use forward slashes, even on Windows.
+        # Don't forget to use absolute paths, not relative paths.
+        filejoin(SITE_DIR, 'static'),
+    )
 
-	# List of finder classes that know how to find static files in
-	# various locations.
-	STATICFILES_FINDERS = (
-	    'django.contrib.staticfiles.finders.FileSystemFinder',
-	    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-	#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-	)
+    # List of finder classes that know how to find static files in
+    # various locations.
+    STATICFILES_FINDERS = (
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    )
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -132,7 +132,7 @@ AUTHENTICATION_BACKENDS = (
 
 
 if DJANGO_STATIC_AND_MEDIA:
-	INSTALLED_APPS += ('django.contrib.staticfiles', )
+    INSTALLED_APPS += ('django.contrib.staticfiles', )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
@@ -166,6 +166,11 @@ LOGGING = {
         'mail_admins_always': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/usr/local/projects/chimerax/www/preview/cxtoolshed/cxtoolshed.log',
         }
     },
     'loggers': {
@@ -177,6 +182,11 @@ LOGGING = {
         'users.views': {
             'handlers': ['mail_admins_always'],
             'level': 'ERROR',
+            'propagate': True,
+        },
+        'apps.pypi': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
             'propagate': True,
         },
     }
