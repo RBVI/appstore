@@ -183,6 +183,20 @@ class Release(models.Model):
     def release_download_url(self):
         return reverse('release_download', args=[self.app.name, self.version])
 
+    @property
+    def metadata_count(self):
+        return len(self.get_metadata)
+
+    @property
+    def get_metadata(self):
+        md_dict = {}
+        for md in self.releasemetadata_set.all():
+            md_set = md_dict.setdefault(md.type, set())
+            md_set.add(md.name)
+        for md_type in md_dict.keys():
+            md_dict[md_type] = sorted(md_dict[md_type])
+        return sorted(md_dict.items())
+
     def __unicode__(self):
         return self.app.fullname + ' ' + self.version
 
@@ -251,3 +265,13 @@ class ReleaseAPI(models.Model):
             rmtree(dirpath)
         self.javadocs_jar_file.delete()
         self.pom_xml_file.delete()
+
+class ReleaseMetadata(models.Model):
+    release           = models.ForeignKey(Release)
+    type              = models.CharField(max_length=127)
+    name              = models.CharField(max_length=127)
+    key               = models.CharField(max_length=127)
+    value             = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return unicode(self.release)

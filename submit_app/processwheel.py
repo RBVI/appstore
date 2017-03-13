@@ -36,7 +36,7 @@ def process_wheel(wheel_file, expect_app_name):
         app_dependencies = list(_app_dependencies_to_releases(app_dependencies))
     except ValueError as e:
         (msg, ) = e.args
-        raise ValueError('has a problem with its manifest for entry <tt>Cytoscape-App-Dependencies</tt>: ' + msg)
+        raise ValueError('has a problem app dependencies: ' + msg)
 
     return (app_name, app_ver, app_works_with, app_dependencies, False)
 

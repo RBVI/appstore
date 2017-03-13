@@ -3,9 +3,10 @@ from django.contrib.auth.models import User
 from conf.mvn import MVN_BIN_PATH, MVN_SETTINGS_PATH 
 from conf.emails import EMAIL_ADDR
 from django.conf import settings
-from apps.models import App, Release, ReleaseAPI
+from apps.models import App, Release, ReleaseAPI, ReleaseMetadata
 from util.id_util import fullname_to_name
 from util.view_util import get_object_or_none
+from util.chimerax_util import Bundle
 from os.path import basename, join as pathjoin
 from threading import Thread
 import subprocess
@@ -49,6 +50,32 @@ class AppPending(models.Model):
         for dependee in self.dependencies.all():
             release.dependencies.add(dependee)
         release.calc_checksum()
+
+        #
+        # Extract release metadata if it is a Python wheel/ChimeraX bundle
+        #
+        rf = self.release_file
+        path = rf.storage.path(rf.name)
+        if path.endswith(".whl"):
+            b = Bundle(path)
+            for info_type, metadata in b.info().items():
+                # info_type: "bundle", "command", etc.
+                for name, values in metadata.items():
+                    # name: "apbs", "debug ccd", etc.
+                    for key, value in values.items():
+                        # key: "synopsis", "categories ccd", etc.
+                        # value: either a string or a list
+                        if isinstance(value, basestring):
+                            md, _ = ReleaseMetadata.objects.get_or_create(
+                                        release=release, type=info_type,
+                                        name=name, key=key, value=value)
+                            md.save()
+                        else:
+                            for v in value:
+                                md, _ = ReleaseMetadata.objects.get_or_create(
+                                            release=release, type=info_type,
+                                            name=name, key=key, value=v)
+                                md.save()
 
         if not app.has_releases:
             app.has_releases = True

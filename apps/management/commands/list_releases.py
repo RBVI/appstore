@@ -5,15 +5,20 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
 
-    args = "bundle version"
+    args = "[bundle]"
     help = "delete all references to specified version of a bundle"
 
     def handle(self, *args, **options):
-        if len(args) == 0:
-            self.list_all_releases()
-        else:
-            for bundle in args:
-                self.list_release(bundle)
+        save = self.stdout.ending
+        self.stdout.ending = ''
+        try:
+            if len(args) == 0:
+                self.list_all_releases()
+            else:
+                for bundle in args:
+                    self.list_release(bundle)
+        finally:
+            self.stdout.ending = save
 
     def list_all_releases(self, ):
         from apps.models import App
@@ -31,4 +36,6 @@ class Command(BaseCommand):
             self._list_version(app, rel)
 
     def _list_version(self, app, rel):
-        print >> self.stdout, app.name, rel.version, rel
+        print >> self.stdout, app.name, rel.version, "active:", rel.active
+        f = rel.release_file
+        print >> self.stdout, "  ", f.storage.path(f.name)

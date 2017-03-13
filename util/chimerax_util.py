@@ -44,6 +44,93 @@ class Bundle:
         if self.metadata["version"] != self.version:
             raise ValueError("internal version mismatch")
 
+    def info(self):
+        # This code parses the bundle metadata in the same way
+        # found in chimerax/src/core/toolshed/__init__.py
+        def get_list_items(s):
+            # Assume s is already stripped
+            if not s:
+                return None
+            else:
+                return [i.strip() for i in s.split(',')]
+        container = {}
+        for classifier in self.metadata.get("classifiers", []):
+            parts = [s.strip() for s in classifier.split("::")]
+            if parts[0] != "ChimeraX":
+                continue
+            info_type = parts[1].lower()
+            if info_type == "bundle":
+                if len(parts) != 7:
+                    continue
+                name = self.package
+                value = {
+                    "categories": parts[2],
+                    "session_versions": parts[3],
+                    "module_name": parts[4],
+                    "superceded": parts[5],
+                    "custom_init": parts[6],
+                }
+            elif info_type in ["command", "tool"]:
+                if len(parts) != 5:
+                    continue
+                name = parts[2]
+                value = {
+                    "categories":get_list_items(parts[3]),
+                    "synopsis":parts[4],
+                }
+            elif info_type == "selector":
+                if len(parts) != 4:
+                    continue
+                name = parts[2]
+                value = {
+                    "synopsis":parts[3]
+                }
+            elif info_type == "dataformat":
+                if len(parts) not in [11,12]:
+                    continue
+                name = parts[2]
+                value = {
+                    "nicknames":get_list_items(parts[3]),
+                    "category":parts[4],
+                    "suffixes":get_list_items(parts[5]),
+                    "mime_types":get_list_items(parts[6]),
+                    "url":parts[7],
+                    "dangerous":parts[8],
+                    "icon":parts[9],
+                    "synopsis":parts[10],
+                }
+                if len(parts) == 12:
+                    value["encoding"] = parts[11]
+            elif info_type == "fetch":
+                if len(parts) != 7:
+                    continue
+                name = parts[2]
+                value = {
+                    "format":parts[3],
+                    "suffixes":get_list_items(parts[4]),
+                    "example":parts[5],
+                    "is_default":parts[6],
+                }
+            elif info_type in ["open", "save"]:
+                if len(parts) not in [5,6]:
+                    continue
+                name = parts[2]
+                value = {
+                    "tag":parts[3],
+                    "is_default":parts[4],
+                }
+                if len(parts) == 6:
+                    value["keywords"] = get_list_items(parts[5])
+            else:
+                # unknown ChimeraX metadata type, ignore for now
+                continue
+            for k, v in list(value.items()):
+                if not v:
+                    del value[k]
+            d = container.setdefault(info_type, {})
+            d[name] = value
+        return container
+
     @property
     def summary(self):
         return self.metadata.get("summary")
@@ -65,10 +152,21 @@ class Bundle:
             return ss
 
 if __name__ == "__main__":
-    import types
-    b = Bundle("chimerax.model_panel-1.0-py3-none-any.whl")
-    print "bundle", b, b.package, b.version
-    print "summary", b.summary
-    print "screenshot", b.screenshot
-    print "screenshot", b.screenshot
-    print "metadata", b.metadata
+    import os, os.path
+    # root = "d:/chimerax/src/bundles"
+    root = "."
+    for dirpath, dirnames, filenames in os.walk(root):
+        for filename in filenames:
+            if not filename.endswith(".whl"):
+                continue
+            b = Bundle(os.path.join(dirpath, filename))
+            print "bundle", b.package, b.version
+            print "summary", b.summary
+            print "screenshot", b.screenshot
+            # print "metadata", b.metadata
+            info = b.info()
+            for info_type in sorted(info.keys()):
+                info_data = info[info_type]
+                for name, value in info_data.items():
+                    print info_type, name, value
+            print

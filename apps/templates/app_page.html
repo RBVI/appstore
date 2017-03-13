@@ -225,6 +225,25 @@
 						{% endwith %}
 						{% endif %}
 
+                        {# Release metadata #}
+						{% if release.metadata_count %}
+						<p>
+							<strong>Details</strong>
+							<ul>
+								{% for type, values in release.get_metadata %}
+								<li>{{ type }}: {{ values|join:", " }}
+                                    <!--
+                                    {% for v in values %}
+                                    {{ v }}
+                                    {% endfor %}
+                                    -->
+                                </li>
+								{% endfor %}
+							</ul>
+						</p>
+						{% endif %}
+                        {# End Release metadata #}
+
 						{# Release dependencies #}
 						{% if release.dependents.count %}
 						<p>

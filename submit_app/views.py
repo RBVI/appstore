@@ -107,7 +107,7 @@ The following app has been submitted:
     Version: {version}
     Submitter: {submitter_name} {submitter_email}
 """.format(id = pending.id, fullname = pending.fullname, version = pending.version, submitter_name = pending.submitter.username, submitter_email = pending.submitter.email)
-    send_mail('Cytoscape App Store - App Submitted', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
+    send_mail('ChimeraX Toolshed - Bundle Submitted', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
 
 def _verify_javadocs_jar(file):
     error_msg = None
@@ -155,7 +155,7 @@ def submit_api(request, id):
     return html_response('submit_api.html', {'pending': pending, 'error_msg': error_msg}, request)
 
 def _send_email_for_accepted_app(to_email, from_email, app_fullname, app_name, server_url):
-    subject = u'Cytoscape App Store - {app_fullname} Has Been Approved'.format(app_fullname = app_fullname)
+    subject = u'ChimeraX Toolshed - {app_fullname} Has Been Approved'.format(app_fullname = app_fullname)
     app_url = reverse('app_page', args=[app_name])
     msg = u"""Your app has been approved! Here is your app page:
 
@@ -174,7 +174,7 @@ If you would like other people to be able to edit the app page, have them sign i
 to the App Store, then add their email addresses to the Editors box, located in
 the top-right.
 
-- Cytoscape App Store Team
+- ChimeraX Team
 """.format(app_url = app_url, author_email = to_email, server_url = server_url)
     send_mail(subject, msg, from_email, (to_email,))
 
