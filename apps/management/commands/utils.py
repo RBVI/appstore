@@ -109,14 +109,6 @@ def erase_release(cmd, rel, dry_run=True):
 
     app = rel.app
     from apps.models import Release, ReleaseAPI
-    #
-    # There should not be any release APIs since ChimeraX
-    # does not support that yet
-    #
-    apis = ReleaseAPI.objects.filter(release=rel)
-    if len(apis) != 0:
-        print >> cmd.stderr, "cannot delete release with API"
-        return
 
     #
     # Make sure there are no dependents on this version
@@ -132,7 +124,7 @@ def erase_release(cmd, rel, dry_run=True):
     #
     all_rels = Release.objects.all()
     if len(all_rels) == 1:
-        print >> cmd.stdout, ("Warning: \"%s\" is the only release "
+        print >> cmd.stderr, ("Warning: \"%s\" is the only release "
                                 "of bundle \"%s\""
                                 % (rel.version, app.name))
 
@@ -152,7 +144,7 @@ def erase_release(cmd, rel, dry_run=True):
         if dry_run:
             print >> cmd.stdout, "delete file", rel.release_file.name
         else:
-            rel.release_file.delete()
+            rel.delete_files()
 
     #
     # Remove download references
@@ -168,8 +160,10 @@ def erase_release(cmd, rel, dry_run=True):
         ReleaseDownloadsByDate.objects.filter(release=rel).delete()
 
     #
-    # TODO: delete bundle metadata
+    # Delete release metadata
     #
+    from apps.models import ReleaseMetadata
+    ReleaseMetadata.objects.filter(release=rel).delete()
 
     #
     # Remove this release
@@ -179,6 +173,40 @@ def erase_release(cmd, rel, dry_run=True):
     else:
         rel.delete()
 
+
+def update_metadata(cmd, rel):
+    "Update metdata for a release from its wheel"
+    rf = rel.release_file
+    if not rf:
+        print >> cmd.stderr, "No file associated with release", rel
+        return
+    path = rf.storage.path(rf.name)
+    if not path.endswith(".whl"):
+        print >> cmd.stderr, "Release file is not a wheel", rf
+        return
+    from util.chimerax_util import Bundle
+    b = Bundle(path)
+    from apps.models import ReleaseMetadata
+    # XXX: Copied from submit_app/models.py
+    for info_type, metadata in b.info().items():
+        # info_type: "bundle", "command", etc.
+        for name, values in metadata.items():
+            # name: "apbs", "debug ccd", etc.
+            for key, value in values.items():
+                # key: "synopsis", "categories ccd", etc.
+                # value: either a string or a list
+                if isinstance(value, basestring):
+                    md, _ = ReleaseMetadata.objects.get_or_create(
+                                release=rel, type=info_type,
+                                name=name, key=key, value=value)
+                    md.save()
+                else:
+                    for v in value:
+                        md, _ = ReleaseMetadata.objects.get_or_create(
+                                    release=rel, type=info_type,
+                                    name=name, key=key, value=v)
+                        md.save()
+    print >> cmd.stdout, "Updated metadata for", rel
 
 def print_help(cmd):
     import sys, os.path
