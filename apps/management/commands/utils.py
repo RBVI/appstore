@@ -188,6 +188,21 @@ def update_metadata(cmd, rel):
     b = Bundle(path)
     from apps.models import ReleaseMetadata
     # XXX: Copied from submit_app/models.py
+    # Get version from bundle data
+    md, _ = ReleaseMetadata.objects.get_or_create(
+                release=rel, type="bundle",
+                name=b.package, key="version", value=b.version)
+    md.save()
+    try:
+        for req in b.requires:
+            for r in req["requires"]:
+                md, _ = ReleaseMetadata.objects.get_or_create(
+                            release=rel, type="bundle",
+                            name=b.package, key="requires", value=r)
+                md.save()
+    except KeyError:
+        pass
+    # Get rest of metadata from bundle classifiers
     for info_type, metadata in b.info().items():
         # info_type: "bundle", "command", etc.
         for name, values in metadata.items():

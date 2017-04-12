@@ -9,8 +9,11 @@ class Command(BaseCommand):
     help = "list metadata associated with a bundle version"
 
     def handle(self, *args, **options):
-        save = self.stdout.ending
-        self.stdout.ending = ''
+        try:
+            save = self.stdout.ending
+            self.stdout.ending = ''
+        except AttributeError:
+            pass
         try:
             if len(args) == 0:
                 self.list_all_bundles()
@@ -33,7 +36,10 @@ class Command(BaseCommand):
                 print_help(self)
                 return
         finally:
-            self.stdout.ending = save
+            try:
+                self.stdout.ending = save
+            except NameError:
+                pass
 
     def list_all_bundles(self):
         from apps.models import App
@@ -51,7 +57,7 @@ class Command(BaseCommand):
             self.list_release(rel)
 
     def list_release(self, rel):
-        app = rel.app
-        print >> self.stdout, app.name, rel.version, "count", rel.metadata_count
-        for md in rel.releasemetadata_set.all():
-            print >> self.stdout, " ", md.type, md.name, md.key, md.value
+        dist = rel.distribution()
+        if dist:
+            import json
+            print >> self.stdout, json.dumps(dist)

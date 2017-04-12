@@ -9,8 +9,11 @@ class Command(BaseCommand):
     help = "update metadata associated with a bundle version"
 
     def handle(self, *args, **options):
-        save = self.stdout.ending
-        self.stdout.ending = ''
+        try:
+            save = self.stdout.ending
+            self.stdout.ending = ''
+        except AttributeError:
+            pass
         try:
             if len(args) == 0:
                 self.update_all_bundles()
@@ -33,7 +36,10 @@ class Command(BaseCommand):
                 print_help(self)
                 return
         finally:
-            self.stdout.ending = save
+            try:
+                self.stdout.ending = save
+            except NameError:
+                pass
 
     def update_all_bundles(self):
         from apps.models import App

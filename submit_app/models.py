@@ -58,6 +58,21 @@ class AppPending(models.Model):
         path = rf.storage.path(rf.name)
         if path.endswith(".whl"):
             b = Bundle(path)
+            # Get version from bundle data
+            md, _ = ReleaseMetadata.objects.get_or_create(
+                        release=rel, type="bundle",
+                        name=b.package, key="version", value=b.version)
+            md.save()
+            try:
+                for req in b.requires:
+                    for r in req["requires"]:
+                        md, _ = ReleaseMetadata.objects.get_or_create(
+                                    release=rel, type="bundle",
+                                    name=b.package, key="requires", value=r)
+                        md.save()
+            except KeyError:
+                pass
+            # Get rest of metadata from classifiers
             for info_type, metadata in b.info().items():
                 # info_type: "bundle", "command", etc.
                 for name, values in metadata.items():

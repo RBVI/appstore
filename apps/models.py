@@ -219,6 +219,49 @@ class Release(models.Model):
             api.delete_files()
             api.delete()
 
+    def distribution(self):
+        "Return metadata as dictionary."
+        # A bunch of values must be lists
+        force_list = set([("bundle", "categories"),
+                          ("bundle", "requires"),
+                          ("tool", "categories"),
+                          ("command", "categories"),
+                          ("dataformat", "nicknames"),
+                          ("dataformat", "suffixes"),
+                          ("dataformat", "mime_types"),
+                          ("fetch", "prefixes"),
+                          ("open", "keywords"),
+                          ("save", "keywords")])
+        d = {}
+        for md in self.releasemetadata_set.all():
+            try:
+                type_d = d[md.type]
+            except KeyError:
+                type_d = d[md.type] = {}
+            try:
+                name_d = type_d[md.name]
+            except KeyError:
+                name_d = type_d[md.name] = {}
+            if (md.type, md.key) not in force_list:
+                name_d[md.key] = md.value
+            else:
+                try:
+                    value_list = name_d[md.key]
+                except KeyError:
+                    name_d[md.key] = [md.value]
+                else:
+                    value_list.append(md.value)
+        if not d:
+            return None
+        app = self.app
+        d["bundle_name"] = app.fullname
+        d["toolshed_name"] = app.name
+        if app.description:
+            d["description"] = app.description
+        if app.details:
+            d["details"] = app.details
+        return d
+
     class Meta:
         ordering = ['-created']
 

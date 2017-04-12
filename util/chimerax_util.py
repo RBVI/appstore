@@ -64,10 +64,10 @@ class Bundle:
                     continue
                 name = self.package
                 value = {
-                    "categories": parts[2],
+                    "categories": get_list_items(parts[2]),
                     "session_versions": parts[3],
-                    "module_name": parts[4],
-                    "superceded": parts[5],
+                    "app_package_name": parts[4],
+                    "supercedes": parts[5],
                     "custom_init": parts[6],
                 }
             elif info_type in ["command", "tool"]:

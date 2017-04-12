@@ -213,7 +213,7 @@ def _format_package_versions(package, version):
     if not package:
         releases = Release.objects.filter(active=True)
     else:
-        package = ''.join([c for c in package if c not in '-_'])
+        package = ''.join([c for c in package if c not in '-_']).lower()
         if not version:
             releases = Release.objects.filter(active=True,
                                               app__name=package)

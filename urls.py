@@ -27,6 +27,7 @@ urlpatterns = patterns('',
     url(r'^help/',       include('help.urls')),
     url(r'^backend/',    include('backend.urls')),
     url(r'^pypi',       'apps.pypi.handler', name='pypi'),
+    url(r'^bundle',     'apps.bundle.handler', name='bundle'),
 )
 
 if settings.DJANGO_STATIC_AND_MEDIA:
