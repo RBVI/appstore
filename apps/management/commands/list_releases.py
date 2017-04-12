@@ -2,23 +2,20 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
+from utils import fix_line_ending
 
 class Command(BaseCommand):
 
     args = "[bundle]"
     help = "delete all references to specified version of a bundle"
 
+    @fix_line_ending
     def handle(self, *args, **options):
-        save = self.stdout.ending
-        self.stdout.ending = ''
-        try:
-            if len(args) == 0:
-                self.list_all_releases()
-            else:
-                for bundle in args:
-                    self.list_release(bundle)
-        finally:
-            self.stdout.ending = save
+        if len(args) == 0:
+            self.list_all_releases()
+        else:
+            for bundle in args:
+                self.list_release(bundle)
 
     def list_all_releases(self, ):
         from apps.models import App

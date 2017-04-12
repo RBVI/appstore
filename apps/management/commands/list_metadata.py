@@ -2,44 +2,35 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
+from utils import fix_line_ending
 
 class Command(BaseCommand):
 
     args = "[bundle [version]]"
     help = "list metadata associated with a bundle version"
 
+    @fix_line_ending
     def handle(self, *args, **options):
-        try:
-            save = self.stdout.ending
-            self.stdout.ending = ''
-        except AttributeError:
-            pass
-        try:
-            if len(args) == 0:
-                self.list_all_bundles()
-            elif len(args) == 1:
-                bundle = args[0]
-                from utils import find_bundle
-                app = find_bundle(self, bundle)
-                if app is None:
-                    return
-                self.list_bundle(app)
-            elif len(args) == 2:
-                bundle, version = args
-                from utils import find_bundle_version
-                rel = find_bundle_version(self, bundle, version)
-                if rel is None:
-                    return
-                self.list_release(rel)
-            else:
-                from utils import print_help
-                print_help(self)
+        if len(args) == 0:
+            self.list_all_bundles()
+        elif len(args) == 1:
+            bundle = args[0]
+            from utils import find_bundle
+            app = find_bundle(self, bundle)
+            if app is None:
                 return
-        finally:
-            try:
-                self.stdout.ending = save
-            except NameError:
-                pass
+            self.list_bundle(app)
+        elif len(args) == 2:
+            bundle, version = args
+            from utils import find_bundle_version
+            rel = find_bundle_version(self, bundle, version)
+            if rel is None:
+                return
+            self.list_release(rel)
+        else:
+            from utils import print_help
+            print_help(self)
+            return
 
     def list_all_bundles(self):
         from apps.models import App

@@ -2,6 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
+from utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -14,21 +15,17 @@ class Command(BaseCommand):
                                 default=False,
                                 help="really delete instead of dry run"),)
 
+    @fix_line_ending
     def handle(self, *args, **options):
-        save = self.stdout.ending
-        self.stdout.ending = ''
-        try:
-            if len(args) != 2:
-                from utils import print_help
-                print_help(self)
-                return
-            dry_run = not options["delete"]
-            bundle, version = args
-            from utils import find_bundle_version
-            rel = find_bundle_version(self, bundle, version)
-            if rel is None:
-                return
-            from utils import erase_release
-            erase_release(self, rel, dry_run)
-        finally:
-            self.stdout.ending = save
+        if len(args) != 2:
+            from utils import print_help
+            print_help(self)
+            return
+        dry_run = not options["delete"]
+        bundle, version = args
+        from utils import find_bundle_version
+        rel = find_bundle_version(self, bundle, version)
+        if rel is None:
+            return
+        from utils import erase_release
+        erase_release(self, rel, dry_run)

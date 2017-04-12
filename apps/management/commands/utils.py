@@ -1,5 +1,22 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 
+def fix_line_ending(f):
+    from functools import wraps
+    @wraps(f)
+    def wrapped_f(self, *args, **kw):
+        try:
+            save = self.stdout.ending
+            self.stdout.ending = ''
+        except AttributeError:
+            pass
+        rv = f(self, *args, **kw)
+        try:
+            self.stdout.ending = save
+        except NameError:
+            pass
+        return rv
+    return wrapped_f
+
 def find_bundle(cmd, bundle):
     "Find the specified bundle"
     from apps.models import App
