@@ -202,7 +202,11 @@ def update_metadata(cmd, rel):
         print >> cmd.stderr, "Release file is not a wheel", rf
         return
     from util.chimerax_util import Bundle
-    b = Bundle(path)
+    try:
+        b = Bundle(path)
+    except IOError:
+        print >> cmd.stderr, "Release file is missing", path
+        return
     from apps.models import ReleaseMetadata
     # XXX: Copied from submit_app/models.py
     # Get version from bundle data
