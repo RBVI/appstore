@@ -60,14 +60,14 @@ class AppPending(models.Model):
             b = Bundle(path)
             # Get version from bundle data
             md, _ = ReleaseMetadata.objects.get_or_create(
-                        release=rel, type="bundle",
+                        release=release, type="bundle",
                         name=b.package, key="version", value=b.version)
             md.save()
             try:
                 for req in b.requires:
                     for r in req["requires"]:
                         md, _ = ReleaseMetadata.objects.get_or_create(
-                                    release=rel, type="bundle",
+                                    release=release, type="bundle",
                                     name=b.package, key="requires", value=r)
                         md.save()
             except KeyError:
