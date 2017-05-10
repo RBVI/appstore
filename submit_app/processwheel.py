@@ -5,6 +5,32 @@ from util.view_util import get_object_or_none
 from util.chimerax_util import Bundle
 
 def process_wheel(wheel_file, expect_app_name):
+    # Make sure it is a wheel and supports a single platform
+    import os.path
+    filename = wheel_file.name
+    root, ext = os.path.splitext(os.path.basename(filename))
+    if ext != ".whl":
+        raise ValueError('"%s" is not a Python wheel' % filename)
+    parts = root.split('-')
+    if len(parts) != 5 and len(parts) != 6:
+        raise ValueError('"%s" is not a properly named Python wheel' % filename)
+    # platform is the output from distutils.util.get_platform,
+    # which we convert into what will be stored in our model
+    # and presented to the user in web pages
+    pf = parts[-1]
+    if '.' in pf:
+        raise ValueError('"%s" supports more than one platform' % filename)
+    if pf.startswith("win_"):
+        app_platform = "Windows"
+    elif pf.startswith("linux_"):
+        app_platform = "Linux"
+    elif pf.startswith("macosx_"):
+        app_platform = "macOS"
+    elif pf == "any":
+        app_platform = ""
+    else:
+        raise ValueError('"%s" targets unsupported platform' % filename)
+
     try:
         bundle = Bundle(wheel_file)
     except (BadZipfile, IOError, ValueError):
@@ -38,7 +64,7 @@ def process_wheel(wheel_file, expect_app_name):
         (msg, ) = e.args
         raise ValueError('has a problem app dependencies: ' + msg)
 
-    return (app_name, app_ver, app_works_with, app_dependencies, False)
+    return (app_name, app_ver, app_platform, app_works_with, app_dependencies, False)
 
 def _app_dependencies_to_releases(app_dependencies):
     for dependency in app_dependencies:

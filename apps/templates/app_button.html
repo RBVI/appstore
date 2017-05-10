@@ -7,7 +7,7 @@
   votes="{{ app.votes }}"
   downloads="{{ app.downloads }}"
   latest_release_date="{{ app.latest_release_date.isoformat }}"
-  onClick="window.location='{% url 'app_page' app.name %}';">
+  onClick="window.location='{% url 'app_page' app.name %}{{ cx_platform|safe }}';">
 
   {% if app.has_releases %}
     <!--
@@ -15,7 +15,7 @@
     -->
   {% endif %}
   
-  <a href="{% url 'app_page' app.name %}">
+  <a href="{% url 'app_page' app.name %}{{ cx_platform|safe }}">
     <div class="partial">
       <table border="0" width="100%">
         <tr valign="top">

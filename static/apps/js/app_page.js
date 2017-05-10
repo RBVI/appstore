@@ -26,12 +26,14 @@ var AppPage = (function($) {
             callback);
     }
 
-	var install_btn = $('#cy-app-install-btn');
     var install_btn_last_class = [];
 
-	function setup_install_btn(btn_class, icon_class, btn_text, func) {
-        if (install_btn_last_class.length !== 0)
-            install_btn.removeClass(install_btn_last_class.pop());
+	function setup_install_btn(install_btn, btn_class, icon_class, btn_text, func) {
+        var last_class = install_btn_last_class[install_btn];
+        if (install_btn in install_btn_last_class) {
+            install_btn.removeClass(install_btn_last_class[install_btn]);
+            delete install_btn_last_class[install_btn];
+        }
 		install_btn.addClass(btn_class);
         install_btn_last_class.push(btn_class);
 
@@ -63,21 +65,30 @@ var AppPage = (function($) {
         }
 	}
 
-	function set_install_btn_to_download(release_url) {
-		setup_install_btn('btn-primary', 'icon-cy-install-download', 'Download',
+	function set_install_btn_to_download(install_btn, release_url) {
+        var label = "Download";
+		if (navigator.userAgent.indexOf("ChimeraX") != -1)
+			label = "Install"
+        else {
+			var platform = install_btn.attr("platform");
+			if (platform)
+				label = '<div class="cy-app-install-label">'
+						+ platform + "<br>Download</div>";
+		}
+		setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
             function() {
                 window.location.href = release_url;
             });
 	}
 
-	function set_install_btn_to_installing() {
-		setup_install_btn('btn-info', 'icon-cy-install-install', 'Installing...');
+	function set_install_btn_to_installing(install_btn) {
+		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Installing...');
     }
 
-	function set_install_btn_to_install(app_name, latest_release_version) {
-		setup_install_btn('btn-info', 'icon-cy-install-install', 'Install',
+	function set_install_btn_to_install(install_btn, app_name, latest_release_version) {
+		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Install',
             function() {
-                set_install_btn_to_installing();
+                set_install_btn_to_installing(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
                     if (result['install_status'] === 'success') {
                         CyMsgs.add_msg(result['name'] + ' has been installed! Go to Cytoscape to use it.', 'success');
@@ -90,14 +101,14 @@ var AppPage = (function($) {
             });
 	}
 
-	function set_install_btn_to_upgrading() {
-		setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
+	function set_install_btn_to_upgrading(install_btn) {
+		setup_install_btn(install_btn, 'btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
     }
 
-	function set_install_btn_to_upgrade(app_name, latest_release_version) {
+	function set_install_btn_to_upgrade(install_btn, app_name, latest_release_version) {
 		setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrade',
             function() {
-                set_install_btn_to_upgrading();
+                set_install_btn_to_upgrading(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
                     if (result['install_status'] === 'success') {
                         CyMsgs.add_msg(result['name'] + ' has been updated! Go to Cytoscape to use it.', 'success');
@@ -110,12 +121,12 @@ var AppPage = (function($) {
             });
 	}
 
-	function set_install_btn_to_installed() {
-		setup_install_btn('btn-success', 'icon-cy-install-installed', 'Installed');
+	function set_install_btn_to_installed(install_btn) {
+		setup_install_btn(install_btn, 'btn-success', 'icon-cy-install-installed', 'Installed');
 	}
 
-	function setup_install(app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
-        set_install_btn_to_download(latest_release_url);
+	function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
+        set_install_btn_to_download($('#'+release_id), latest_release_url);
 
 		/* Do not bother checking if ChimeraX is running
 		is_manager_running(function(is_running) {

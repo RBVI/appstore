@@ -143,8 +143,11 @@
                 <button class="btn btn-small {% if release.dependents.count %}disabled{% endif %} cy-release-delete"><i class="icon icon-trash"></i> Delete</button>
               </h4>
               <p>
-                <strong>Works with ChimeraX</strong>
+                <strong>Works with</strong> ChimeraX
                 {{ release.works_with }}
+                {% if release.platform %}
+                on {{ release.platform }}
+                {% endif %}
               </p>
               {% if release.releaseapi_set.count %}
               {% with releaseapi=release.releaseapi_set.get %}
@@ -163,7 +166,7 @@
                 <ul>
                   {% for dependent in release.dependents.all %}
                   <li>
-                    <a href="{% url 'app_page' dependent.app.name %}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}
+                    <a href="{% url 'app_page' dependent.app.name %}{{ cx_platform|safe }}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}
                   </li>
                   {% endfor %}
                 </ul>
@@ -289,7 +292,7 @@
     Are you sure you want to cancel editing this bundle page? All unsaved changes will be lost.
   </div>
   <div class="modal-footer">
-    <a href="{% url 'app_page' app.name %}" class="btn btn-danger">Yes, Discard Changes</a>
+    <a href="{% url 'app_page' app.name %}{{ cx_platform|safe }}" class="btn btn-danger">Yes, Discard Changes</a>
     <a href="#" class="btn" data-dismiss="modal">No, Continue Editing</a>
   </div>
 </div>
@@ -399,7 +402,7 @@ AppPageEdit.add_screenshot('{{ screenshot.thumbnail.url|escapejs }}').attr('back
 {% endif %}
 
 AppPageEdit.setup_details();
-AppPageEdit.set_app_page_url("{% url 'app_page' app.name %}");
+AppPageEdit.set_app_page_url("{% url 'app_page' app.name %}{{ cx_platform|safe }}");
 AppPageEdit.set_loading_icon_url('{% get_static_prefix %}common/img/loading_small.gif');
 
 AppPageEdit.setup_add_editor_btn();

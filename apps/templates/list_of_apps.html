@@ -20,7 +20,7 @@
         </tr>
       </table>
     </div>
-    {% app_buttons apps_with_releases %}
+    {% app_buttons apps_with_releases cx_platform %}
   </div>
   <script type="text/javascript" src="{% get_static_prefix %}apps/js/sort_app_buttons.js"></script>
   <script type="text/javascript">
@@ -32,6 +32,6 @@
 
 {% if apps_without_releases %}
   <div class="row">
-    {% app_buttons apps_without_releases %}
+    {% app_buttons apps_without_releases cx_platform %}
   </div>
 {% endif %}

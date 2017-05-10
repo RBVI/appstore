@@ -40,12 +40,12 @@ def _nav_panel_context(request):
 	sorted_tags = sorted(all_tags, key=lambda tag: tag.count)
 	sorted_tags.reverse()
 	try:
-    		tag = get_object_or_404(Tag, name = 'collections')
-        	idx = sorted_tags.index(tag)
-           	sorted_tags.pop(idx)
-           	sorted_tags.insert(0, tag)
+		tag = get_object_or_404(Tag, name = 'collections')
+		idx = sorted_tags.index(tag)
+		sorted_tags.pop(idx)
+		sorted_tags.insert(0, tag)
 	except Http404:
-    		idx = 0
+		idx = 0
 	if sorted_tags:
 		max_count = sorted_tags[0].count
 		min_count = sorted_tags[-1].count
@@ -89,6 +89,7 @@ def apps_default(request):
 	downloaded_apps = App.objects.filter(active=True).order_by('downloads').reverse()[:_DefaultConfig.num_of_top_apps]
 	
 	c = {
+		'cx_platform': _cx_platform(request),
 		'latest_apps': latest_apps,
 		'downloaded_apps': downloaded_apps,
 		'go_back_to': 'home',
@@ -98,6 +99,7 @@ def apps_default(request):
 def all_apps(request):
 	apps = App.objects.filter(active=True).order_by('name')
 	c = {
+		'cx_platform': _cx_platform(request),
 		'apps': apps,
 		'navbar_selected_link': 'all',
 		'go_back_to': 'All Apps',
@@ -112,6 +114,7 @@ def wall_of_apps(request):
 		apps_in_not_top_tags.update(not_top_tag.app_set.all())
 	tags.append(('other', apps_in_not_top_tags))
 	c = {
+		'cx_platform': _cx_platform(request),
 		'total_apps_count': App.objects.filter(active=True).count,
 		'tags': tags,
 		'go_back_to': 'Wall of Apps',
@@ -122,6 +125,7 @@ def apps_with_tag(request, tag_name):
 	tag = get_object_or_404(Tag, name = tag_name)
 	apps = App.objects.filter(active = True, tags = tag).order_by('name')
 	c = {
+		'cx_platform': _cx_platform(request),
 		'tag': tag,
 		'apps': apps,
 		'selected_tag_name': tag_name,
@@ -135,6 +139,7 @@ def apps_with_author(request, author_name):
 		raise Http404('No such author "%s".' % author_name)
 
 	c = {
+		'cx_platform': _cx_platform(request),
 		'author_name': author_name,
 		'apps': apps,
 		'go_back_to': '%s\'s author page' % author_name,
@@ -150,17 +155,17 @@ def apps_with_author(request, author_name):
 # -- App Rating
 
 def _app_rate(app, user, post):
-    rating_n = post.get('rating')
-    try:
-        rating_n = int(rating_n)
-        if not (0 <= rating_n <= 5):
-            raise ValueError()
-    except ValueError:
-        raise ValueError('rating is "%s" but must be an integer between 0 and 5' % rating_n)
-    app.votes += 1
-    app.stars += rating_n
-    app.save()
-    return obj_to_dict(app, ('votes', 'stars_percentage'))
+	rating_n = post.get('rating')
+	try:
+		rating_n = int(rating_n)
+		if not (0 <= rating_n <= 5):
+			raise ValueError()
+	except ValueError:
+		raise ValueError('rating is "%s" but must be an integer between 0 and 5' % rating_n)
+	app.votes += 1
+	app.stars += rating_n
+	app.save()
+	return obj_to_dict(app, ('votes', 'stars_percentage'))
 
 def _app_ratings_delete_all(app, user, post):
 	if not app.is_editor(user):
@@ -171,16 +176,50 @@ def _app_ratings_delete_all(app, user, post):
 
 # -- General app stuff
 
-def _latest_release(app):
+def _cx_platform(request):
+	platform = request.GET.get("platform")
+	cx_version = request.GET.get("version")
+	params = {}
+	if platform:
+		params["platform"] = platform
+	if cx_version:
+		params["version"] = cx_version
+	if not params:
+		return ""
+	from urllib import urlencode
+	return '?' + urlencode(params)
+
+def _latest_releases(app, platform=None, cx_version=None):
 	releases = app.releases
 	if not releases: return None
-	return releases[0] # go by the ordering provided by Release.Meta
+	# Assume version numbers are '.'-separated ints
+	# so we can turn them into tuples for comparison.
+	# distutils.version.StrictVersion only allows
+	# up to 3 components and ISOLDE uses 0.9.3.1 already.
+	def to_version(s):
+		return [int(n) for n in s.split('.')]
+	newest_version = None
+	newest_releases = []
+	for r in releases:
+		if r.platform and platform and r.platform != platform:
+			continue
+		# TODO: check if release is compatible with ChimeraX version
+		v = to_version(r.version)
+		if newest_version is None or v > newest_version:
+			newest_version = v
+			newest_releases = [r]
+		elif v == newest_version:
+			newest_releases.append(r)
+	return newest_releases
 
 def _mk_app_page(app, user, request):
+	platform = request.GET.get("platform")
+	cx_version = request.GET.get("version")
 	c = {
+		'cx_platform': _cx_platform(request),
 		'app': app,
 		'is_editor': (user and app.is_editor(user)),
-		'cy3_latest_release': _latest_release(app),
+		'cx_latest_releases': _latest_releases(app, platform, cx_version),
 		'go_back_to_title': _unescape_and_unquote(request.COOKIES.get('go_back_to_title')),
 		'go_back_to_url':   _unescape_and_unquote(request.COOKIES.get('go_back_to_url')),
 	}
@@ -461,13 +500,14 @@ def app_page_edit(request, app_name):
 	
 	all_tags = [tag.fullname for tag in Tag.objects.all()]
 	c = {
+		'cx_platform': _cx_platform(request),
 		'app': app,
 		'all_tags': all_tags,
 		'max_file_img_size_b': _AppPageEditConfig.max_img_size_b,
 		'max_icon_dim_px': _AppPageEditConfig.max_icon_dim_px,
 		'thumbnail_height_px': _AppPageEditConfig.thumbnail_height_px,
 		'app_description_maxlength': _AppPageEditConfig.app_description_maxlength,
-        'release_uploaded': request.GET.get('upload_release') == 'true',
+		'release_uploaded': request.GET.get('upload_release') == 'true',
 	}
 	return html_response('app_page_edit.html', c, request)
 

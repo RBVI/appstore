@@ -12,5 +12,5 @@ urlpatterns = patterns('',
     url(r'^stats/(\w{1,100})/geography/world$',           'download.views.app_stats_geography_world'),
     url(r'^stats/(\w{1,100})/geography/country/(\w{2})$', 'download.views.app_stats_country'),
     
-	url(r'^(\w{1,100})/(.{1,31})$',                      'download.views.release_download',            name='release_download'),
+	url(r'^(\w{1,100})/(.{1,31})/(\d{1,10})$',            'download.views.release_download',            name='release_download'),
 )

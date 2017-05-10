@@ -22,6 +22,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Version</th>
+                        <th>Platform</th>
                         <th>Submitted On</th>
                         <th>Submitter</th>
                         <th></th>
@@ -31,6 +32,7 @@
                     <tr pending_id="{{ pending_app.id }}">
                         <td class="cy-app-name">{{ pending_app.fullname }}</td>
                         <td class="cy-app-version">{{ pending_app.version }}</td>
+                        <td class="cy-app-tags">{{ pending_app.tags }}</td>
                         <td>{{ pending_app.created|date:"j M, H:i:s" }}</td>
                         <td>
                             {{ pending_app.submitter.username }}

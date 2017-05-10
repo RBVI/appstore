@@ -27,8 +27,8 @@ def _increment_count(klass, **args):
     obj.count += 1
     obj.save()
 
-def release_download(request, app_name, version):
-    release = get_object_or_404(Release, app__name = app_name, version = version, active = True)
+def release_download(request, app_name, version, release_id):
+    release = get_object_or_404(Release, id = int(release_id), active = True)
     ip4addr = _client_ipaddr(request)
     when    = datetime.date.today()
 

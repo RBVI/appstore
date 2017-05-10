@@ -154,13 +154,13 @@ class Bundle:
 if __name__ == "__main__":
     import os, os.path
     # root = "d:/chimerax/src/bundles"
-    root = "."
+    root = "testdata"
     for dirpath, dirnames, filenames in os.walk(root):
         for filename in filenames:
             if not filename.endswith(".whl"):
                 continue
             b = Bundle(os.path.join(dirpath, filename))
-            print "bundle", b.package, b.version
+            print "bundle", b.package, b.version, b.platform
             print "summary", b.summary
             print "screenshot", b.screenshot
             # print "metadata", b.metadata

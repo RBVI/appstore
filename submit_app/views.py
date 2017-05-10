@@ -27,8 +27,8 @@ def submit_app(request):
         f = request.FILES.get('file')
         if f:
             try:
-                fullname, version, works_with, app_dependencies, has_export_pkg = process_wheel(f, expect_app_name)
-                pending = _create_pending(request.user, fullname, version, works_with, app_dependencies, f)
+                fullname, version, platform, works_with, app_dependencies, has_export_pkg = process_wheel(f, expect_app_name)
+                pending = _create_pending(request.user, fullname, version, platform, works_with, app_dependencies, f)
                 _send_email_for_pending(pending)
                 if has_export_pkg:
                     return HttpResponseRedirect(reverse('submit-api', args=[pending.id]))
@@ -79,19 +79,20 @@ def confirm_submission(request, id):
         pending.pom_xml_file.close()
     return html_response('confirm.html', {'pending': pending, 'pom_attrs': pom_attrs}, request)
 
-def _create_pending(submitter, fullname, version, cy_works_with, app_dependencies, release_file):
+def _create_pending(submitter, fullname, version, platform, cy_works_with, app_dependencies, release_file):
     name = fullname_to_name(fullname)
     app = get_object_or_none(App, name = name)
     if app:
         if not app.is_editor(submitter):
             raise ValueError('cannot be accepted because you are not an editor')
-        release = get_object_or_none(Release, app = app, version = version)
+        release = get_object_or_none(Release, app = app, version = version, platform = platform)
         if release and release.active:
             raise ValueError('cannot be accepted because the app %s already has a release with version %s. You can delete this version by going to the Release History tab in the app edit page' % (app.fullname, version))
 
     pending = AppPending.objects.create(submitter      = submitter,
                                         fullname       = fullname,
                                         version        = version,
+                                        platform       = platform,
                                         cy_works_with  = cy_works_with)
     for dependency in app_dependencies:
         pending.dependencies.add(dependency)
