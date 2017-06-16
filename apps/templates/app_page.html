@@ -336,7 +336,7 @@
 
 				<li class="divider"></li>
 
-				<li><a href="{% url 'app_stats' app.name %}" target="_blank">Download Stats</a></li>
+				<li id="downloadstats"><a href="{% url 'app_stats' app.name %}" target="_blank">Download Stats</a></li>
 				{% if app.website %}
 				<li><a href="{{ app.website }}" target="_blank">
 					<i class="icon-home"></i> Website
@@ -444,7 +444,7 @@ AppPage.setup_details();
 {% endif %}
 
 AppPage.setup_stars();
-
 AppPage.setup_release_notes();
+AppPage.setup_download_stats();
 </script>
 {% endblock %}

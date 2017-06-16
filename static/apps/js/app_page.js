@@ -253,6 +253,17 @@ var AppPage = (function($) {
     
     /*
      ================================================================
+       Download Stats
+     ================================================================
+    */
+    
+    function setup_download_stats() {
+		if (navigator.userAgent.indexOf("ChimeraX") != -1)
+            $('#downloadstats').html("Download Stats requires Flash and is not available from ChimeraX");
+    }
+    
+    /*
+     ================================================================
        Init
      ================================================================
     */
@@ -260,8 +271,9 @@ var AppPage = (function($) {
     return {
 	'setup_install': setup_install,
 	'setup_cy_2x_download_popover': setup_cy_2x_download_popover,
-        'setup_stars': setup_stars,
-        'setup_details': setup_details,
-        'setup_release_notes': setup_release_notes,
+    'setup_stars': setup_stars,
+    'setup_details': setup_details,
+    'setup_release_notes': setup_release_notes,
+    'setup_download_stats': setup_download_stats,
     }
 })($);
