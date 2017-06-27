@@ -71,6 +71,10 @@ def _app_dependencies_to_releases(app_dependencies):
         app_name, app_version = dependency
         # pip likes '-', but we use '_'
         app_name = app_name.replace('-', '_')
+        # If the dependency is not within ChimeraX, we trust
+        # that it will come from pypi
+        if not app_name.startswith("ChimeraX_"):
+            continue
         # pip likes '(>=version)' but we use 'version'
         if app_version.startswith('(>=') and app_version.endswith(')'):
             app_version = app_version[3:-1].strip()
