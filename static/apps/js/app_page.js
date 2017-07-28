@@ -67,15 +67,27 @@ var AppPage = (function($) {
 
 	function set_install_btn_to_download(install_btn, release_url) {
         var label;
-        var platform = install_btn.attr("platform");
-        if (!platform || platform == CyPlatform) {
+        var app_platform = install_btn.attr("platform");
+        if (!app_platform) {
             if (navigator.userAgent.indexOf("ChimeraX") != -1)
                 label = "Install";
             else
                 label = "Download";
-        } else {
-            label = '<div class="cy-app-install-label">'
-                    + platform + "<br>Download</div>";
+        }
+        else {
+            var my_platform = "";
+            if (navigator.appVersion.indexOf("Win") != -1)
+                my_platform = "Windows";
+            else if (navigator.appVersion.indexOf("Mac") != -1)
+                my_platform = "macOS";
+            else if (navigator.appVersion.indexOf("Linux") != -1)
+                my_platform = "Linux";
+            if (navigator.userAgent.indexOf("ChimeraX") != -1
+            && app_platform == my_platform)
+                label = "Install";
+            else
+                label = '<div class="cy-app-install-label">'
+                        + app_platform + "<br>Download</div>";
 		}
 		setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
             function() {
