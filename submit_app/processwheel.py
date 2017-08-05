@@ -75,16 +75,47 @@ def _app_dependencies_to_releases(app_dependencies):
         # that it will come from pypi
         if not app_name.startswith("ChimeraX_"):
             continue
-        # pip likes '(>=version)' but we use 'version'
-        if app_version.startswith('(>=') and app_version.endswith(')'):
-            app_version = app_version[3:-1].strip()
-
         app = get_object_or_none(App, active = True, fullname = app_name)
         if not app:
             raise ValueError('dependency on "%s": no such app exists' % app_name)
-
-        release = get_object_or_none(Release, app = app, version = app_version, active = True)
+        comparison, preferred_version = _dependency_version(app_version)
+        if comparison != '>=':
+            raise ValueError('unsupport version operator: "%s"' % comparison)
+        #release = get_object_or_none(Release, app = app, version = app_version, active = True)
+        release = None
+        for r in Release.objects.filter(app=app, active=True):
+            rv = _version_tuple(r.version)
+            if rv == preferred_version:
+                release = r
+                break
+            elif rv > preferred_version:
+                release = r
         if not release:
             raise ValueError('dependency on "%s" with version "%s": no such release exists' % (app_name, app_version))
 
         yield release
+
+# Parser for version specification in bundle dependencies.
+# Currently, we only support "(>= version)" where "version"
+# is compatible with the toolshed version scheme.  Standard
+# version numbers like "0.1.4" work fine.
+import re
+_DependencyVersionRE = re.compile(r'\s*\(\s*([=!<>]*)\s*(\S+)\)')
+
+def _dependency_version(s):
+    m = _DependencyVersionRE.match(s)
+    if not m:
+        raise ValueError("Unsupported dependency version: %r" % s)
+    (comparison, version) = m.groups()
+    return comparison, _version_tuple(version)
+
+def _version_tuple(v):
+    m = VersionRE.match(v)
+    if not m:
+        raise ValueError("Unsupported version: %r" % v)
+    (major, minor, patch, tag) = m.groups()
+    major = int(major) if major else 0
+    minor = int(minor) if minor else 0
+    patch = int(patch) if patch else 0
+    tag = tag.lower() if tag else ""
+    return (major, minor, patch, tag)
