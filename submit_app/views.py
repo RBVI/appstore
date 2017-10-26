@@ -184,6 +184,8 @@ def _get_server_url(request):
     port = request.META['SERVER_PORT']
     if port == '80':
         return 'http://%s' % name
+    elif port == '443':
+        return 'https://%s' % name
     else:
         return 'http://%s:%s' % (name, port)
 
