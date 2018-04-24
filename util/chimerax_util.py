@@ -79,12 +79,14 @@ class Bundle:
                     "synopsis":parts[4],
                 }
             elif info_type == "selector":
-                if len(parts) != 4:
+                if len(parts) != 4 and len(parts) != 5:
                     continue
                 name = parts[2]
                 value = {
                     "synopsis":parts[3]
                 }
+                if len(parts) == 5:
+                    value["atomic"] = parts[4]
             elif info_type == "dataformat":
                 if len(parts) not in [11,12]:
                     continue
