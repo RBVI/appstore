@@ -153,7 +153,72 @@ class Bundle:
             self._screenshot = ss
             return ss
 
+
+class Version:
+    """Version is similar to distutils.version.StrictVersion
+    but allows for more than three digits before an optional
+    alphanumeric label.  Unlike StrictVersion, the trailing
+    alphanumeric label part is compared as a string rather
+    than further broken into an alphabetic label and an
+    integer version number.  This is to avoid having to
+    handle illegal version numbers, but it does mean the
+    sorting might go a1<a10<a2."""
+
+    def __init__(self, s):
+        self._raw = s
+        n = 0
+        while n < len(s):
+            if s[n].isdigit() or s[n] != '.':
+                n += 1
+            else:
+                break
+        self.value = [int(v) for v in s[:n].split('.')]
+        if n < len(s):
+            self.value.append(s[n:])
+
+    def __cmp__(self, other):
+        n = 0
+        limit = min(len(self.value), len(other.value))
+        for n in range(limit):
+            if isinstance(self.value[n], int):
+                if isinstance(other.value[n], int):
+                    # Both integers
+                    delta = self.value[n] - other.value[n]
+                    if delta == 0:
+                        # Same version so far
+                        continue
+                    else:
+                        # Different version at n
+                        return delta
+                else:
+                    # Version with more integers is "larger"
+                    return 1
+            else:
+                if isinstance(other.value[n], int):
+                    # Version with more integers is "larger"
+                    return -1
+                else:
+                    # Both non-integers
+                    delta = cmp(self.value[n], other.value[n])
+                    if delta == 0:
+                        # Same version so far
+                        continue
+                    else:
+                        return delta
+        # Same all the way through, longer is "larger"
+        return cmp(len(self.value), len(other.value))
+
+
 if __name__ == "__main__":
+    v1 = Version("1.0.1")
+    v1b1 = Version("1.0.1b1")
+    v1b2 = Version("1.0.1b2")
+    v2 = Version("1.0.2")
+    print v1 < v1b1, "should be True"
+    print v1b2 < v1b1, "should be False"
+    print v1 < v2, "should be True"
+    print v2 < v1b1, "should be False"
+    raise SystemExit(0)
     import os, os.path
     # root = "d:/chimerax/src/bundles"
     root = "testdata"

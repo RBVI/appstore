@@ -10,6 +10,7 @@ from util.view_util import json_response, html_response, obj_to_dict, get_object
 from util.img_util import scale_img
 from util.id_util import fullname_to_name
 from models import Tag, App, Author, OrderedAuthor, Screenshot, Release
+from util.chimerax_util import Version
 
 # Returns a unicode string encoded in a cookie
 def _unescape_and_unquote(s):
@@ -192,19 +193,13 @@ def _cx_platform(request):
 def _latest_releases(app, platform=None, cx_version=None):
 	releases = app.releases
 	if not releases: return None
-	# Assume version numbers are '.'-separated ints
-	# so we can turn them into tuples for comparison.
-	# distutils.version.StrictVersion only allows
-	# up to 3 components and ISOLDE uses 0.9.3.1 already.
-	def to_version(s):
-		return [int(n) for n in s.split('.')]
 	newest_version = None
 	newest_releases = []
 	for r in releases:
 		if r.platform and platform and r.platform != platform:
 			continue
 		# TODO: check if release is compatible with ChimeraX version
-		v = to_version(r.version)
+		v = Version(r.version)
 		if newest_version is None or v > newest_version:
 			newest_version = v
 			newest_releases = [r]
