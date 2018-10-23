@@ -7,7 +7,7 @@ from utils import fix_line_ending
 class Command(BaseCommand):
 
     args = "[bundle]"
-    help = "delete all references to specified version of a bundle"
+    help = "list all releases of a bundle"
 
     @fix_line_ending
     def handle(self, *args, **options):
