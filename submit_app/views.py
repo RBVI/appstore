@@ -27,8 +27,12 @@ def submit_app(request):
         f = request.FILES.get('file')
         if f:
             try:
-                fullname, version, platform, works_with, app_dependencies, has_export_pkg = process_wheel(f, expect_app_name)
-                pending = _create_pending(request.user, fullname, version, platform, works_with, app_dependencies, f)
+                (fullname, version, platform, works_with,
+                 app_dependencies, release_notes,
+                 has_export_pkg) = process_wheel(f.name, expect_app_name)
+                pending = _create_pending(request.user, fullname, version,
+                                          platform, works_with,
+                                          app_dependencies, release_notes, f)
                 _send_email_for_pending(pending)
                 if has_export_pkg:
                     return HttpResponseRedirect(reverse('submit-api', args=[pending.id]))
@@ -79,7 +83,8 @@ def confirm_submission(request, id):
         pending.pom_xml_file.close()
     return html_response('confirm.html', {'pending': pending, 'pom_attrs': pom_attrs}, request)
 
-def _create_pending(submitter, fullname, version, platform, cy_works_with, app_dependencies, release_file):
+def _create_pending(submitter, fullname, version, platform, cy_works_with,
+                    app_dependencies, release_notes, release_file):
     name = fullname_to_name(fullname)
     app = get_object_or_none(App, name = name)
     if app:

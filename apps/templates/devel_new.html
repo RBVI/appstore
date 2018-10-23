@@ -1,0 +1,36 @@
+{% extends "nav_panel.html" %}
+{% load url from future %}
+{% load devel_entries %}
+
+{% block main %}
+  <style type="text/css">
+    h2 { margin-bottom: 0.5em; }
+    .span8 { margin-bottom: 1em; }
+    .devel_form { margin: 0px; }
+    .error_msg { color: red; }
+    .message { /* font-size: small; */ }
+  </style>
+  <div class="row">
+    <div class="span8">
+    {% if error_msgs %}
+    <h2>Errors:</h2>
+        <ul>
+            {% for error_msg in error_msgs %}
+            <li class="error_msg">{{ error_msg }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if messages %}
+    <h2>Notifications:</h2>
+        <ul>
+            {% for message in messages %}
+            <li class="message">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    </div>
+  </div>
+  <div class="span8" id="left">
+    {% devel_entries bundles cx_platform %}
+  </div>
+{% endblock %}

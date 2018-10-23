@@ -190,12 +190,13 @@ def _get_classifiers():
     global _classifier_map
     if _classifier_map is None:
         from models import Release
-        import settings
+        from django.conf import settings
         from util.chimerax_util import Bundle
+        import os.path
         _classifier_map = {}
         releases = Release.objects.filter(active=True)
         for r in releases:
-            full_path = settings.SITE_DIR + r.release_file_url
+            full_path = os.path.join(settings.SITE_DIR, r.release_file_url)
             b = Bundle(full_path)
             value = (r.app.fullname, r.version)
             for c in b.metadata["classifiers"]:
@@ -315,8 +316,8 @@ def release_urls(package_name, release_version):
     Returns a list of dicts."""
     # See documentation for dictionary keys
     from models import Release
-    import settings
-    import os, datetime
+    from django.conf import settings
+    import os, datetime, os.path
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,
                                       version=release_version)
@@ -328,7 +329,7 @@ def release_urls(package_name, release_version):
         winfo = _get_wheel_info(r)
         d["filename"] = winfo["filename"]
         d["python_version"] = winfo["python_tag"]
-        full_path = settings.SITE_DIR + r.release_file_url
+        full_path = os.path.join(settings.SITE_DIR, r.release_file_url)
         sbuf = os.stat(full_path)
         d["size"] = sbuf.st_size
         d["url"] = _release_url(_server_url, r)
@@ -351,7 +352,6 @@ def release_data(package_name, release_version):
     Returns a dictionary."""
     # See documentation for dictionary keys
     from models import Release
-    import settings
     import os, datetime
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,

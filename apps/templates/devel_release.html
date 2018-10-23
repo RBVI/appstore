@@ -1,0 +1,29 @@
+{% extends "nav_panel.html" %}
+{% load url from future %}
+{% load devel_entries %}
+
+{% block main %}
+  <style type="text/css">
+    h3 { margin-bottom: 0.5em; }
+    .span8 { margin-bottom: 1em; }
+    .devel_form { margin: 0px; }
+  </style>
+  {% if new_bundles %}
+    <h3>Unreleased Bundles</h3>
+    <div class="span8" id="left">
+      {% devel_entries new_bundles cx_platform %}
+    </div>
+  {% endif %}
+  {% if new_versions %}
+    <h3>Unreleased Versions</h3>
+    <div class="span8" id="left">
+      {% devel_entries new_versions cx_platform %}
+    </div>
+  {% endif %}
+  {% if released %}
+    <h3>Already Released</h3>
+    <div class="span8" id="left">
+      {% devel_entries released cx_platform %}
+    </div>
+  {% endif %}
+{% endblock %}

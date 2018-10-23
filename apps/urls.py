@@ -11,4 +11,8 @@ urlpatterns = patterns('',
     url(r'^(\w{1,100})/author_names$',        'apps.views.author_names'),
     url(r'^(\w{1,100})/institution_names$',   'apps.views.institution_names'),
     url(r'^(\w{1,100})/download/(.{1,31})$',  'download.views.release_download'), # old url for downloads
+    url(r'^devel/release$',                   'apps.devel.release',              name='devel_release'),
+    url(r'^devel/new_bundle$',                'apps.devel.new_bundle',           name='devel_new_bundle'),
+    url(r'^devel/new_version$',               'apps.devel.new_version',          name='devel_new_version'),
+    url(r'^devel/clean$',                     'apps.devel.clean',                name='devel_clean'),
 )
