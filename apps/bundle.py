@@ -4,7 +4,14 @@
 # "handler" is referenced from ../urls.py
 #
 from django.views.decorators.csrf import csrf_exempt
-import logging
+from django.conf import settings
+import os.path
+
+# import logging
+# logger = logging.getLogger(__name__)
+# "logger" messages should show in cxtoolshed.log.  See settings.py
+
+DbName = os.path.join(settings.SITE_DIR, "request_logs.db")
 
 @csrf_exempt
 def handler(request):
@@ -33,6 +40,13 @@ def handler(request):
         version = path_parts[3]
     except IndexError:
         version = None
+    # Additional information in query parameters or POST data
+    if request.method == "POST":
+        uuid = request.POST.get("uuid")
+    else:
+        uuid = request.GET.get("uuid")
+    if uuid:
+        log_uuid(uuid)
     response = _format_bundle(name, version)
     return response
 
@@ -91,3 +105,37 @@ def _format_bundle(name, version):
     import json
     response = HttpResponse(json.dumps(dlist), content_type='application/json')
     return response
+
+def log_uuid(uuid):
+    """Log UUID and return row identifier."""
+    import sqlite3
+    from datetime import datetime
+    with sqlite3.connect(DbName) as db:
+        _check_table(db, "Request", SQL_CreateTable_Request)
+        c = db.cursor()
+        c.execute(SQL_Insert_Request, (uuid, datetime.now()))
+        return c.lastrowid
+
+
+def _check_table(db, table_name, create_script):
+    c = db.cursor()
+    c.execute(SQL_CheckTable, (table_name,))
+    if not c.fetchall():
+        c.executescript(create_script)
+
+#
+# SQL statements
+#
+SQL_Insert_Request = "INSERT INTO Request(uuid, time) VALUES (?, ?)"
+
+#
+# All tables should have a primary key "id" that autoincrements
+#
+SQL_CheckTable = "SELECT * FROM sqlite_master WHERE name=? AND type='table';"
+SQL_CreateTable_Request = """
+CREATE TABLE Request (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid TEXT,
+    time DATETIME
+);
+"""

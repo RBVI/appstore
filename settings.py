@@ -209,6 +209,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
+        'apps.bundle': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     }
 }
 
