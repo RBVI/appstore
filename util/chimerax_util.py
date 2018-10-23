@@ -16,33 +16,13 @@ icon, screenshot, etc.
 
 class Bundle:
     def __init__(self, filename):
-        from zipfile import ZipFile
-        import json
-        # Wheels are zip files
-        self.zip = z = ZipFile(filename)
-
-        # Look for toplevel directory that ends with ".dist-info"
-        # This directory contains the wheel metadata
-        distinfo = None
-        for name in z.namelist():
-            components = name.split('/')
-            if components[0].endswith(".dist-info"):
-                if distinfo is not None and distinfo != components[0]:
-                    raise ValueError("too many .dist-info directories")
-                distinfo = components[0]
-        self.distinfo = distinfo
-
-        # Parse distinfo into package and version
-        parts = distinfo.rsplit('.', 1)[0].rsplit('-', 1)
-        if len(parts) != 2:
-            raise ValueError("unsupported .dist-info name")
-        self.package, self.version = parts
+        import pkginfo
+        self.path = filename
+        self._wheel = pkginfo.Wheel(filename)
+        self._dist_info = (self._wheel.name.replace('-', '_') +
+                           '-' + self._wheel.version + '.dist-info')
         self._pkg_path = self.package.replace('.', '/')
-
-        # Read metadata using the json-format file
-        self.metadata = json.loads(z.read("%s/metadata.json" % distinfo))
-        if self.metadata["version"] != self.version:
-            raise ValueError("internal version mismatch")
+        self._zip = None
 
     def info(self):
         # This code parses the bundle metadata in the same way
@@ -54,7 +34,7 @@ class Bundle:
             else:
                 return [i.strip() for i in s.split(',')]
         container = {}
-        for classifier in self.metadata.get("classifiers", []):
+        for classifier in self._wheel.classifiers:
             parts = [s.strip() for s in classifier.split("::")]
             if parts[0] != "ChimeraX":
                 continue
@@ -134,12 +114,27 @@ class Bundle:
         return container
 
     @property
+    def package(self):
+        return self._wheel.name
+
+    @property
+    def version(self):
+        return self._wheel.version
+
+    @property
     def summary(self):
-        return self.metadata.get("summary")
+        return self._wheel.summary
 
     @property
     def requires(self):
-        return self.metadata.get("run_requires")
+        return self._wheel.requires_dist
+
+    @property
+    def zip(self):
+        if self._zip is None:
+            import zipfile
+            self._zip = zipfile.ZipFile(self.path)
+        return self._zip
 
     @property
     def screenshot(self):
@@ -147,10 +142,22 @@ class Bundle:
             return self._screenshot
         except AttributeError:
             try:
-                ss = self.zip.read("%s/screenshot.png" % self._pkg_path)
+                ss = self.zip.read("%s/screenshot.png" % self._dist_info)
             except KeyError:
                 ss = None
             self._screenshot = ss
+            return ss
+
+    @property
+    def release_notes(self):
+        try:
+            return self._release_notes
+        except AttributeError:
+            try:
+                ss = self.zip.read("%s/RELNOTES.html" % self._dist_info)
+            except KeyError:
+                ss = None
+            self._release_notes = ss
             return ss
 
 
@@ -210,30 +217,32 @@ class Version:
 
 
 if __name__ == "__main__":
-    v1 = Version("1.0.1")
-    v1b1 = Version("1.0.1b1")
-    v1b2 = Version("1.0.1b2")
-    v2 = Version("1.0.2")
-    print v1 < v1b1, "should be True"
-    print v1b2 < v1b1, "should be False"
-    print v1 < v2, "should be True"
-    print v2 < v1b1, "should be False"
-    raise SystemExit(0)
-    import os, os.path
-    # root = "d:/chimerax/src/bundles"
-    root = "testdata"
-    for dirpath, dirnames, filenames in os.walk(root):
-        for filename in filenames:
-            if not filename.endswith(".whl"):
-                continue
-            b = Bundle(os.path.join(dirpath, filename))
-            print "bundle", b.package, b.version, b.platform
-            print "summary", b.summary
-            print "screenshot", b.screenshot
-            # print "metadata", b.metadata
-            info = b.info()
-            for info_type in sorted(info.keys()):
-                info_data = info[info_type]
-                for name, value in info_data.items():
-                    print info_type, name, value
-            print
+    if False:
+        v1 = Version("1.0.1")
+        v1b1 = Version("1.0.1b1")
+        v1b2 = Version("1.0.1b2")
+        v2 = Version("1.0.2")
+        print v1 < v1b1, "should be True"
+        print v1b2 < v1b1, "should be False"
+        print v1 < v2, "should be True"
+        print v2 < v1b1, "should be False"
+    if True:
+        import os, os.path
+        # root = "d:/chimerax/src/bundles"
+        root = "testdata"
+        for dirpath, dirnames, filenames in os.walk(root):
+            for filename in filenames:
+                if not filename.endswith(".whl"):
+                    continue
+                b = Bundle(os.path.join(dirpath, filename))
+                print "bundle", b.package, b.version
+                print "summary", b.summary
+                print "requires", b.requires
+                print "screenshot", b.screenshot is not None
+                print "release notes", b.release_notes
+                info = b.info()
+                for info_type in sorted(info.keys()):
+                    info_data = info[info_type]
+                    for name, value in info_data.items():
+                        print info_type, name, value
+                print
