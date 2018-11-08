@@ -13,33 +13,17 @@ def process_wheel(filename, expect_app_name):
     parts = root.split('-')
     if len(parts) != 5 and len(parts) != 6:
         raise ValueError('"%s" is not a properly named Python wheel' % filename)
-    # platform is the output from distutils.util.get_platform,
-    # which we convert into what will be stored in our model
-    # and presented to the user in web pages
-    pf = parts[-1]
-    if '.' in pf:
-        raise ValueError('"%s" supports more than one platform' % filename)
-    if pf.startswith("win_"):
-        app_platform = "Windows"
-    elif pf.startswith("linux_"):
-        app_platform = "Linux"
-    elif pf.startswith("macosx_"):
-        app_platform = "macOS"
-    elif pf == "any":
-        app_platform = ""
-    else:
-        raise ValueError('"%s" targets unsupported platform' % filename)
 
     try:
         bundle = Bundle(filename)
-    except (BadZipfile, IOError, ValueError):
-        raise ValueError('is not a valid wheel file')
+    except (BadZipfile, IOError, ValueError) as e:
+        raise ValueError('is not a valid wheel file: %s' % str(e))
+    if bundle.platform == "Unknown":
+        raise ValueError('unsupported platform')
     app_name = smart_unicode(bundle.package, errors='replace')
     if expect_app_name and (not app_name == expect_app_name):
         raise ValueError('has app name as <tt>%s</tt> but '
                          'must be <tt>%s</tt>' % (app_name, expect_app_name))
-    app_ver = smart_unicode(bundle.version, errors='replace')
-    # XXX: Handle "environment" key properly
     app_dependencies = []
     app_works_with = None
     for dep in bundle.requires:
@@ -57,45 +41,115 @@ def process_wheel(filename, expect_app_name):
             app_dependencies.append((name, version))
     app_works_with = smart_unicode(app_works_with, errors='replace')
 
-    try:
-        app_dependencies = list(_app_dependencies_to_releases(app_dependencies))
-    except ValueError as e:
-        (msg, ) = e.args
-        raise ValueError('problem with dependencies: ' + msg)
+    # Add some computed attributes to bundle and return
+    bundle.works_with = app_works_with
+    bundle.app_dependencies = app_dependencies
+    return bundle
 
-    app_release_notes = bundle.release_notes
-
-    return (app_name, app_ver, app_platform, app_works_with,
-            app_dependencies, app_release_notes, False)
-
-def _app_dependencies_to_releases(app_dependencies):
+def release_dependencies(app_dependencies):
+    releases = []
     for dependency in app_dependencies:
         app_name, app_version = dependency
-        # pip likes '-', but we use '_'
-        app_name = app_name.replace('-', '_')
-        # If the dependency is not within ChimeraX, we trust
-        # that it will come from pypi
-        if not app_name.startswith("ChimeraX_"):
-            continue
-        app = get_object_or_none(App, active = True, fullname = app_name)
-        if not app:
-            raise ValueError('dependency on "%s": no such bundle exists' % app_name)
-        comparison, preferred_version = _dependency_version(app_version)
-        if comparison != '>=':
-            raise ValueError('unsupport version operator: "%s"' % comparison)
-        #release = get_object_or_none(Release, app = app, version = app_version, active = True)
-        release = None
-        for r in Release.objects.filter(app=app, active=True):
-            rv = _version_tuple(r.version)
-            if rv == preferred_version:
-                release = r
-                break
-            elif rv > preferred_version:
-                release = r
-        if not release:
-            raise ValueError('dependency on "%s" with version "%s": no such release exists' % (app_name, app_version))
+        # _find_release will throw exception and terminate on error
+        r = _find_release(app_name, app_version)
+        if r:
+            releases.append(r)
+    return releases
 
-        yield release
+def _find_release(app_name, app_version):
+    # pip likes '-', but we use '_'
+    app_name = app_name.replace('-', '_')
+    # If the dependency is not within ChimeraX, we trust
+    # that it will come from pypi
+    if not app_name.startswith("ChimeraX_"):
+        return None
+    app = get_object_or_none(App, active=True, fullname=app_name)
+    if not app:
+        raise ValueError('dependency on %r: no such bundle' % app_name)
+    comparison, preferred_version = _dependency_version(app_version)
+    if comparison != '>=':
+        raise ValueError('unsupport version operator: %r' % comparison)
+    known_releases = {}
+    for r in Release.objects.filter(app=app, active=True):
+        known_releases[r.version] = r
+    release = _version_match(preferred_version, known_releases)
+    if not release:
+        raise ValueError('dependency on %r with version %r: '
+                         'no such release' % (app_name, app_version))
+    return release
+
+def sort_bundles_by_dependencies(bundles):
+    # 1. Prime a cache with all the bundles we are about to install.
+    # 2. Make sure no bundle is missing any dependencies.
+    # 3. Build dependency tree and find roots.
+    # 4. Post-order traversal of roots generates ordered bundle list.
+
+    # Prime cache
+    # release_cache:
+    #   key = bundle name
+    #   value = dictionary of version to release/bundle
+    release_cache = {}
+    for bundle in bundles:
+        try:
+            d = release_cache[bundle.package]
+        except KeyError:
+            release_cache[bundle.package] = {bundle.version:bundle}
+        else:
+            s[bundle.version] = bundle
+
+    # Verify bundles and build dependencies
+    # depends_on:
+    #   key = bundle instance
+    #   value = set of bundle instances that need to be installed before key
+    depends_on = {}
+    for bundle in bundles:
+        for dependency in bundle.app_dependencies:
+            app_name, app_version = dependency
+            # Look in cache first
+            try:
+                known_releases = release_cache[app_name]
+            except KeyError:
+                pass
+            else:
+                comparison, preferred_version = _dependency_version(app_version)
+                if comparison != '>=':
+                    raise ValueError('unsupport version operator: %r' % comparison)
+                r = _version_match(preferred_version, known_releases)
+                if r:
+                    if isinstance(r, Bundle):
+                        # One of the primed bundles
+                        try:
+                            depends_on[bundle].add(r)
+                        except KeyError:
+                            depends_on[bundle] = {r}
+                    continue
+            # Not in cache.  If bundle not already released,
+            # _find_release will throw exception to terminate sorting
+            r = _find_release(app_name, app_version)
+            release_cache.setdefault(app_name).add(app_version)
+
+    # Generate ordered bundles
+    ordered_bundles = []
+    remainder = set(bundles)
+    while remainder:
+        ready = []
+        for bundle in remainder:
+            if bundle not in depends_on:
+                ready.append(bundle)
+        if not ready:
+            # all bundles depend on some other bundles
+            raise ValueError("circular bundle dependencies")
+        for bundle in ready:
+            ordered_bundles.append(bundle)
+            remainder.remove(bundle)
+            no_dependents = []
+            for db, ds in depends_on.items():
+                ds.discard(bundle)
+                if not ds:
+                    no_dependents.append(db)
+            for db in no_dependents:
+                del depends_on[db]
+    return ordered_bundles
 
 # Parser for version specification in bundle dependencies.
 # Currently, we only support "(>= version)" where "version"
@@ -121,3 +175,14 @@ def _version_tuple(v):
     patch = int(patch) if patch else 0
     tag = tag.lower() if tag else ""
     return (major, minor, patch, tag)
+
+def _version_match(preferred_version, known_releases):
+    release = None
+    for version, r in known_releases.items():
+        rv = _version_tuple(version)
+        if rv == preferred_version:
+            release = r
+            break
+        elif rv > preferred_version:
+            release = r
+    return release

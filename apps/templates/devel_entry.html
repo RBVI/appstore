@@ -1,11 +1,10 @@
 <li>
-<form class="devel_form" action="{{ bundle.release_state }}">
-{% if bundle.release_state == "new_bundle" %}
-<button class="devel_entry">Release</button>
-{% elif bundle.release_state == "new_version" %}
-<button class="devel_entry">Update</button>
+{% if bundle.release_state != "released" %}
+<input type="checkbox"
+       style="margin:0;"
+       class="devel_entry {{bundle.release_state}}"
+       name="file"
+       value="{{ filename }}"/>
 {% endif %}
-{{ bundle.package }} ({{ bundle.version }})
-<input type="hidden" name="file" value={{ filename }}></input>
-</form>
+{{ bundle.display_name }}
 </li>

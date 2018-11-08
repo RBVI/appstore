@@ -1,23 +1,56 @@
 {% extends "nav_panel.html" %}
+{% load static %}
 {% load url from future %}
 {% load devel_entries %}
+
+{% block more_head %}
+<script type="text/javascript" src="{% get_static_prefix %}common/js/setup_ajax_for_csrf.js"></script>
+{% endblock %}
 
 {% block main %}
   <style type="text/css">
     h3 { margin-bottom: 0.5em; }
-    .span8 { margin-bottom: 1em; }
-    .devel_form { margin: 0px; }
+    form { margin-bottom: 1em; }
   </style>
+  <script type="text/javascript">
+    function set_all(tag, value) {
+      var buttons = document.getElementsByClassName(tag);
+      for (var i = 0; i < buttons.length; i++)
+        buttons[i].checked = value;
+    }
+  </script>
   {% if new_bundles %}
     <h3>Unreleased Bundles</h3>
-    <div class="span8" id="left">
-      {% devel_entries new_bundles cx_platform %}
+    <div class="span8" id="new_bundle_div">
+    <form method="POST" action="new_bundle">
+      {% csrf_token %}
+      <button onclick="set_all('new_bundle', true);">Check All</button>
+      <button onclick="set_all('new_bundle', false);">Uncheck All</button>
+      <button type="submit">Release Bundles</button>
+      <div>
+        {% devel_entries new_bundles cx_platform %}
+      </div>
+      <button onclick="set_all('new_bundle', true);">Check All</button>
+      <button onclick="set_all('new_bundle', false);">Uncheck All</button>
+      <button type="submit">Release Bundles</button>
+    </form>
     </div>
   {% endif %}
   {% if new_versions %}
     <h3>Unreleased Versions</h3>
-    <div class="span8" id="left">
-      {% devel_entries new_versions cx_platform %}
+    <div class="span8" id="new_version_div">
+    <form method="POST" action="new_version">
+      {% csrf_token %}
+      <button onclick="set_all('new_version', true);">Check All</button>
+      <button onclick="set_all('new_version', false);">Uncheck All</button>
+      <button type="submit">Release Versions</button>
+      <div>
+        {% devel_entries new_versions cx_platform %}
+      </div>
+      <button onclick="set_all('new_version', true);">Check All</button>
+      <button onclick="set_all('new_version', false);">Uncheck All</button>
+      <button type="submit">Release Versions</button>
+    </form>
     </div>
   {% endif %}
   {% if released %}
@@ -25,5 +58,6 @@
     <div class="span8" id="left">
       {% devel_entries released cx_platform %}
     </div>
+    <br/>
   {% endif %}
 {% endblock %}

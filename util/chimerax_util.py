@@ -17,12 +17,33 @@ icon, screenshot, etc.
 class Bundle:
     def __init__(self, filename):
         import pkginfo
-        self.path = filename
+        self.path = filename    # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
         self._dist_info = (self._wheel.name.replace('-', '_') +
                            '-' + self._wheel.version + '.dist-info')
         self._pkg_path = self.package.replace('.', '/')
         self._zip = None
+        # There does not seem a standard way of getting a platform
+        # name, so we just translate the last field in the filename
+        # into something more familiar
+        import os.path
+        base, ext = os.path.splitext(os.path.basename(filename))
+        platform = base.split('-')[-1]
+        if platform.startswith("macosx_"):
+            self.platform = "macOS"
+        elif platform.startswith("win_"):
+            self.platform = "Windows"
+        elif platform.startswith("linux_"):
+            self.platform = "Linux"
+        elif platform == "any":
+            self.platform = ""
+        else:
+            self.platform = "Unknown"
+        if self.platform:
+            self.display_name = "%s (%s, %s)" % (self.package, self.version,
+                                                 self.platform)
+        else:
+            self.display_name = "%s (%s)" % (self.package, self.version)
 
     def info(self):
         # This code parses the bundle metadata in the same way
@@ -131,7 +152,7 @@ class Bundle:
 
     @property
     def zip(self):
-        if self._zip is None:
+        if not self._zip:
             import zipfile
             self._zip = zipfile.ZipFile(self.path)
         return self._zip
@@ -235,14 +256,14 @@ if __name__ == "__main__":
                 if not filename.endswith(".whl"):
                     continue
                 b = Bundle(os.path.join(dirpath, filename))
-                print "bundle", b.package, b.version
+                print "bundle", b.package, b.version, b.platform
                 print "summary", b.summary
                 print "requires", b.requires
-                print "screenshot", b.screenshot is not None
-                print "release notes", b.release_notes
+                #print "screenshot", b.screenshot is not None
+                #print "release notes", b.release_notes
                 info = b.info()
                 for info_type in sorted(info.keys()):
                     info_data = info[info_type]
                     for name, value in info_data.items():
-                        print info_type, name, value
+                        print "info", info_type, name, value
                 print

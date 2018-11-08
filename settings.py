@@ -218,3 +218,5 @@ LOGGING = {
 }
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
+FILE_UPLOAD_PERMISSIONS = 0664

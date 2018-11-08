@@ -16,7 +16,34 @@ from apps.models import Release, App, Author, OrderedAuthor
 from apps.views import _parse_iso_date
 from models import AppPending
 from .pomparse import PomAttrNames, parse_pom
-from .processwheel import process_wheel
+from .processwheel import process_wheel, release_dependencies
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class _TemporaryBundle:
+
+    def __init__(self, f):
+        self.filename = f.name
+        self.fileobj = f
+        self.temp_dir = None
+
+    def __enter__(self):
+        import os.path, tempfile
+        self.temp_dir = tempfile.mkdtemp()
+        self.name = os.path.join(self.temp_dir, os.path.basename(self.filename))
+        with open(self.name, "wb") as f:
+            for chunk in self.fileobj.chunks():
+                f.write(chunk)
+        return self
+
+    def __exit__(self, *args):
+        if self.temp_dir:
+            import shutil
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+
 
 # Presents an app submission form and accepts app submissions.
 @login_required
@@ -26,20 +53,26 @@ def submit_app(request):
         expect_app_name = request.POST.get('expect_app_name')
         f = request.FILES.get('file')
         if f:
-            try:
-                (fullname, version, platform, works_with,
-                 app_dependencies, release_notes,
-                 has_export_pkg) = process_wheel(f.name, expect_app_name)
-                pending = _create_pending(request.user, fullname, version,
-                                          platform, works_with,
-                                          app_dependencies, release_notes, f)
-                _send_email_for_pending(pending)
-                if has_export_pkg:
-                    return HttpResponseRedirect(reverse('submit-api', args=[pending.id]))
-                else:
-                    return HttpResponseRedirect(reverse('confirm-submission', args=[pending.id]))
-            except ValueError, e:
-                context['error_msg'] = str(e)
+            # We need a real file with the matching name for wheels
+            # so we need to save the content and remove it later
+            with _TemporaryBundle(f) as tb:
+                try:
+                    bundle = process_wheel(tb.name, expect_app_name)
+                    try:
+                        app_dependencies = release_dependencies(
+                                                        bundle.app_dependencies)
+                    except ValueError as e:
+                        raise ValueError('problem with dependencies: ' + str(e))
+                    pending = _create_pending(request.user, bundle.package,
+                                              bundle.version, bundle.platform,
+                                              bundle.works_with,
+                                              app_dependencies,
+                                              bundle.release_notes, f)
+                    _send_email_for_pending(pending)
+                    return HttpResponseRedirect(reverse('confirm-submission',
+                                                        args=[pending.id]))
+                except ValueError, e:
+                    context['error_msg'] = str(e)
     else:
         expect_app_name = request.GET.get('expect_app_name')
         if expect_app_name:
@@ -52,6 +85,7 @@ def _user_cancelled(request, pending):
     return HttpResponseRedirect(reverse('submit-app'))
 
 def _user_accepted(request, pending):
+    info_name = pending.fullname
     app = get_object_or_none(App, name = fullname_to_name(pending.fullname))
     if app:
         if not app.is_editor(request.user):
@@ -197,14 +231,24 @@ def _get_server_url(request):
 def _pending_app_accept(pending, request):
     name = fullname_to_name(pending.fullname)
     # we always create a new app, because only new apps require accepting
-    app = App.objects.create(fullname = pending.fullname, name = name)
-    app.active = True
-    app.editors.add(pending.submitter)
-    app.save()
+    try:
+        logger.debug("_pending_app_accept: create %r %r" % (pending.fullname, name))
+        app = App.objects.create(fullname = pending.fullname, name = name)
+        app.active = True
+        logger.debug("_pending_app_accept: add editor")
+        app.editors.add(pending.submitter)
+        logger.debug("_pending_app_accept: save")
+        app.save()
 
-    pending.make_release(app)
-    pending.delete_files()
-    pending.delete()
+        logger.debug("_pending_app_accept: make release")
+        pending.make_release(app)
+        logger.debug("_pending_app_accept: delete files")
+        pending.delete_files()
+        logger.debug("_pending_app_accept: delete pending")
+        pending.delete()
+    except:
+        logger.exception("_pending_app_accept: failed")
+        raise
 
     server_url = _get_server_url(request)
     _send_email_for_accepted_app(pending.submitter.email, settings.CONTACT_EMAIL, app.fullname, app.name, server_url)
@@ -221,13 +265,16 @@ _PendingAppsActions = {
 @ensure_csrf_cookie
 @login_required
 def pending_apps(request):
+    logger.debug("submit_app.pending_app: method=%s" % request.method)
     if not request.user.is_staff:
         return HttpResponseForbidden()
     if request.method == 'POST':
         action = request.POST.get('action')
         if not action:
             return HttpResponseBadRequest('action must be specified')
+        logger.debug("submit_app.pending_app action=%s" % action)
         if not action in _PendingAppsActions:
+            logger.debug("submit_app.pending_app action invalid" % action)
             return HttpResponseBadRequest('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys()))
         pending_id = request.POST.get('pending_id')
         if not pending_id:
@@ -236,6 +283,7 @@ def pending_apps(request):
             pending_app = AppPending.objects.get(id = int(pending_id))
         except AppPending.DoesNotExist, ValueError:
             return HttpResponseBadRequest('invalid pending_id')
+        logger.debug("submit_app.pending_app function=%s" % _PendingAppsActions[action])
         _PendingAppsActions[action](pending_app, request)
         if request.is_ajax():
             return json_response(True)

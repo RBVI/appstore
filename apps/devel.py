@@ -2,10 +2,10 @@ from django.contrib.auth.decorators import user_passes_test
 def staff_required(login_url=None):
     return user_passes_test(lambda u: u.is_staff, login_url=login_url)
 
-ADMIN_URL = "../../admin"
+LOGIN_URL = "../../users/login"
 REPO_DIR = "/usr/local/projects/chimerax/builds/repo"
 
-@staff_required(login_url=ADMIN_URL)
+@staff_required(login_url=LOGIN_URL)
 def release(request):
     from util.view_util import html_response
     context = _get_parameters(request)
@@ -15,7 +15,7 @@ def release(request):
     context["released"] = released
     return html_response('devel_release.html', context, request)
 
-@staff_required(login_url=ADMIN_URL)
+@staff_required(login_url=LOGIN_URL)
 def clean(request):
     from util.view_util import html_response
     context = _get_parameters(request)
@@ -26,64 +26,114 @@ def clean(request):
     context["errors"] = errors
     return html_response('devel_clean.html', context, request)
 
-@staff_required(login_url=ADMIN_URL)
-def new_bundle(request, name="new_bundle"):
+@staff_required(login_url=LOGIN_URL)
+def new_bundle(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
     from util.view_util import html_response
     from submit_app.processwheel import process_wheel
+    from submit_app.processwheel import sort_bundles_by_dependencies
     context = _get_parameters(request)
-    filename = request.GET.get("file")
-    if os.sep in filename:
-        return HttpResponseBadRequest("bad file: %s" % filename)
-    try:
-        full_path = os.path.join(REPO_DIR, filename)
-        (fullname, version, platform, works_with, app_dependencies,
-         release_notes, _) = process_wheel(full_path, None)
-        fullname = fullname.replace('-', '_')
-        # context["messages"] = ["new_bundle: %s %s %s" %
-        #                         (name, fullname, version)]
-        app, msgs = _create_app(request.user, full_path, fullname,
-                                version, platform, works_with,
-                                app_dependencies, release_notes)
-        context["messages"] = msgs
-    except IOError as e:
-        return HttpResponseBadRequest("%s: %s" % (filename, str(e)))
-    except ValueError as e:
-        context["error_msgs"] = [str(e)]
+    parameters = dict(request.POST.lists())
+    filenames = parameters.get("file", [])
+    for filename in filenames:
+        if os.sep in filename:
+            return HttpResponseBadRequest("bad file: %s" % filename)
+    error_messages = []
+    messages = []
+    # First read in all wheels and order them by dependency
+    bundles = []
+    for filename in filenames:
+        try:
+            full_path = os.path.join(REPO_DIR, filename)
+            bundle = process_wheel(full_path, None)
+            bundles.append(bundle)
+        except Exception as e:
+            error_messages.append("%s: %s" % (filename, str(e)))
+    if error_messages:
+        context["error_msgs"] = error_messages
         return html_response('devel_new.html', context, request)
-    return _edit_app(app, context, request)
+    try:
+        bundles = sort_bundles_by_dependencies(bundles)
+        # Then try installing them in order
+        for bundle in bundles:
+            try:
+                fullname = bundle.package.replace('-', '_')
+                #messages.append("new_bundle: %s %s %s %s" %
+                #                (fullname, bundle.package,
+                #                 bundle.version, bundle.platform))
+                #messages.append("  works_with: %s" % str(bundle.works_with))
+                #for dep in bundle.app_dependencies:
+                #    messages.append("  dep: %s" % str(dep))
+                app, msgs = _create_app(request.user, bundle.path, fullname,
+                                        bundle.version, bundle.platform,
+                                        bundle.works_with,
+                                        bundle.app_dependencies,
+                                        bundle.release_notes)
+                messages.append("Bundle %r released" % bundle.package)
+                #if msgs:
+                #   messages.extend(msgs)
+            except Exception as e:
+                error_messages.append("Exception: %s: %s" % (filename, str(e)))
+    except Exception as e:
+        error_messages.append("error sorting bundles: %s" % str(e))
+    context["messages"] = messages
+    context["error_msgs"] = error_messages
+    return html_response('devel_new.html', context, request)
 
-@staff_required(login_url=ADMIN_URL)
+@staff_required(login_url=LOGIN_URL)
 def new_version(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
     from util.view_util import html_response
+    from util.id_util import fullname_to_name
     from submit_app.processwheel import process_wheel
     context = _get_parameters(request)
-    filename = request.GET.get("file")
-    if os.sep in filename:
-        return HttpResponseBadRequest("bad file: %s" % filename)
-    try:
-        full_path = os.path.join(REPO_DIR, filename)
-        (fullname, version, platform, works_with, app_dependencies,
-         release_notes, _) = process_wheel(full_path, None)
-        fullname = fullname.replace('-', '_')
-        app = _find_app(fullname)
-        if app is None:
-            raise ValueError("%s: no such bundle", fullname)
-        # context["messages"] = ["new_version: %s %s %s" %
-        #                         (name, fullname, version)]
-        context["messages"] = _create_release(app, request.user, full_path,
-                                              name, fullname, version,
-                                              platform, works_with,
-                                              app_dependencies, release_notes)
-    except IOError as e:
-        return HttpResponseBadRequest("%s: %s" % (filename, str(e)))
-    except ValueError as e:
-        context["error_msgs"] = [str(e)]
+    parameters = dict(request.POST.lists())
+    filename = parameters.get("file", [])
+    for filename in filenames:
+        if os.sep in filename:
+            return HttpResponseBadRequest("bad file: %s" % filename)
+    error_messages = []
+    messages = []
+    # First read in all wheels and order them by dependency
+    bundles = []
+    for filename in filenames:
+        try:
+            full_path = os.path.join(REPO_DIR, filename)
+            bundle = process_wheel(full_path, None)
+            bundles.append(bundle)
+        except Exception as e:
+            error_messages.append("%s: %s" % (filename, str(e)))
+    if error_messages:
+        context["error_msgs"] = error_messages
         return html_response('devel_new.html', context, request)
-    return _edit_app(app, context, request)
+    try:
+        bundles = sort_bundles_by_dependencies(bundles)
+        for bundle in bundles:
+            try:
+                fullname = fullname.replace('-', '_')
+                app = _find_app(fullname)
+                if app is None:
+                    raise ValueError("%s: no such bundle", fullname)
+                name = fullname_to_name(fullname)
+                context["messages"]
+                msgs = _create_release(app, request.user, full_path,
+                                       name, fullname, bundle.version,
+                                       bundle.platform,
+                                       bundle.works_with,
+                                       bundle.app_dependencies,
+                                       bundle.release_notes)
+                messages.append("Bundle %r updated" % bundle.package)
+                #if msgs:
+                #   messages.extend(msgs)
+            except Exception as e:
+                error_messages.append("Exception: %s: %s" % (filename, str(e)))
+    except Exception as e:
+        error_messages.append("error sorting bundles: %s" % str(e))
+    context["messages"] = messages
+    context["error_msgs"] = error_messages
+    return html_response('devel_new.html', context, request)
 
 def _get_parameters(request):
     from apps.views import _cx_platform
@@ -194,6 +244,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     import os.path
     from django.core.files import File
     from apps.models import Release
+    from submit_app.processwheel import release_dependencies
     messages = []
     # Create release (see _make_release in submit_app/models.py)
     release, _ = Release.objects.get_or_create(app=app, version=version,
@@ -208,7 +259,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     messages.append("release: %s %s" % (version, platform))
     with open(full_path, "rb") as f:
         release.release_file.save(os.path.basename(full_path), File(f))
-    for dependee in app_dependencies:
+    for dependee in release_dependencies(app_dependencies):
         messages.append("dependency: %r [%s]" % (dependee, dependee))
         release.dependencies.add(dependee)
     release.calc_checksum()

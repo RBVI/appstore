@@ -67,11 +67,10 @@ class AppPending(models.Model):
             md.save()
             try:
                 for req in b.requires:
-                    for r in req["requires"]:
-                        md, _ = ReleaseMetadata.objects.get_or_create(
-                                    release=release, type="bundle",
-                                    name=b.package, key="requires", value=r)
-                        md.save()
+                    md, _ = ReleaseMetadata.objects.get_or_create(
+                                release=release, type="bundle",
+                                name=b.package, key="requires", value=req)
+                    md.save()
             except KeyError:
                 pass
             # Get rest of metadata from classifiers
