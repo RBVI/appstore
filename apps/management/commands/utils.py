@@ -25,6 +25,9 @@ def find_bundle(cmd, bundle):
         print >> cmd.stderr, "no match for bundle \"%s\"" % bundle
         return None
     elif len(apps) > 1:
+        for app in apps:
+            if app.name == bundle:
+                return app
         print >> cmd.stderr, "too many matches for bundle \"%s\"" % bundle
         for app in apps:
             print >> cmd.stderr, "  ", app.name
@@ -130,11 +133,13 @@ def erase_release(cmd, rel, dry_run=True):
     #
     # Make sure there are no dependents on this version
     #
-    deps = rel.dependencies.all()
+    #deps = rel.dependencies.all()
+    deps = Release.objects.filter(dependencies__app__name=app.name).filter(dependencies__version=rel.version)
     if len(deps) > 0:
         print >> cmd.stderr, "cannot delete release with dependencies"
         for dep in deps:
-            print >> cmd.stderr, "  ", dep.app.name, dep.app.version
+            print >> cmd.stderr, "  ", dep.app.name, dep.version
+        return
 
     #
     # Warn caller if this is the only release of this bundle

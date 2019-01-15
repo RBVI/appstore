@@ -55,28 +55,32 @@ def new_bundle(request):
         return html_response('devel_new.html', context, request)
     try:
         bundles = sort_bundles_by_dependencies(bundles)
-        # Then try installing them in order
-        for bundle in bundles:
-            try:
-                fullname = bundle.package.replace('-', '_')
-                #messages.append("new_bundle: %s %s %s %s" %
-                #                (fullname, bundle.package,
-                #                 bundle.version, bundle.platform))
-                #messages.append("  works_with: %s" % str(bundle.works_with))
-                #for dep in bundle.app_dependencies:
-                #    messages.append("  dep: %s" % str(dep))
-                app, msgs = _create_app(request.user, bundle.path, fullname,
-                                        bundle.version, bundle.platform,
-                                        bundle.works_with,
-                                        bundle.app_dependencies,
-                                        bundle.release_notes)
-                messages.append("Bundle %r released" % bundle.package)
-                #if msgs:
-                #   messages.extend(msgs)
-            except Exception as e:
-                error_messages.append("Exception: %s: %s" % (filename, str(e)))
     except Exception as e:
         error_messages.append("error sorting bundles: %s" % str(e))
+    else:
+        try:
+            # Then try installing them in order
+            for bundle in bundles:
+                try:
+                    fullname = bundle.package.replace('-', '_')
+                    #messages.append("new_bundle: %s %s %s %s" %
+                    #                (fullname, bundle.package,
+                    #                 bundle.version, bundle.platform))
+                    #messages.append("  works_with: %s" % str(bundle.works_with))
+                    #for dep in bundle.app_dependencies:
+                    #    messages.append("  dep: %s" % str(dep))
+                    app, msgs = _create_app(request.user, bundle.path, fullname,
+                                            bundle.version, bundle.platform,
+                                            bundle.works_with,
+                                            bundle.app_dependencies,
+                                            bundle.release_notes)
+                    messages.append("Bundle %r released" % bundle.package)
+                    #if msgs:
+                    #   messages.extend(msgs)
+                except Exception as e:
+                    error_messages.append("Exception: %s: %s" % (filename, str(e)))
+        except Exception as e:
+            error_messages.append("error creating new bundles: %s" % str(e))
     context["messages"] = messages
     context["error_msgs"] = error_messages
     return html_response('devel_new.html', context, request)
@@ -110,27 +114,31 @@ def new_version(request):
         return html_response('devel_new.html', context, request)
     try:
         bundles = sort_bundles_by_dependencies(bundles)
-        for bundle in bundles:
-            try:
-                fullname = fullname.replace('-', '_')
-                app = _find_app(fullname)
-                if app is None:
-                    raise ValueError("%s: no such bundle", fullname)
-                name = fullname_to_name(fullname)
-                context["messages"]
-                msgs = _create_release(app, request.user, full_path,
-                                       name, fullname, bundle.version,
-                                       bundle.platform,
-                                       bundle.works_with,
-                                       bundle.app_dependencies,
-                                       bundle.release_notes)
-                messages.append("Bundle %r updated" % bundle.package)
-                #if msgs:
-                #   messages.extend(msgs)
-            except Exception as e:
-                error_messages.append("Exception: %s: %s" % (filename, str(e)))
     except Exception as e:
         error_messages.append("error sorting bundles: %s" % str(e))
+    else:
+        try:
+            for bundle in bundles:
+                try:
+                    fullname = fullname.replace('-', '_')
+                    app = _find_app(fullname)
+                    if app is None:
+                        raise ValueError("%s: no such bundle", fullname)
+                    name = fullname_to_name(fullname)
+                    context["messages"]
+                    msgs = _create_release(app, request.user, full_path,
+                                           name, fullname, bundle.version,
+                                           bundle.platform,
+                                           bundle.works_with,
+                                           bundle.app_dependencies,
+                                           bundle.release_notes)
+                    messages.append("Bundle %r updated" % bundle.package)
+                    #if msgs:
+                    #   messages.extend(msgs)
+                except Exception as e:
+                    error_messages.append("Exception: %s: %s" % (filename, str(e)))
+        except Exception as e:
+            error_messages.append("error creating new versions: %s" % str(e))
     context["messages"] = messages
     context["error_msgs"] = error_messages
     return html_response('devel_new.html', context, request)
@@ -224,11 +232,13 @@ def _create_app(submitter, full_path, fullname, version, platform,
     messages = ["%s = %s %s" % (full_path, fullname, version)]
     # Create app (see _pending_app_accept in submit_app/views.py)
     name = fullname_to_name(fullname)
-    app = App.objects.create(fullname=fullname, name=name)
-    app.active = True
-    app.editors.add(submitter)
-    app.save()
-    messages.append("app: %s %s" % (fullname, name))
+    app = _find_app(fullname)
+    if app is None:
+        app = App.objects.create(fullname=fullname, name=name)
+        app.active = True
+        app.editors.add(submitter)
+        app.save()
+    messages.append("app: %s %s" % (app.fullname, app.name))
     messages.extend(_create_release(app, submitter, full_path, name, fullname,
                                     version, platform, works_with,
                                     app_dependencies, release_notes))
@@ -236,7 +246,10 @@ def _create_app(submitter, full_path, fullname, version, platform,
 
 def _find_app(fullname):
     from apps.models import App
-    return App.objects.filter(fullname=fullname)
+    try:
+        return App.objects.get(fullname=fullname)
+    except App.DoesNotExist:
+        return None
 
 def _create_release(app, submitter, full_path, name, fullname, version,
                     platform, works_with, app_dependencies, release_notes):

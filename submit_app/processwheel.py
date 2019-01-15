@@ -95,7 +95,7 @@ def sort_bundles_by_dependencies(bundles):
         except KeyError:
             release_cache[bundle.package] = {bundle.version:bundle}
         else:
-            s[bundle.version] = bundle
+            d[bundle.version] = bundle
 
     # Verify bundles and build dependencies
     # depends_on:
@@ -126,7 +126,12 @@ def sort_bundles_by_dependencies(bundles):
             # Not in cache.  If bundle not already released,
             # _find_release will throw exception to terminate sorting
             r = _find_release(app_name, app_version)
-            release_cache.setdefault(app_name).add(app_version)
+            try:
+                d = release_cache[app_name]
+            except KeyError:
+                release_cache[app_name] = {app_version:bundle}
+            else:
+                d[app_version] = bundle
 
     # Generate ordered bundles
     ordered_bundles = []
@@ -168,7 +173,7 @@ def _dependency_version(s):
 def _version_tuple(v):
     m = VersionRE.match(v)
     if not m:
-        raise ValueError("Unsupported version: %r" % v)
+        raise ValueError("Unsupported version: %s" % v)
     (major, minor, patch, tag) = m.groups()
     major = int(major) if major else 0
     minor = int(minor) if minor else 0
@@ -179,7 +184,10 @@ def _version_tuple(v):
 def _version_match(preferred_version, known_releases):
     release = None
     for version, r in known_releases.items():
-        rv = _version_tuple(version)
+        try:
+            rv = _version_tuple(version)
+        except ValueError as e:
+            raise ValueError("Unsupported version: %s (%s)" % (version, r))
         if rv == preferred_version:
             release = r
             break
