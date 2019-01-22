@@ -22,9 +22,13 @@ def process_wheel(filename, expect_app_name):
     if bundle.platform == "Unknown":
         raise ValueError("Unsupported platform")
     app_name = smart_unicode(bundle.package, errors="replace")
-    if expect_app_name and (not app_name == expect_app_name):
-        raise ValueError("App name given as \"%s\" but "
-                         "must be \"%s\"" % (app_name, expect_app_name))
+    if expect_app_name:
+        # Stored app name is ChimeraX_BUNDLENAME but the Bundle class
+        # converted bundle name from underscores to hyphens
+        expect_app_name = expect_app_name.replace('_', '-')
+        if app_name != expect_app_name:
+            raise ValueError("App name given as \"%s\" but "
+                             "must be \"%s\"" % (app_name, expect_app_name))
     app_dependencies = []
     app_works_with = None
     for dep in bundle.requires:
