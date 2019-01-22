@@ -9,21 +9,22 @@ def process_wheel(filename, expect_app_name):
     import os.path
     root, ext = os.path.splitext(os.path.basename(filename))
     if ext != ".whl":
-        raise ValueError('"%s" is not a Python wheel' % filename)
+        raise ValueError("\"%s\" is not a Python wheel" % filename)
     parts = root.split('-')
     if len(parts) != 5 and len(parts) != 6:
-        raise ValueError('"%s" is not a properly named Python wheel' % filename)
+        raise ValueError("\"%s\" is not a properly named Python wheel" %
+                         filename)
 
     try:
         bundle = Bundle(filename)
     except (BadZipfile, IOError, ValueError) as e:
-        raise ValueError('is not a valid wheel file: %s' % str(e))
+        raise ValueError("Not a valid wheel file: \"%s\"" % str(e))
     if bundle.platform == "Unknown":
-        raise ValueError('unsupported platform')
-    app_name = smart_unicode(bundle.package, errors='replace')
+        raise ValueError("Unsupported platform")
+    app_name = smart_unicode(bundle.package, errors="replace")
     if expect_app_name and (not app_name == expect_app_name):
-        raise ValueError('has app name as <tt>%s</tt> but '
-                         'must be <tt>%s</tt>' % (app_name, expect_app_name))
+        raise ValueError("App name given as \"%s\" but "
+                         "must be \"%s\"" % (app_name, expect_app_name))
     app_dependencies = []
     app_works_with = None
     for dep in bundle.requires:
@@ -39,7 +40,7 @@ def process_wheel(filename, expect_app_name):
             app_works_with = version
         else:
             app_dependencies.append((name, version))
-    app_works_with = smart_unicode(app_works_with, errors='replace')
+    app_works_with = smart_unicode(app_works_with, errors="replace")
 
     # Add some computed attributes to bundle and return
     bundle.works_with = app_works_with
@@ -65,18 +66,27 @@ def _find_release(app_name, app_version):
         return None
     app = get_object_or_none(App, active=True, fullname=app_name)
     if not app:
-        raise ValueError('dependency on %r: no such bundle' % app_name)
+        raise ValueError("missing dependency \"%s\": bundle not on toolshed" %
+                         _toolshed_display_name(app_name))
     comparison, preferred_version = _dependency_version(app_version)
     if comparison != '>=':
-        raise ValueError('unsupport version operator: %r' % comparison)
+        raise ValueError("unsupport version operator: \"%s\"" % comparison)
     known_releases = {}
     for r in Release.objects.filter(app=app, active=True):
         known_releases[r.version] = r
     release = _version_match(preferred_version, known_releases)
     if not release:
-        raise ValueError('dependency on %r with version %r: '
-                         'no such release' % (app_name, app_version))
+        raise ValueError("missing dependency on \"%s\" with version \"%s\": "
+                         "release not on toolshed" % (
+                         _toolshed_display_name(app_name), app_version))
     return release
+
+def _toolshed_display_name(app_name):
+    app_name = app_name.replace('_', '-')
+    if app_name.startswith("ChimeraX-"):
+        return app_name[9:]
+    else:
+        return app_name
 
 def sort_bundles_by_dependencies(bundles):
     # 1. Prime a cache with all the bundles we are about to install.
@@ -112,8 +122,9 @@ def sort_bundles_by_dependencies(bundles):
                 pass
             else:
                 comparison, preferred_version = _dependency_version(app_version)
-                if comparison != '>=':
-                    raise ValueError('unsupport version operator: %r' % comparison)
+                if comparison != ">=":
+                    raise ValueError("unsupport version operator: \"%s\"" %
+                                     comparison)
                 r = _version_match(preferred_version, known_releases)
                 if r:
                     if isinstance(r, Bundle):
@@ -166,14 +177,14 @@ _DependencyVersionRE = re.compile(r'\s*\(\s*([=!<>]*)\s*(\S+)\)')
 def _dependency_version(s):
     m = _DependencyVersionRE.match(s)
     if not m:
-        raise ValueError("Unsupported dependency version: %r" % s)
+        raise ValueError("Unsupported dependency version format: %\"%s\"" % s)
     (comparison, version) = m.groups()
     return comparison, _version_tuple(version)
 
 def _version_tuple(v):
     m = VersionRE.match(v)
     if not m:
-        raise ValueError("Unsupported version: %s" % v)
+        raise ValueError("Unsupported version format: \"%s\"" % v)
     (major, minor, patch, tag) = m.groups()
     major = int(major) if major else 0
     minor = int(minor) if minor else 0
@@ -187,7 +198,8 @@ def _version_match(preferred_version, known_releases):
         try:
             rv = _version_tuple(version)
         except ValueError as e:
-            raise ValueError("Unsupported version: %s (%s)" % (version, r))
+            raise ValueError("Unsupported version format: \"%s\" (\"%s\")" %
+                             (version, r))
         if rv == preferred_version:
             release = r
             break
