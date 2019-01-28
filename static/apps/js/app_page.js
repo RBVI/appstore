@@ -292,21 +292,26 @@ var AppPage = (function($) {
 
     (function(){
         var ua_string = navigator.userAgent.trim();
-        var slash = ua_string.indexOf("/");
-        if (slash == -1)
-            useragent = ua_string
+        var cx = ua_string.indexOf("UCSF-ChimeraX");
+        if (cx == -1)
+            useragent = ua_string;
         else {
-            useragent = ua_string.substring(0, slash);
-            var start = slash + 1;
-            var end = start;
-            while (end < ua_string.length) {
-                if (/\s/.test(ua_string[end]))
-                    break;
-                end += 1;
+            var slash = ua_string.indexOf("/", cx);
+            if (slash == -1)
+                useragent = ua_string
+            else {
+                useragent = ua_string.substring(cx, slash);
+                var start = slash + 1;
+                var end = start;
+                while (end < ua_string.length) {
+                    if (/\s/.test(ua_string[end]))
+                        break;
+                    end += 1;
+                }
+                ua_version = ua_string.substring(start, end);
+                is_chimerax = true;
             }
-            ua_version = ua_string.substring(start, end);
         }
-        is_chimerax = useragent.indexOf("ChimeraX") != -1;
     })();
 
     function version_compatible(needed) {
