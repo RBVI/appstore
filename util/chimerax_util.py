@@ -19,9 +19,7 @@ class Bundle:
         import pkginfo
         self.path = filename    # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
-        self._dist_info = (self._wheel.name.replace('-', '_') +
-                           '-' + self._wheel.version + '.dist-info')
-        self._pkg_path = self.package.replace('.', '/')
+        self._dist_info = self.package + '-' + self.version + '.dist-info'
         self._zip = None
         # There does not seem a standard way of getting a platform
         # name, so we just translate the last field in the filename
@@ -136,7 +134,7 @@ class Bundle:
 
     @property
     def package(self):
-        return self._wheel.name
+        return self._wheel.name.replace('-', '_')
 
     @property
     def version(self):

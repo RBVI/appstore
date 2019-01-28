@@ -62,7 +62,7 @@ def new_bundle(request):
             # Then try installing them in order
             for bundle in bundles:
                 try:
-                    fullname = bundle.package.replace('-', '_')
+                    fullname = bundle.package
                     #messages.append("new_bundle: %s %s %s %s" %
                     #                (fullname, bundle.package,
                     #                 bundle.version, bundle.platform))
@@ -120,7 +120,7 @@ def new_version(request):
         try:
             for bundle in bundles:
                 try:
-                    fullname = fullname.replace('-', '_')
+                    fullname = bundle.package
                     app = _find_app(fullname)
                     if app is None:
                         raise ValueError("%s: no such bundle", fullname)
@@ -160,11 +160,11 @@ def _get_bundles():
     # Group bundles by package name and assign default release state
     candidates = {}
     for bundle in bundles:
-        bundle_name = bundle.package.replace('-', '_')
+        app_name = bundle.package
         try:
-            candidates[bundle_name].append(bundle)
+            candidates[app_name].append(bundle)
         except KeyError:
-            candidates[bundle_name] = [bundle]
+            candidates[app_name] = [bundle]
         bundle.release_state = "new_bundle"
         bundle.app = None
     # Update bundle release state if app is known

@@ -23,9 +23,6 @@ def process_wheel(filename, expect_app_name):
         raise ValueError("Unsupported platform")
     app_name = smart_unicode(bundle.package, errors="replace")
     if expect_app_name:
-        # Stored app name is ChimeraX_BUNDLENAME but the Bundle class
-        # converted bundle name from underscores to hyphens
-        expect_app_name = expect_app_name.replace('_', '-')
         if app_name != expect_app_name:
             raise ValueError("App name given as \"%s\" but "
                              "must be \"%s\"" % (app_name, expect_app_name))
@@ -86,11 +83,11 @@ def _find_release(app_name, app_version):
     return release
 
 def _toolshed_display_name(app_name):
-    app_name = app_name.replace('_', '-')
-    if app_name.startswith("ChimeraX-"):
-        return app_name[9:]
+    bundle_name = app_name.replace('_', '-')
+    if bundle_name.startswith("ChimeraX-"):
+        return bundle_name[9:]
     else:
-        return app_name
+        return bundle_name
 
 def sort_bundles_by_dependencies(bundles):
     # 1. Prime a cache with all the bundles we are about to install.

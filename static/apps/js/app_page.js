@@ -69,7 +69,7 @@ var AppPage = (function($) {
         var label;
         var app_platform = install_btn.attr("platform");
         if (!app_platform) {
-            if (navigator.userAgent.indexOf("ChimeraX") != -1)
+            if (is_chimerax)
                 label = "Install";
             else
                 label = "Download";
@@ -82,8 +82,12 @@ var AppPage = (function($) {
                 my_platform = "macOS";
             else if (navigator.appVersion.indexOf("Linux") != -1)
                 my_platform = "Linux";
-            if (navigator.userAgent.indexOf("ChimeraX") != -1
-            && app_platform == my_platform)
+            var installable = is_chimerax && app_platform == my_platform;
+            if (installable) {
+                var app_workswith = install_btn.attr("workswith");
+                installable = version_compatible(app_workswith);
+            }
+            if (installable)
                 label = "Install";
             else
                 label = '<div class="cy-app-install-label">'
@@ -272,8 +276,76 @@ var AppPage = (function($) {
     */
     
     function setup_download_stats() {
-		if (navigator.userAgent.indexOf("ChimeraX") != -1)
+		if (is_chimerax)
             $('#downloadstats').html("Download Stats requires Flash and is not available from ChimeraX");
+    }
+    
+    /*
+     ================================================================
+       UserAgent and Version
+     ================================================================
+    */
+
+    var useragent = "";
+    var ua_version = "";
+    var is_chimerax = false;
+
+    (function(){
+        var ua_string = navigator.userAgent.trim();
+        var slash = ua_string.indexOf("/");
+        if (slash == -1)
+            useragent = ua_string
+        else {
+            useragent = ua_string.substring(0, slash);
+            var start = slash + 1;
+            var end = start;
+            while (end < ua_string.length) {
+                if (/\s/.test(ua_string[end]))
+                    break;
+                end += 1;
+            }
+            ua_version = ua_string.substring(start, end);
+        }
+        is_chimerax = useragent.indexOf("ChimeraX") != -1;
+    })();
+
+    function version_compatible(needed) {
+        var match = /\((.*=)(.+)\)/.exec(needed);
+        if (match == null)
+            return true;
+        var operator = match[1];
+        var needed_version = version_array(match[2]);
+        var have_version = version_array(ua_version);
+        return compare_version(operator, have_version, needed_version);
+    }
+
+    function version_array(v) {
+        return v.split('.').map(Number);
+    }
+
+    function compare_version(op, have, want) {
+        var length = Math.min(have.length, want.length);
+        var cmp = 0;    // -1 if have<want, 0 if same, 1 if have>want
+        for (var i = 0; i < length; i++) {
+            if (have < want) {
+                cmp = -1;
+                break;
+            } else if (have > want) {
+                cmp = 1;
+                break;
+            }
+        }
+        if (cmp == 0) {
+            if (have.length < want.length)
+                cmp = -1;
+            else if (have.length > want.length)
+                cmp = 1;
+        }
+        if (op == "==")
+            return cmp == 0;
+        else if (op == ">=")
+            return cmp > 0;
+        return false;
     }
     
     /*

@@ -284,7 +284,7 @@
 		{% for cx_release in cx_latest_releases %}
 		<div class="well">
 			<!-- <h6 class="panel-title muted">CHIMERAX</h6> -->
-			<button class="btn btn-large btn-block cy-app-install-btn" platform="{{ cx_release.platform }}" id="{{ cx_release.id }}">
+			<button class="btn btn-large btn-block cy-app-install-btn" platform="{{ cx_release.platform }}" workswith="{{ cx_release.works_with }}" id="{{ cx_release.id }}">
 				<i></i> {# <-- download button icon will go here #}
 				<h4></h4> {# <-- download button text will go here #}
 			</button>
