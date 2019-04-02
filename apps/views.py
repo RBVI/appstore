@@ -193,19 +193,38 @@ def _cx_platform(request):
 def _latest_releases(app, platform=None, cx_version=None):
 	releases = app.releases
 	if not releases: return None
-	newest_version = None
-	newest_releases = []
-	for r in releases:
-		if r.platform and platform and r.platform != platform:
-			continue
-		# TODO: check if release is compatible with ChimeraX version
-		v = Version(r.version)
-		if newest_version is None or v > newest_version:
-			newest_version = v
-			newest_releases = [r]
-		elif v == newest_version:
-			newest_releases.append(r)
-	return newest_releases
+	if platform:
+		newest_version = None
+		newest_releases = []
+		for r in releases:
+			if r.platform != platform:
+				continue
+			# TODO: check if release is compatible with ChimeraX version
+			v = Version(r.version)
+			if newest_version is None or v > newest_version:
+				newest_version = v
+				newest_releases = [r]
+			elif v == newest_version:
+				newest_releases.append(r)
+		return newest_releases
+	else:
+		newest_by_platform = {}
+		for r in releases:
+			try:
+				newest = newest_by_platform[r.platform]
+			except KeyError:
+				newest = newest_by_platform[r.platform] = [None, []]
+			# TODO: check if release is compatible with ChimeraX version
+			v = Version(r.version)
+			if newest[0] is None or v > newest[0]:
+				newest[0] = v
+				newest[1] = [r]
+			elif v == newest[0]:
+				newest[1].append(r)
+		newest_releases = []
+		for platform in sorted(newest_by_platform.keys()):
+			newest_releases.extend(newest_by_platform[platform][1])
+		return newest_releases
 
 def _mk_app_page(app, user, request):
 	platform = request.GET.get("platform")
