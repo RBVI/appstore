@@ -194,7 +194,7 @@ class Version:
         self._raw = s
         n = 0
         while n < len(s):
-            if s[n].isdigit() or s[n] != '.':
+            if s[n].isdigit() or s[n] == '.':
                 n += 1
             else:
                 break
