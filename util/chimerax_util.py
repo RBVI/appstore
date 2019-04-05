@@ -234,6 +234,9 @@ class Version:
         # Same all the way through, longer is "larger"
         return cmp(len(self.value), len(other.value))
 
+    def is_prerelease(self):
+        return not isinstance(self.value[-1], int)
+
 
 if __name__ == "__main__":
     if False:

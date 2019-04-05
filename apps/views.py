@@ -193,38 +193,54 @@ def _cx_platform(request):
 def _latest_releases(app, platform=None, cx_version=None):
 	releases = app.releases
 	if not releases: return None
-	if platform:
-		newest_version = None
-		newest_releases = []
-		for r in releases:
-			if r.platform != platform:
-				continue
-			# TODO: check if release is compatible with ChimeraX version
-			v = Version(r.version)
-			if newest_version is None or v > newest_version:
-				newest_version = v
-				newest_releases = [r]
-			elif v == newest_version:
-				newest_releases.append(r)
-		return newest_releases
-	else:
-		newest_by_platform = {}
-		for r in releases:
-			try:
-				newest = newest_by_platform[r.platform]
-			except KeyError:
-				newest = newest_by_platform[r.platform] = [None, []]
-			# TODO: check if release is compatible with ChimeraX version
-			v = Version(r.version)
-			if newest[0] is None or v > newest[0]:
-				newest[0] = v
-				newest[1] = [r]
-			elif v == newest[0]:
-				newest[1].append(r)
-		newest_releases = []
-		for platform in sorted(newest_by_platform.keys()):
-			newest_releases.extend(newest_by_platform[platform][1])
-		return newest_releases
+	# First collect by platform, with newest prerelease and release
+	# versions for each
+	newest_by_platform = {}
+	for r in releases:
+		if platform is not None and platform != r.platform:
+			continue
+		try:
+			newest = newest_by_platform[r.platform]
+		except KeyError:
+			newest = newest_by_platform[r.platform] = _LatestReleases()
+		# TODO: check if release is compatible with ChimeraX version
+		v = Version(r.version)
+		newest.add_file(v, r)
+	# Return only requested platform
+	newest_releases = []
+	for p in sorted(newest_by_platform.keys()):
+		pr = newest_by_platform[p]
+		newest_releases.extend(pr.get_releases())
+		newest_releases.extend(pr.get_prereleases())
+	return newest_releases
+
+class _LatestReleases:
+
+	def __init__(self):
+		self.releases = [None, []]
+		self.prereleases = [None, []]
+
+	def add_file(self, version, file):
+		newest = self.prereleases if version.is_prerelease() else self.releases
+		self._add_file(newest, version, file)
+
+	def _add_file(self, newest, version, file):
+		if newest[0] is None or version > newest[0]:
+			newest[0] = version
+			newest[1] = [file]
+		elif version == newest[0]:
+			newest[1].append(file)
+
+	def get_releases(self):
+		return self.releases[1]
+
+	def get_prereleases(self):
+		if (self.releases[0] is None or
+			(self.prereleases[0] is not None and
+			 self.prereleases[0] > self.releases[0])):
+			return self.prereleases[1]
+		else:
+			return []
 
 def _mk_app_page(app, user, request):
 	platform = request.GET.get("platform")
