@@ -190,6 +190,9 @@ class Version:
     handle illegal version numbers, but it does mean the
     sorting might go a1<a10<a2."""
 
+    import re
+    RENeeded = re.compile("\((?P<op>[<>=]+)(?P<version>.*)\)")
+
     def __init__(self, s):
         self._raw = s
         n = 0
@@ -201,6 +204,9 @@ class Version:
         self.value = [int(v) for v in s[:n].split('.')]
         if n < len(s):
             self.value.append(s[n:])
+
+    def __str__(self):
+        return '.'.join([str(v) for v in self.value])
 
     def __cmp__(self, other):
         n = 0
@@ -237,8 +243,56 @@ class Version:
     def is_prerelease(self):
         return not isinstance(self.value[-1], int)
 
+    def compatible_with(self, needed_version):
+        m = self.RENeeded.match(needed_version)
+        if not m:
+            return False
+        op = m.group("op")
+        version = Version(m.group("version"))
+        compare = cmp(self, version)
+        # Most common operators are >= and ==
+        if op == ">=":
+            return compare >= 0
+        elif op == "==":
+            return compare == 0
+        elif op == ">":
+            return compare > 0
+        elif op == "<":
+            return compare < 0
+        elif op == "<=":
+            return compare <= 0
+        return False
+
+
+import re
+REUAChimeraX = re.compile(r".*UCSF-ChimeraX/(?P<version>\S+) "
+                          r"\((?P<platform>.*)\).*")
+
+
+def chimerax_user_agent(request):
+    """Return ChimeraX version and platform from user agent string."""
+
+    m = REUAChimeraX.match(request.META["HTTP_USER_AGENT"])
+    if m:
+        # Note that we only use the ChimeraX-provided information
+        # instead of the more general user agent data.  The platform
+        # from ChimeraX derives from "platform.system()" in Python 3.
+        version = m.group("version")
+        platform = m.group("platform")
+        if platform == "Darwin":
+            platform = "macOS"
+        return version, platform
+    else:
+        return None, None
+
 
 if __name__ == "__main__":
+    if False:
+        v = Version("0.9")
+        need = [ "(>=0.1)", "(==0.8)", "(>=0.8)", "(==0.9)" ]
+        print(v)
+        for n in need:
+            print n, v.compatible_with(n)
     if False:
         v1 = Version("1.0.1")
         v1b1 = Version("1.0.1b1")
@@ -248,7 +302,7 @@ if __name__ == "__main__":
         print v1b2 < v1b1, "should be False"
         print v1 < v2, "should be True"
         print v2 < v1b1, "should be False"
-    if True:
+    if False:
         import os, os.path
         # root = "d:/chimerax/src/bundles"
         root = "testdata"

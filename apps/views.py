@@ -10,7 +10,11 @@ from util.view_util import json_response, html_response, obj_to_dict, get_object
 from util.img_util import scale_img
 from util.id_util import fullname_to_name
 from models import Tag, App, Author, OrderedAuthor, Screenshot, Release
-from util.chimerax_util import Version
+from util.chimerax_util import Version, chimerax_user_agent
+
+import logging
+logger = logging.getLogger(__name__)
+# "logger" messages should show in cxtoolshed.log.  See settings.py
 
 # Returns a unicode string encoded in a cookie
 def _unescape_and_unquote(s):
@@ -180,6 +184,9 @@ def _app_ratings_delete_all(app, user, post):
 def _cx_platform(request):
 	platform = request.GET.get("platform")
 	cx_version = request.GET.get("version")
+	if platform is None and cx_version is None:
+		# If default and from ChimeraX, use requesting version/platform
+		cx_version, platform = chimerax_user_agent(request)
 	params = {}
 	if platform:
 		params["platform"] = platform
@@ -196,14 +203,16 @@ def _latest_releases(app, platform=None, cx_version=None):
 	# First collect by platform, with newest prerelease and release
 	# versions for each
 	newest_by_platform = {}
+	cx = Version(cx_version) if cx_version is not None else None
 	for r in releases:
 		if platform is not None and platform != r.platform:
+			continue
+		if cx and not cx.compatible_with(r.works_with):
 			continue
 		try:
 			newest = newest_by_platform[r.platform]
 		except KeyError:
 			newest = newest_by_platform[r.platform] = _LatestReleases()
-		# TODO: check if release is compatible with ChimeraX version
 		v = Version(r.version)
 		newest.add_file(v, r)
 	# Return only requested platform
@@ -245,8 +254,12 @@ class _LatestReleases:
 def _mk_app_page(app, user, request):
 	platform = request.GET.get("platform")
 	cx_version = request.GET.get("version")
+	if platform is None and cx_version is None:
+		cx_version, platform = chimerax_user_agent(request)
 	c = {
 		'cx_platform': _cx_platform(request),
+		'platform': platform,
+		'version': cx_version,
 		'app': app,
 		'is_editor': (user and app.is_editor(user)),
 		'cx_latest_releases': _latest_releases(app, platform, cx_version),

@@ -299,7 +299,17 @@
 		{% if not cx_latest_releases %}
 		{# in case there are no downloads for this platform... #}
 		<div class="alert alert-error">
-			No download available for this platform.
+			No download available for
+			{% if version %}
+			ChimeraX {{ version }} on
+			{% endif %}
+			{% if platform %}
+			{{ platform }}.
+			{% else %}
+			this platform.
+			{% endif %}
+			See <b>Release History</b> for versions available
+			on other ChimeraX versions and platforms.
 		</div>
 		{% endif %}
 		{% endif %}
