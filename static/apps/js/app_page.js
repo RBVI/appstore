@@ -349,7 +349,13 @@ var AppPage = (function($) {
         if (op == "==")
             return cmp == 0;
         else if (op == ">=")
+            return cmp >= 0;
+        else if (op == ">")
             return cmp > 0;
+        else if (op == "<=")
+            return cmp <= 0;
+        else if (op == "<")
+            return cmp < 0;
         return false;
     }
     
