@@ -12,9 +12,10 @@ from util.id_util import fullname_to_name
 from models import Tag, App, Author, OrderedAuthor, Screenshot, Release
 from util.chimerax_util import Version, chimerax_user_agent
 
-import logging
-logger = logging.getLogger(__name__)
-# "logger" messages should show in cxtoolshed.log.  See settings.py
+# import logging
+# logger = logging.getLogger(__name__)
+# "logger" messages land in cxtoolshed.log, e.g., logger.warning(msg)
+# Default logging level is WARNING for apps.views (see settings.py)
 
 # Returns a unicode string encoded in a cookie
 def _unescape_and_unquote(s):
@@ -205,7 +206,7 @@ def _latest_releases(app, platform=None, cx_version=None):
 	newest_by_platform = {}
 	cx = Version(cx_version) if cx_version is not None else None
 	for r in releases:
-		if platform is not None and platform != r.platform:
+		if platform and r.platform and platform != r.platform:
 			continue
 		if cx and not cx.compatible_with(r.works_with):
 			continue
