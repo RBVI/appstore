@@ -36,13 +36,16 @@ def find_bundle(cmd, bundle):
         return apps[0]
 
 
-def find_bundle_version(cmd, bundle, version):
+def find_bundle_version(cmd, bundle, version, platform):
     "Find the specified version of the bundle"
     app = find_bundle(cmd, bundle)
     if app is None:
         return None
     from apps.models import Release
-    rels = Release.objects.filter(app=app, version=version)
+    if platform:
+        rels = Release.objects.filter(app=app, version=version, platform=platform)
+    else:
+        rels = Release.objects.filter(app=app, version=version)
     if len(rels) == 0:
         print >> cmd.stderr, ("no match for bundle \"%s\" version \"%s\""
                                 % (bundle, version))
@@ -50,6 +53,23 @@ def find_bundle_version(cmd, bundle, version):
     elif len(rels) > 1:
         print >> cmd.stderr, ("too many matches for bundle \"%s\" "
                                 "version \"%s\"" % (bundle, version))
+        for rel in rels:
+            print >> cmd.stderr, "  ", app.name, rel.version
+        return None
+    else:
+        return rels[0]
+
+
+def find_release_by_id(cmd, release_id):
+    "Find the specified version of the bundle"
+    from apps.models import Release
+    rels = Release.objects.filter(id=release_id)
+    if len(rels) == 0:
+        print >> cmd.stderr, ("no match for release id \"%s\"" % release_id)
+        return None
+    elif len(rels) > 1:
+        print >> cmd.stderr, ("too many matches for release id \"%s\" "
+                                % release_id)
         for rel in rels:
             print >> cmd.stderr, "  ", app.name, rel.version
         return None

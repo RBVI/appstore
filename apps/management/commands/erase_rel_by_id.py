@@ -6,8 +6,8 @@ from utils import fix_line_ending
 
 class Command(BaseCommand):
 
-    args = "bundle version [platform]"
-    help = "delete all references to specified version of a bundle"
+    args = "release_id"
+    help = "delete all references to specified (by id) release of a bundle"
     option_list = BaseCommand.option_list + (
                     make_option("--delete",
                                 action="store_true",
@@ -17,16 +17,14 @@ class Command(BaseCommand):
 
     @fix_line_ending
     def handle(self, *args, **options):
-        if len(args) != 2 and len(args) != 3:
+        if len(args) != 1:
             from utils import print_help
             print_help(self)
             return
         dry_run = not options["delete"]
-        bundle = args[0]
-        version = args[1]
-        platform = args[2] if len(args) == 3 else None
-        from utils import find_bundle_version
-        rel = find_bundle_version(self, bundle, version, platform)
+        release_id = args[0]
+        from utils import find_release_by_id
+        rel = find_release_by_id(self, release_id)
         if rel is None:
             return
         from utils import erase_release

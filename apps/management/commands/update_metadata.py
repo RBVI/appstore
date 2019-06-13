@@ -6,7 +6,7 @@ from utils import fix_line_ending
 
 class Command(BaseCommand):
 
-    args = "[bundle [version]]"
+    args = "[bundle [version [platform]]]"
     help = "update metadata associated with a bundle version"
 
     @fix_line_ending
@@ -23,7 +23,14 @@ class Command(BaseCommand):
         elif len(args) == 2:
             bundle, version = args
             from utils import find_bundle_version
-            rel = find_bundle_version(self, bundle, version)
+            rel = find_bundle_version(self, bundle, version, None)
+            if rel is None:
+                return
+            self.update_release(rel)
+        elif len(args) == 3:
+            bundle, version, platform = args
+            from utils import find_bundle_version
+            rel = find_bundle_version(self, bundle, version, platform)
             if rel is None:
                 return
             self.update_release(rel)
