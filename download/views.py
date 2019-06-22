@@ -116,12 +116,15 @@ def app_stats_timeline(request, app_name):
     version_counts = dict()
     for release in releases:
         dls = ReleaseDownloadsByDate.objects.filter(release = release)
-        vdict = version_counts[release.version]
+        try:
+            vdict = version_counts[release.version]
+        except KeyError:
+            vdict = version_counts[release.version] = {}
         for dl in dls:
             date = dl.when.isoformat()
             vdict[date] = vdict.get(date, 0) + dl.count
     response = dict()
-    for version, vdict in version_counts:
+    for version, vdict in version_counts.items():
         response[version] = list(vdict.items())
     return json_response(response)
         
