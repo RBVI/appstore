@@ -113,10 +113,16 @@ def app_stats(request, app_name):
 def app_stats_timeline(request, app_name):
     app = get_object_or_404(App, active = True, name = app_name)
     releases = app.release_set.all()
-    response = dict()
+    version_counts = dict()
     for release in releases:
         dls = ReleaseDownloadsByDate.objects.filter(release = release)
-        response[release.version] = [[dl.when.isoformat(), dl.count] for dl in dls]
+        vdict = version_counts[release.version]
+        for dl in dls:
+            date = dl.when.isoformat()
+            vdict[date] = vdict.get(date, 0) + dl.count
+    response = dict()
+    for version, vdict in version_counts:
+        response[version] = list(vdict.items())
     return json_response(response)
         
 def app_stats_geography_all(request, app_name):
