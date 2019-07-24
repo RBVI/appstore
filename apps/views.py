@@ -123,9 +123,32 @@ def wall_of_apps(request):
 		'cx_platform': _cx_platform(request),
 		'total_apps_count': App.objects.filter(active=True).count,
 		'tags': tags,
-		'go_back_to': 'Wall of Apps',
+		'go_back_to': 'Wall of Bundles',
 	}
 	return html_response('wall_of_apps.html', c, request)
+
+def bundle_developers(request):
+	apps = App.objects.filter(active = True).order_by('name')
+	developers = []
+	for app in apps:
+		contact = app.contact
+		if contact:
+			contact = "Contact: " + contact
+		else:
+			for editor in app.editors.all():
+				if editor.email:
+					contact = "Editor: " + editor.email
+					break
+		if not contact:
+			contact = "(No contact e-mail available)"
+		developers.append((app.display_name, contact))
+	c = {
+		'cx_platform': _cx_platform(request),
+		'total_apps_count': apps.count,
+		'developers': developers,
+		'go_back_to': 'Bundle Developers',
+	}
+	return html_response('bundle_developers.html', c, request)
 
 def apps_with_tag(request, tag_name):
 	tag = get_object_or_404(Tag, name = tag_name)
