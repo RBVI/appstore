@@ -13,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.list_all_bundles()
 
-    def list_all_bundles(self, ):
+    def list_all_bundles(self):
         from apps.models import App
         for app in App.objects.all():
             self._list_bundle(app)
