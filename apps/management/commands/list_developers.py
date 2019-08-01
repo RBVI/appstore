@@ -23,7 +23,6 @@ class Command(BaseCommand):
         if app.contact:
             email = app.contact
             email_type = "Contact"
-            developers.append((app.display_name, "Contact", app.contact))
         else:
             for editor in app.editors.all():
                 if editor.email:
