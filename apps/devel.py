@@ -2,10 +2,9 @@ from django.contrib.auth.decorators import user_passes_test
 def staff_required(login_url=None):
     return user_passes_test(lambda u: u.is_staff, login_url=login_url)
 
-LOGIN_URL = "../../users/login"
 REPO_DIR = "/usr/local/projects/chimerax/builds/repo"
 
-@staff_required(login_url=LOGIN_URL)
+@staff_required()
 def release(request):
     from util.view_util import html_response
     context = _get_parameters(request)
@@ -15,7 +14,7 @@ def release(request):
     context["released"] = released
     return html_response('devel_release.html', context, request)
 
-@staff_required(login_url=LOGIN_URL)
+@staff_required()
 def clean(request):
     from util.view_util import html_response
     context = _get_parameters(request)
@@ -26,7 +25,7 @@ def clean(request):
     context["errors"] = errors
     return html_response('devel_clean.html', context, request)
 
-@staff_required(login_url=LOGIN_URL)
+@staff_required()
 def new_bundle(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
@@ -85,7 +84,7 @@ def new_bundle(request):
     context["error_msgs"] = error_messages
     return html_response('devel_new.html', context, request)
 
-@staff_required(login_url=LOGIN_URL)
+@staff_required()
 def new_version(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
