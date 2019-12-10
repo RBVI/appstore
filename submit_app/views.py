@@ -281,10 +281,13 @@ def pending_apps(request):
             return HttpResponseBadRequest('pending_id must be specified')
         try:
             pending_app = AppPending.objects.get(id = int(pending_id))
-        except AppPending.DoesNotExist, ValueError:
+        except (AppPending.DoesNotExist, ValueError):
             return HttpResponseBadRequest('invalid pending_id')
         logger.debug("submit_app.pending_app function=%s" % _PendingAppsActions[action])
-        _PendingAppsActions[action](pending_app, request)
+        try:
+            _PendingAppsActions[action](pending_app, request)
+        except Exception as e:
+            return HttpResponseBadRequest('%s: %s' % (action, str(e)))
         if request.is_ajax():
             return json_response(True)
             
