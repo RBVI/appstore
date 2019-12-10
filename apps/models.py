@@ -143,7 +143,7 @@ class OrderedAuthor(models.Model):
     class Meta:
         ordering = ["author_order"]
 
-VersionRE = re.compile(r'^(\d+)(?:\.(\d)+)?(?:\.(\d)+)?(?:\.([\w-]+))?$')
+VersionRE = re.compile(r'^(\d+)(?:\.(\d+))?(?:\.(\d)+)?(?:\.([\w-]+))?$')
 
 def release_file_path(release, filename):
     return pathjoin(release.app.name, 'releases', release.version, filename)
