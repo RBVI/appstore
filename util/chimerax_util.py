@@ -132,6 +132,9 @@ class Bundle:
             d[name] = value
         return container
 
+    def __unicode__(self):
+        return self._wheel.name
+
     @property
     def package(self):
         return self._wheel.name.replace('-', '_')
