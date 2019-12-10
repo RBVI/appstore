@@ -199,6 +199,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
+        'submit_app.processwheel': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
         'search.views': {
             'handlers': ['file'],
             'level': 'WARNING',
