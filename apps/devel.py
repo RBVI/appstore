@@ -91,6 +91,7 @@ def new_version(request):
     from util.view_util import html_response
     from util.id_util import fullname_to_name
     from submit_app.processwheel import process_wheel
+    from submit_app.processwheel import sort_bundles_by_dependencies
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
     filenames = parameters.get("file", [])
