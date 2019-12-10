@@ -12,5 +12,5 @@ sys.path.append(SITE_DIR)
 os.environ['PYTHON_EGG_CACHE'] = os.path.join(SITE_DIR, '.python-egg')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
