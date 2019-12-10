@@ -93,7 +93,7 @@ def new_version(request):
     from submit_app.processwheel import process_wheel
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
-    filename = parameters.get("file", [])
+    filenames = parameters.get("file", [])
     for filename in filenames:
         if os.sep in filename:
             return HttpResponseBadRequest("bad file: %s" % filename)
