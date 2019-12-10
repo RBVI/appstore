@@ -73,7 +73,7 @@ def new_bundle(request):
                                             bundle.works_with,
                                             bundle.app_dependencies,
                                             bundle.release_notes)
-                    messages.append("Bundle %r released" % bundle.package)
+                    messages.append("Bundle \"%s\" released" % bundle.package)
                     #if msgs:
                     #   messages.extend(msgs)
                 except Exception as e:
@@ -131,7 +131,7 @@ def new_version(request):
                                            bundle.works_with,
                                            bundle.app_dependencies,
                                            bundle.release_notes)
-                    messages.append("Bundle %r updated" % bundle.package)
+                    messages.append("Bundle \"%s\" updated" % bundle.package)
                     #if msgs:
                     #   messages.extend(msgs)
                 except Exception as e:
@@ -272,7 +272,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     with open(full_path, "rb") as f:
         release.release_file.save(os.path.basename(full_path), File(f))
     for dependee in release_dependencies(app_dependencies):
-        messages.append("dependency: %r [%s]" % (dependee, dependee))
+        messages.append("dependency: \"%s\" [%s]" % (dependee, dependee))
         release.dependencies.add(dependee)
     release.calc_checksum()
     # Make release part of app
