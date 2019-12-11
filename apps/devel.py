@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import user_passes_test
-def staff_required(login_url=None):
-    return user_passes_test(lambda u: u.is_staff, login_url=login_url)
+from cgi import escape
 
 REPO_DIR = "/usr/local/projects/chimerax/builds/repo"
+
+def staff_required(login_url=None):
+    return user_passes_test(lambda u: u.is_staff, login_url=login_url)
 
 @staff_required()
 def release(request):
@@ -37,7 +39,7 @@ def new_bundle(request):
     filenames = parameters.get("file", [])
     for filename in filenames:
         if os.sep in filename:
-            return HttpResponseBadRequest("bad file: %s" % filename)
+            return HttpResponseBadRequest(escape("bad file: %s" % filename))
     error_messages = []
     messages = []
     # First read in all wheels and order them by dependency
@@ -97,7 +99,7 @@ def new_version(request):
     filenames = parameters.get("file", [])
     for filename in filenames:
         if os.sep in filename:
-            return HttpResponseBadRequest("bad file: %s" % filename)
+            return HttpResponseBadRequest(escape("bad file: %s" % filename))
     error_messages = []
     messages = []
     # First read in all wheels and order them by dependency

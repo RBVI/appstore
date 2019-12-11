@@ -5,6 +5,7 @@
 #
 from django.views.decorators.csrf import csrf_exempt
 import logging
+from cgi import escape
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +233,7 @@ def _format_package_versions(package, version):
         lines.append("</li>")
     lines.extend(["</ul>", "</body>", "</html>"])
     from django.http import HttpResponse
-    response = HttpResponse('\n'.join(lines), content_type='text/html')
+    response = HttpResponse(escape('\n'.join(lines), content_type='text/html'))
     return response
 
 # =============================================================

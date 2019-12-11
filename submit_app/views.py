@@ -18,6 +18,7 @@ from models import AppPending
 from .pomparse import PomAttrNames, parse_pom
 from .processwheel import process_wheel, release_dependencies
 import logging
+from cgi import escape
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +276,7 @@ def pending_apps(request):
         logger.debug("submit_app.pending_app action=%s" % action)
         if not action in _PendingAppsActions:
             logger.debug("submit_app.pending_app action invalid" % action)
-            return HttpResponseBadRequest('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys()))
+            return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
         pending_id = request.POST.get('pending_id')
         if not pending_id:
             return HttpResponseBadRequest('pending_id must be specified')
@@ -287,7 +288,7 @@ def pending_apps(request):
         try:
             _PendingAppsActions[action](pending_app, request)
         except Exception as e:
-            return HttpResponseBadRequest('%s: %s' % (action, str(e)))
+            return HttpResponseBadRequest(escape('%s: %s' % (action, str(e))))
         if request.is_ajax():
             return json_response(True)
             
@@ -401,7 +402,7 @@ def cy2x_plugins(request):
         if not action:
             return HttpResponseBadRequest('action must be specified')
         if not action in _Cy2xPluginsActions:
-            return HttpResponseBadRequest('invalid action--must be: %s' % ', '.join(_Cy2xPluginsActions.keys()))
+            return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_Cy2xPluginsActions.keys())))
         return _Cy2xPluginsActions[action](request.POST)
     else:
         return html_response('cy2x_plugins.html', {}, request)

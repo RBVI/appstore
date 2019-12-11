@@ -11,6 +11,7 @@ from util.img_util import scale_img
 from util.id_util import fullname_to_name
 from models import Tag, App, Author, OrderedAuthor, Screenshot, Release
 from util.chimerax_util import Version, chimerax_user_agent
+from cgi import escape
 
 # import logging
 # logger = logging.getLogger(__name__)
@@ -306,11 +307,11 @@ def app_page(request, app_name):
 		if not action:
 			return HttpResponseBadRequest('no action specified')
 		if not action in _AppActions:
-			return HttpResponseBadRequest('action "%s" invalid--must be: %s' % (action, ', '.join(_AppActions)))
+			return HttpResponseBadRequest(escape('action "%s" invalid--must be: %s' % (action, ', '.join(_AppActions))))
 		try:
 			result = _AppActions[action](app, user, request.POST)
 		except ValueError as e:
-			return HttpResponseBadRequest(str(e))
+			return HttpResponseBadRequest(escape(str(e)))
 		if isinstance(result, HttpResponse):
 			return result
 		if request.is_ajax():
@@ -556,11 +557,11 @@ def app_page_edit(request, app_name):
 		if not action:
 			return HttpResponseBadRequest('no action specified')
 		if not action in _AppEditActions:
-			return HttpResponseBadRequest('action "%s" invalid--must be: %s' % (action, ', '.join(_AppEditActions)))
+			return HttpResponseBadRequest(escape('action "%s" invalid--must be: %s' % (action, ', '.join(_AppEditActions))))
 		try:
 			result = _AppEditActions[action](app, request)
 		except ValueError as e:
-			return HttpResponseBadRequest(str(e))
+			return HttpResponseBadRequest(escape(str(e)))
 		app.save()
 		if request.is_ajax():
 			return json_response(result)
