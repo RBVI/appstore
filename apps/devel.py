@@ -125,7 +125,6 @@ def new_version(request):
                     if app is None:
                         raise ValueError("%s: no such bundle", fullname)
                     name = fullname_to_name(fullname)
-                    context["messages"]
                     msgs = _create_release(app, request.user, full_path,
                                            name, fullname, bundle.version,
                                            bundle.platform,
