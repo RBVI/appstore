@@ -229,11 +229,11 @@ def _format_package_versions(package, version):
         filename = os.path.basename(r.release_file_url)
         url = _server_url + r.release_file_url
         lines.append("<a href=\"%s\" rel=\"download\">%s</a>" %
-                     (url, filename))
+                     (escape(url), escape(filename)))
         lines.append("</li>")
     lines.extend(["</ul>", "</body>", "</html>"])
     from django.http import HttpResponse
-    response = HttpResponse(escape('\n'.join(lines)), content_type='text/html')
+    response = HttpResponse('\n'.join(lines), content_type='text/html')
     return response
 
 # =============================================================
