@@ -4,6 +4,11 @@ from django.utils.encoding import smart_unicode
 from util.view_util import get_object_or_none
 from util.chimerax_util import Bundle
 
+import logging
+logger = logging.getLogger(__name__)
+# "logger" messages land in cxtoolshed.log, e.g., logger.warning(msg)
+# Default logging level is WARNING for submit_apps.processwheel (see settings.py)
+
 def process_wheel(filename, expect_app_name):
     # Make sure it is a wheel and supports a single platform
     import os.path
@@ -70,12 +75,10 @@ def _find_release(app_name, app_version):
         raise ValueError("missing dependency \"%s\": bundle not on toolshed" %
                          _toolshed_display_name(app_name))
     comparison, preferred_version = _dependency_version(app_version)
-    if comparison != '>=':
-        raise ValueError("unsupport version operator: \"%s\"" % comparison)
     known_releases = {}
     for r in Release.objects.filter(app=app, active=True):
         known_releases[r.version] = r
-    release = _version_match(preferred_version, known_releases)
+    release = _version_match(comparison, preferred_version, known_releases)
     if not release:
         raise ValueError("missing dependency on \"%s\" with version \"%s\": "
                          "release not on toolshed" % (
@@ -107,6 +110,7 @@ def sort_bundles_by_dependencies(bundles):
             release_cache[bundle.package] = {bundle.version:bundle}
         else:
             d[bundle.version] = bundle
+        logger.debug(" prime cache: %s %s" % (bundle.package, bundle.version))
 
     # Verify bundles and build dependencies
     # depends_on:
@@ -116,17 +120,18 @@ def sort_bundles_by_dependencies(bundles):
     for bundle in bundles:
         for dependency in bundle.app_dependencies:
             app_name, app_version = dependency
+            app_name = app_name.replace('-', '_')
+            logger.debug(" depends on: %s %s" % (app_name, app_version))
             # Look in cache first
             try:
                 known_releases = release_cache[app_name]
             except KeyError:
                 pass
             else:
+                for v in known_releases.keys():
+                    logger.debug("  known: %s" % v)
                 comparison, preferred_version = _dependency_version(app_version)
-                if comparison != ">=":
-                    raise ValueError("unsupport version operator: \"%s\"" %
-                                     comparison)
-                r = _version_match(preferred_version, known_releases)
+                r = _version_match(comparison, preferred_version, known_releases)
                 if r:
                     if isinstance(r, Bundle):
                         # One of the primed bundles
@@ -139,11 +144,12 @@ def sort_bundles_by_dependencies(bundles):
             # _find_release will throw exception to terminate sorting
             r = _find_release(app_name, app_version)
             try:
-                d = release_cache[app_name]
+                d = release_cache[r.app.fullname]
             except KeyError:
-                release_cache[app_name] = {app_version:bundle}
+                release_cache[r.app.fullname] = {r.version:bundle}
             else:
-                d[app_version] = bundle
+                d[r.version] = bundle
+            logger.debug(" augment cache: %s %s" % (r.app.fullname, r.version))
 
     # Generate ordered bundles
     ordered_bundles = []
@@ -174,6 +180,7 @@ def sort_bundles_by_dependencies(bundles):
 # version numbers like "0.1.4" work fine.
 import re
 _DependencyVersionRE = re.compile(r'\s*\(\s*([=!<>]*)\s*(\S+)\)')
+_VersionRE = re.compile(r'^(\d+)(?:\.(\d+))?(?:\.(\d+|\*))?(?:\.([\w-]+))?$')
 
 def _dependency_version(s):
     m = _DependencyVersionRE.match(s)
@@ -183,27 +190,82 @@ def _dependency_version(s):
     return comparison, _version_tuple(version)
 
 def _version_tuple(v):
-    m = VersionRE.match(v)
+    m = _VersionRE.match(v)
     if not m:
         raise ValueError("Unsupported version format: \"%s\"" % v)
     (major, minor, patch, tag) = m.groups()
     major = int(major) if major else 0
     minor = int(minor) if minor else 0
-    patch = int(patch) if patch else 0
+    patch = patch.lower() if patch else ""
     tag = tag.lower() if tag else ""
     return (major, minor, patch, tag)
 
-def _version_match(preferred_version, known_releases):
+def _version_match(comparison, preferred_version, known_releases):
+    if comparison not in [">=", "=="]:
+        raise ValueError("unsupport version operator: \"%s\"" % comparison)
     release = None
-    for version, r in known_releases.items():
+    version = None
+    for v, r in known_releases.items():
         try:
-            rv = _version_tuple(version)
+            rv = _version_tuple(v)
         except ValueError as e:
             raise ValueError("Unsupported version format: \"%s\" (\"%s\")" %
-                             (version, r))
-        if rv == preferred_version:
+                             (v, str(r)))
+        c = _version_compare(comparison, preferred_version, rv)
+        if c == 0:
             release = r
+            version = rv
             break
-        elif rv > preferred_version:
-            release = r
+        elif c > 0:
+            if version is None or _version_compare(">=", version, rv) > 0:
+                release = r
+                version = rv
     return release
+
+def _version_compare(comparison, preferred, rv):
+    # Assume both versions are 4-tuples.
+    # First two elements of each tuple must be integers.
+    # Third element of "preferred" is a string representing one of (integer, '', '*').
+    # Third element of "rv" is a string representing one of (integer, '').
+    # Fourth element may be one of ('', string).
+    # Return value is:
+    #  -1 if preferred > rv (rv does not satisfy requirement),
+    #   0 for an exact match, and
+    #  +1 if rv > preferred or preferred has '*' and matched rv.
+
+    newer = 1 if comparison == ">=" else -1
+
+    # Check element 0
+    if preferred[0] > rv[0]:
+        return -1
+    if preferred[0] < rv[0]:
+        return newer
+
+    # Check element 1 (element 0 must be equal)
+    if preferred[1] > rv[1]:
+        return -1
+    if preferred[1] < rv[1]:
+        return newer
+
+    # Check element 2 (element 0 and 1 must be equal)
+    if preferred[2] == '*':
+        return 1
+    try:
+        p = int(preferred[2])
+    except ValueError:
+        p = 0
+    try:
+        r = int(rv[2])
+    except ValueError:
+        r = 0
+    if p > r:
+        return -1
+    if r > p:
+        return newer
+
+    # Check element 3 (element 0, 1 and 2 must be equal)
+    if preferred[3] > rv[3]:
+        return -1
+    if preferred[3] < rv[3]:
+        return newer
+    return 0
