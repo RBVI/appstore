@@ -233,7 +233,7 @@ def _format_package_versions(package, version):
         lines.append("</li>")
     lines.extend(["</ul>", "</body>", "</html>"])
     from django.http import HttpResponse
-    response = HttpResponse(escape('\n'.join(lines), content_type='text/html'))
+    response = HttpResponse(escape('\n'.join(lines)), content_type='text/html')
     return response
 
 # =============================================================
