@@ -1,9 +1,10 @@
-import os
-from os.path import join as filejoin
+import os, os.path
 import sys
 
-SITE_PARENT_DIR = '/var/www'
-SITE_DIR = filejoin(SITE_PARENT_DIR, 'CyAppStore')
+# SITE_PARENT_DIR = '/usr/local/projects/chimerax/www/preview'
+# SITE_DIR = os.path.join(SITE_PARENT_DIR, 'cxtoolshed')
+SITE_DIR = os.path.dirname(__file__)
+SITE_PARENT_DIR = os.path.dirname(SITE_DIR)
 
 sys.path.append(SITE_PARENT_DIR)
 sys.path.append(SITE_DIR)

@@ -6,13 +6,15 @@
   votes="{{ app.votes }}"
   downloads="{{ app.downloads }}"
   latest_release_date="{{ app.latest_release_date.isoformat }}"
-  onClick="window.location='{% url 'app_page' app.name %}';">
+  onClick="window.location='{% url 'app_page' app.name %}{{ cx_platform|safe }}';">
 
   {% if app.has_releases %}
+    <!--
     <i class="cy3-sticker" style="background-image: url('{% get_static_prefix %}apps/img/cy3_sticker.png');"></i>
+    -->
   {% endif %}
   
-  <a href="{% url 'app_page' app.name %}">
+  <a href="{% url 'app_page' app.name %}{{ cx_platform|safe }}">
     <div class="partial">
       <table border="0" width="100%">
         <tr valign="top">
@@ -22,7 +24,7 @@
             </div>
           </td>
           <td align="left">
-            <h5>{{ app.fullname }}</h5>
+            <h5>{{ app.display_name }}</h5>
           </td>
         </tr>
         <tr valign="top">
@@ -46,7 +48,7 @@
             </div>
           </td>
           <td align="left">
-            <h5>{{ app.fullname }}</h5>
+            <h5>{{ app.display_name }}</h5>
           </td>
         </tr>
         <tr valign="top">

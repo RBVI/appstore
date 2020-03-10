@@ -8,7 +8,7 @@ target_tbl = tbl_prefix  + 'screenshot'
 
 con = None
 try:
-    con = mdb.connect('localhost', 'root', '', 'CyAppStore')
+    con = mdb.connect('localhost', 'root', '', 'cxtoolshed')
     cur = con.cursor()
     cur.execute('SELECT * FROM %s' % m2m_tbl)
     for (_, app_id, ss_id) in list(cur.fetchall()):

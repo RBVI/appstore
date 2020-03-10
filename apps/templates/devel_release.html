@@ -1,0 +1,91 @@
+{% extends "nav_panel.html" %}
+{% load static %}
+{% load url from future %}
+{% load devel_entries %}
+
+{% block more_head %}
+<script type="text/javascript" src="{% get_static_prefix %}common/js/setup_ajax_for_csrf.js"></script>
+{% endblock %}
+
+{% block main %}
+  <style type="text/css">
+    h3 { margin-bottom: 0.5em; }
+    form { margin-bottom: 1em; }
+  </style>
+  {% if new_bundles %}
+    <h3>Unreleased Bundles</h3>
+    <div class="span8" id="new_bundle_div">
+    <form method="POST" action="new_bundle">
+      {% csrf_token %}
+      <button class="b_check_all">Check All</button>
+      <button class="b_clear_all">Uncheck All</button>
+      <button class="b_submit" type="submit">Release Bundles</button>
+      <div>
+        {% devel_entries new_bundles cx_platform %}
+      </div>
+      <button class="b_check_all">Check All</button>
+      <button class="b_clear_all">Uncheck All</button>
+      <button class="b_submit" type="submit">Release Bundles</button>
+    </form>
+    </div>
+  {% endif %}
+  {% if new_versions %}
+    <h3>Unreleased Versions</h3>
+    <div class="span8" id="new_version_div">
+    <form method="POST" action="new_version">
+      {% csrf_token %}
+      <button class="v_check_all">Check All</button>
+      <button class="v_clear_all">Uncheck All</button>
+      <button class="v_submit" type="submit">Release Versions</button>
+      <div>
+        {% devel_entries new_versions cx_platform %}
+      </div>
+      <button class="v_check_all">Check All</button>
+      <button class="v_clear_all">Uncheck All</button>
+      <button class="v_submit" type="submit">Release Versions</button>
+    </form>
+    </div>
+  {% endif %}
+  {% if released %}
+    <h3>Already Released</h3>
+    <div class="span8" id="left">
+      {% devel_entries released cx_platform %}
+    </div>
+    <br/>
+  {% endif %}
+  <script type="text/javascript">
+    function set_all(tag, value) {
+      var buttons = document.getElementsByClassName(tag);
+      for (var i = 0; i < buttons.length; i++)
+        buttons[i].checked = value;
+    }
+    function update_submit(checkboxes, submit_button) {
+      $(submit_button).prop("disabled", !$(checkboxes).is(":checked"));
+      return false;
+    }
+    $(".b_check_all").click(function(e) {
+        set_all("new_bundle", true);
+        return update_submit(".new_bundle", ".b_submit");
+    });
+    $(".b_clear_all").click(function(e) {
+        set_all("new_bundle", false);
+        return update_submit(".new_bundle", ".b_submit");
+    });
+    $(".v_check_all").click(function(e) {
+        set_all("new_version", true);
+        return update_submit(".new_bundle", ".b_submit");
+    });
+    $(".v_clear_all").click(function(e) {
+        set_all("new_version", false);
+        return update_submit(".new_bundle", ".b_submit");
+    });
+    $(".new_bundle").change(function(e) {
+        return update_submit(".new_bundle", ".b_submit");
+    });
+    $(".new_version").change(function(e) {
+        return update_submit(".new_version", ".v_submit");
+    });
+    update_submit(".new_bundle", ".b_submit");
+    update_submit(".new_version", ".v_submit");
+  </script>
+{% endblock %}

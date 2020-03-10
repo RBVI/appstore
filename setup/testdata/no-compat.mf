@@ -1,0 +1,2 @@
+Cytoscape-App-Name: Tester
+Cytoscape-App-Version: 1.0

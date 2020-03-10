@@ -10,12 +10,14 @@ def app_button(app, order_index):
         c = {}
         c['app'] = app.object
         c['order_index'] = order_index
+        c['cx_platform'] = cx_platform
         return c
     except:
         app.star_percentage = 100 * app.stars / 5 / app.votes if app.votes else 0 
         c = {}
         c['app'] = app
         c['order_index'] = order_index
+        c['cx_platform'] = cx_platform
         return c
 
 @register.inclusion_tag('app_button.html')
@@ -32,7 +34,7 @@ def app_button_by_name(app_name):
         return c 
 @register.inclusion_tag('app_buttons.html')
 def app_buttons(apps):
-    return {'apps': list(apps)}
+    return {'apps': list(apps), 'cx_platform': cx_platform}
 
 
 @register.inclusion_tag('list_of_apps_search.html')

@@ -1,0 +1,25 @@
+{% extends "nav_panel.html" %}
+
+{% block main %}
+  <style type="text/css">
+    h2 { margin-bottom: 0.5em; }
+  </style>
+  <div class="row">
+    <div class="span8"><h2>Cleaned Candidates Repo</h2></div>
+  </div>
+  <div class="span8" id="left">
+    <ul>
+    <li>Expired bundles: {{ expired }}</li>
+    <li>Current bundles: {{ current }}</li>
+    <li>Ignored files: {{ ignored }}</li>
+    </ul>
+    {% if errors %}
+    <h3>Errors encounted</h3>
+    <ul>
+      {% for msg in errors %}
+        <li>{{ msg }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+{% endblock %}

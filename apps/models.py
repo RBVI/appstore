@@ -110,6 +110,10 @@ class App(models.Model):
         return ' '.join([c for c in camel_case_split(self.fullname)])
 
     @property
+    def display_name(self):
+        return self.fullname.replace("ChimeraX_", "")
+
+    @property
     def stars_percentage(self):
         return 100 * self.stars / self.votes / 5 if self.votes != 0 else 0
 
@@ -150,7 +154,7 @@ class OrderedAuthor(models.Model):
     class Meta:
         ordering = ["author_order"]
 
-VersionRE = re.compile(r'^(\d+)(?:\.(\d)+)?(?:\.(\d)+)?(?:\.([\w-]+))?$')
+VersionRE = re.compile(r'^(\d+)(?:\.(\d+))?(?:\.(\d)+)?(?:\.([\w-]+))?$')
 
 def release_file_path(release, filename):
     return pathjoin(release.app.name, 'releases', release.version, filename)
@@ -158,6 +162,7 @@ def release_file_path(release, filename):
 class Release(models.Model):
     app           = models.ForeignKey(App)
     version       = models.CharField(max_length=31)
+    platform      = models.CharField(max_length=15)
     works_with    = models.CharField(max_length=31)
     notes         = models.TextField(blank=True, null=True)
     created       = models.DateTimeField(auto_now_add=True)
@@ -190,6 +195,20 @@ class Release(models.Model):
     def release_download_url(self):
         return reverse('release_download', args=[self.app.name, self.version])
 
+    @property
+    def metadata_count(self):
+        return len(self.get_metadata)
+
+    @property
+    def get_metadata(self):
+        md_dict = {}
+        for md in self.releasemetadata_set.all():
+            md_set = md_dict.setdefault(md.type, set())
+            md_set.add(md.name)
+        for md_type in md_dict.keys():
+            md_dict[md_type] = sorted(md_dict[md_type])
+        return sorted(md_dict.items())
+
     def __str__(self):
         return self.app.fullname + ' ' + self.version
 
@@ -211,6 +230,49 @@ class Release(models.Model):
             api = self.releaseapi_set.get()
             api.delete_files()
             api.delete()
+
+    def distribution(self):
+        "Return metadata as dictionary."
+        # A bunch of values must be lists
+        force_list = set([("bundle", "categories"),
+                          ("bundle", "requires"),
+                          ("tool", "categories"),
+                          ("command", "categories"),
+                          ("dataformat", "nicknames"),
+                          ("dataformat", "suffixes"),
+                          ("dataformat", "mime_types"),
+                          ("fetch", "prefixes"),
+                          ("open", "keywords"),
+                          ("save", "keywords")])
+        d = {}
+        for md in self.releasemetadata_set.all():
+            try:
+                type_d = d[md.type]
+            except KeyError:
+                type_d = d[md.type] = {}
+            try:
+                name_d = type_d[md.name]
+            except KeyError:
+                name_d = type_d[md.name] = {}
+            if (md.type, md.key) not in force_list:
+                name_d[md.key] = md.value
+            else:
+                try:
+                    value_list = name_d[md.key]
+                except KeyError:
+                    name_d[md.key] = [md.value]
+                else:
+                    value_list.append(md.value)
+        if not d:
+            return None
+        app = self.app
+        d["bundle_name"] = app.fullname
+        d["toolshed_name"] = app.name
+        if app.description:
+            d["description"] = app.description
+        if app.details:
+            d["details"] = app.details
+        return d
 
     class Meta:
         ordering = ['-created']
@@ -269,3 +331,13 @@ class ReleaseAPI(models.Model):
             rmtree(dirpath)
         self.javadocs_jar_file.delete()
         self.pom_xml_file.delete()
+
+class ReleaseMetadata(models.Model):
+    release           = models.ForeignKey(Release)
+    type              = models.CharField(max_length=127)
+    name              = models.CharField(max_length=127)
+    key               = models.CharField(max_length=127)
+    value             = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return unicode(self.release)

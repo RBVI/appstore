@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}- Pending Apps{% endblock %}
+{% block title %}- Pending Bundles{% endblock %}
 
 {% block more_head %}
     <script type="text/javascript" src="{% get_static_prefix %}common/js/setup_ajax_for_csrf.js"></script>
@@ -11,7 +11,7 @@
     <div class="row">
         <div class="span8">
             <div class="page-header">
-                <h1>Pending Apps</h1>
+                <h1>Pending Bundles</h1>
             </div>
         </div>
     </div>
@@ -22,6 +22,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Version</th>
+                        <th>Platform</th>
                         <th>Submitted On</th>
                         <th>Submitter</th>
                         <th></th>
@@ -31,6 +32,7 @@
                     <tr pending_id="{{ pending_app.id }}">
                         <td class="cy-app-name">{{ pending_app.fullname }}</td>
                         <td class="cy-app-version">{{ pending_app.version }}</td>
+                        <td class="cy-app-tags">{{ pending_app.tags }}</td>
                         <td>{{ pending_app.created|date:"j M, H:i:s" }}</td>
                         <td>
                             {{ pending_app.submitter.username }}

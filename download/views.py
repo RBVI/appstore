@@ -27,8 +27,8 @@ def _increment_count(klass, **args):
     obj.count += 1
     obj.save()
 
-def release_download(request, app_name, version):
-    release = get_object_or_404(Release, app__name = app_name, version = version, active = True)
+def release_download(request, app_name, version, release_id):
+    release = get_object_or_404(Release, id = int(release_id), active = True)
     ip4addr = _client_ipaddr(request)
     when    = datetime.date.today()
 
@@ -113,10 +113,19 @@ def app_stats(request, app_name):
 def app_stats_timeline(request, app_name):
     app = get_object_or_404(App, active = True, name = app_name)
     releases = app.release_set.all()
-    response = dict()
+    version_counts = dict()
     for release in releases:
         dls = ReleaseDownloadsByDate.objects.filter(release = release)
-        response[release.version] = [[dl.when.isoformat(), dl.count] for dl in dls]
+        try:
+            vdict = version_counts[release.version]
+        except KeyError:
+            vdict = version_counts[release.version] = {}
+        for dl in dls:
+            date = dl.when.isoformat()
+            vdict[date] = vdict.get(date, 0) + dl.count
+    response = dict()
+    for version, vdict in version_counts.items():
+        response[version] = list(vdict.items())
     return json_response(response)
         
 def app_stats_geography_all(request, app_name):

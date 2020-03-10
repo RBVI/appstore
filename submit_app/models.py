@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-from apps.models import App, Release, ReleaseAPI
+from apps.models import App, Release, ReleaseAPI, ReleaseMetadata
 from util.id_util import fullname_to_name
 from util.view_util import get_object_or_none
+from util.chimerax_util import Bundle
 from os.path import basename, join as pathjoin
 from threading import Thread
 import subprocess
@@ -20,6 +21,7 @@ class AppPending(models.Model):
     submitter     = models.ForeignKey(User)
     fullname      = models.CharField(max_length=127)
     version       = models.CharField(max_length=31)
+    platform      = models.CharField(max_length=15)
     cy_works_with = models.CharField(max_length=31)
     created       = models.DateTimeField(auto_now_add=True)
     release_file  = models.FileField(upload_to='pending_releases')
@@ -44,15 +46,56 @@ class AppPending(models.Model):
         return self.fullname + ' ' + self.version + ' from ' + self.submitter.email
 
     def make_release(self, app):
-        release, _ = Release.objects.get_or_create(app = app, version = self.version)
+        release, _ = Release.objects.get_or_create(app = app, version = self.version, platform = self.platform)
         release.works_with = self.cy_works_with
         release.active = True
         release.created = datetime.datetime.today()
+        release.platform = self.platform
         release.save()
-        release.release_file.save(basename(self.release_file.name), self.release_file)
+        rf = self.release_file
+        release.release_file.save(basename(rf.name), rf)
         for dependee in self.dependencies.all():
             release.dependencies.add(dependee)
         release.calc_checksum()
+
+        #
+        # Extract release metadata if it is a Python wheel/ChimeraX bundle
+        #
+        path = rf.storage.path(rf.name)
+        if path.endswith(".whl"):
+            b = Bundle(path)
+            # Get version from bundle data
+            md, _ = ReleaseMetadata.objects.get_or_create(
+                        release=release, type="bundle",
+                        name=b.package, key="version", value=b.version)
+            md.save()
+            try:
+                for req in b.requires:
+                    md, _ = ReleaseMetadata.objects.get_or_create(
+                                release=release, type="bundle",
+                                name=b.package, key="requires", value=req)
+                    md.save()
+            except KeyError:
+                pass
+            # Get rest of metadata from classifiers
+            for info_type, metadata in b.info().items():
+                # info_type: "bundle", "command", etc.
+                for name, values in metadata.items():
+                    # name: "apbs", "debug ccd", etc.
+                    for key, value in values.items():
+                        # key: "synopsis", "categories ccd", etc.
+                        # value: either a string or a list
+                        if isinstance(value, basestring):
+                            md, _ = ReleaseMetadata.objects.get_or_create(
+                                        release=release, type=info_type,
+                                        name=name, key=key, value=value)
+                            md.save()
+                        else:
+                            for v in value:
+                                md, _ = ReleaseMetadata.objects.get_or_create(
+                                            release=release, type=info_type,
+                                            name=name, key=key, value=v)
+                                md.save()
 
         if not app.has_releases:
             app.has_releases = True

@@ -1,0 +1,12 @@
+{% load devel_entries %}
+
+<div class="span8">
+  <style type="text/css">
+    .devel_candidates { list-style: none; }
+  </style>
+  <ul class="devel_candidates">
+  {% for bundle in bundles %}
+    {% devel_entry bundle cx_platform %}
+  {% endfor %}
+  </ul>
+</div>

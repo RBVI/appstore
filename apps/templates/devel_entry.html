@@ -1,0 +1,10 @@
+<li>
+{% if bundle.release_state != "released" %}
+<input type="checkbox"
+       style="margin:0;"
+       class="devel_entry {{bundle.release_state}}"
+       name="file"
+       value="{{ filename }}"/>
+{% endif %}
+{{ bundle.display_name }}
+</li>

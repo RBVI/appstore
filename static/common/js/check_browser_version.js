@@ -6,4 +6,9 @@ $(function() {
     if (!$.support.ajax) {
         display_unsupported_msg();
     }
+
+    if (navigator.appVersion.indexOf("Win") != -1) CyPlatform = "Windows";
+    else if (navigator.appVersion.indexOf("Mac") != -1) CyPlatform = "macOS";
+    else if (navigator.appVersion.indexOf("Linux") != -1) CyPlatform = "Linux";
+    else CyPlatform = "";
 });

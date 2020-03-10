@@ -24,11 +24,11 @@
   </div>
   <div class="span7">
     <h2 id="app-title">
-      <span rel="tooltip" title="Your app name cannot be changed">
+      <span rel="tooltip" title="Your bundle name cannot be changed">
         {{ app.fullname }}
       </span>
     </h2>
-    <input class="span7" id="cy-app-description" type="text" placeholder="Enter a short description of your app here" value="{% if app.description %}{{ app.description|escape }}{% endif %}" maxlength="{{ app_description_maxlength }}">
+    <input class="span7" id="cy-app-description" type="text" placeholder="Enter a short description of your bundle here" value="{% if app.description %}{{ app.description|escape }}{% endif %}" maxlength="{{ app_description_maxlength }}">
   </div>
 </div>
 {# end app header #}
@@ -142,8 +142,11 @@
                 <button class="btn btn-small {% if release.dependents.count %}disabled{% endif %} cy-release-delete"><i class="icon icon-trash"></i> Delete</button>
               </h4>
               <p>
-                <strong>Works with Cytoscape</strong>
+                <strong>Works with</strong> ChimeraX
                 {{ release.works_with }}
+                {% if release.platform %}
+                on {{ release.platform }}
+                {% endif %}
               </p>
               {% if release.releaseapi_set.count %}
               {% with releaseapi=release.releaseapi_set.get %}
@@ -158,11 +161,11 @@
               {% endif %}
               {% if release.dependents.count %}
               <p>
-                <strong>Apps that depend on this release</strong>
+                <strong>Bundles that depend on this release</strong>
                 <ul>
                   {% for dependent in release.dependents.all %}
                   <li>
-                    <a href="{% url 'app_page' dependent.app.name %}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}
+                    <a href="{% url 'app_page' dependent.app.name %}{{ cx_platform|safe }}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}
                   </li>
                   {% endfor %}
                 </ul>
@@ -204,6 +207,7 @@
     </div>
     {# end editors #}
         
+    <!--
     {# 2.x #}
     <div class="well cy-right-panel">
       <h6 class="muted panel-title">Cytoscape 2.x Plugin</h6>
@@ -229,6 +233,7 @@
       </fieldset>
     </div>
     {# end 2.x #}
+    -->
 
     {# resources #}
     <div class="well cy-right-panel">
@@ -288,10 +293,10 @@
     <h3>Cancel Editing</h3>
   </div>
   <div class="modal-body">
-    Are you sure you want to cancel editing this app page? All unsaved changes will be lost.
+    Are you sure you want to cancel editing this bundle page? All unsaved changes will be lost.
   </div>
   <div class="modal-footer">
-    <a href="{% url 'app_page' app.name %}" class="btn btn-danger">Yes, Discard Changes</a>
+    <a href="{% url 'app_page' app.name %}{{ cx_platform|safe }}" class="btn btn-danger">Yes, Discard Changes</a>
     <a href="#" class="btn" data-dismiss="modal">No, Continue Editing</a>
   </div>
 </div>
@@ -300,7 +305,7 @@
 {# save dialog #}
 <div class="modal hide fade in" id="save-modal">
   <div class="modal-header">
-    <h3>Saving App Page...</h3>
+    <h3>Saving Bundle Page...</h3>
   </div>
   <div class="modal-body">
   </div>
@@ -401,7 +406,7 @@ AppPageEdit.add_screenshot('{{ screenshot.thumbnail.url|escapejs }}').attr('back
 {% endif %}
 
 AppPageEdit.setup_details();
-AppPageEdit.set_app_page_url("{% url 'app_page' app.name %}");
+AppPageEdit.set_app_page_url("{% url 'app_page' app.name %}{{ cx_platform|safe }}");
 AppPageEdit.set_loading_icon_url('{% get_static_prefix %}common/img/loading_small.gif');
 
 AppPageEdit.setup_add_editor_btn();

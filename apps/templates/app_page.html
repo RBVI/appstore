@@ -12,7 +12,7 @@
 <script type="text/javascript" src="{% get_static_prefix %}common/js/markdown_util.js"></script>
 {% endblock %}
 
-{% block title %}- {{ app.fullname }}{% endblock %}
+{% block title %}- {{ app.display_name }}{% endblock %}
 
 {% block content %}
 {% csrf_token %}
@@ -35,7 +35,7 @@
 	{# App name and description #}
 	<div class="span7">
 		<h2 id="app-name">
-			{{ app.fullname }}
+			{{ app.display_name }}
 		</h2>
 		{% if app.description %}<b>{{ app.description }}</b>{% endif %}
 	</div>
@@ -50,8 +50,8 @@
 				<span class="caret"></span>
 			</a>
 			<ul class="dropdown-menu pull-right">
-				<li><a href="{% url 'app_page_edit' app.name %}">Edit this page</a></li>
-				<li><a href="{% url 'submit-app' %}?expect_app_name={{ app.fullname }}">Submit a 3.0 app release</a></li>
+				<li><a href="{% url 'app_page_edit' app.name %}{{ cx_platform|safe }}">Edit this page</a></li>
+				<li><a href="{% url 'submit-app' %}?expect_app_name={{ app.fullname }}">Submit a bundle release</a></li>
 				<li class="divider"></li>
 				<li><a data-toggle="modal" href="#delete_ratings_modal">Delete all ratings</a></li>
 			</ul>
@@ -66,7 +66,7 @@
 <div class="row">
 	<div class="span12" id="app-usage-info">
 		{# Ratings #}
-		<div class="rating-stars" data-placement="bottom" data-title="Rate this app! <a class='close' style='margin-left: 0.5em;'>&times;</a>" data-html="true">
+		<div class="rating-stars" data-placement="bottom" data-title="Rate this bundle! <a class='close' style='margin-left: 0.5em;'>&times;</a>" data-html="true">
 			<i class="rating-stars-empty icon-cy-stars-empty"></i>
 			<i class="rating-stars-filled icon-cy-stars-filled" style="width: {{ app.stars_percentage|escapejs }}%;"></i>
 			<span class="rating-spacer"></span>
@@ -98,14 +98,18 @@
 
 		{# badges #}
 		{% if app.has_releases %}
+		<!--
 		<img src="{% get_static_prefix %}apps/img/cy3_sticker.png" class="has-tooltip" data-toggle="tooltip" data-title="This app is available for Cytoscape 3.0 and above.">
+		-->
 		{% endif %}
 
+		<!--
 		{% if app.competition_winner_dec_2012 %}
 		<a href="http://nrnb.org/competitions.html" target="_blank">
 			<img src="{% get_static_prefix %}apps/img/trophy.png" class="has-tooltip" data-toggle="tooltip" data-title="This app won the December 2012 App Competition.">
 		</a>
 		{% endif %}
+		-->
 
 		{% if app.coderepo %}
 		<a href="{{ app.coderepo }}" target="_blank">
@@ -210,7 +214,7 @@
 					<div class="span8">
 						{# Release version #}
 						<h4>
-							<a href="{% url 'release_download' app.name release.version %}">
+							<a href="{% url 'release_download' app.name release.version release.id%}">
 								{{ release.version }}
 							</a>
 							<small><abbr class="timeago" title="{{ release.created_iso }}"></abbr></small>
@@ -219,8 +223,11 @@
 
 						{# Works with #}
 						<p>
-							<strong>Works with</strong> Cytoscape
+							<strong>Works with</strong> ChimeraX
 							{{ release.works_with }}
+							{% if release.platform %}
+							on {{ release.platform }}
+							{% endif %}
 						</p>
 						{# End Works with #}
 
@@ -237,13 +244,32 @@
 						{% endwith %}
 						{% endif %}
 
+						{# Release metadata #}
+						{% if release.metadata_count %}
+						<p>
+							<strong>Details</strong>
+							<ul>
+								{% for type, values in release.get_metadata %}
+								<li>{{ type }}: {{ values|join:", " }}
+									<!--
+									{% for v in values %}
+									{{ v }}
+									{% endfor %}
+									-->
+								</li>
+								{% endfor %}
+							</ul>
+						</p>
+						{% endif %}
+						{# End Release metadata #}
+
 						{# Release dependencies #}
 						{% if release.dependents.count %}
 						<p>
-							<strong>Apps that depend on this release</strong>
+							<strong>Bundles that depend on this release</strong>
 							<ul>
 								{% for dependent in release.dependents.all %}
-								<li><a href="{% url 'app_page' dependent.app.name %}" target="_blank">{{ dependent.app.fullname }}</a> {{ dependent.version }}</li>
+								<li><a href="{% url 'app_page' dependent.app.name %}{{ cx_platform|safe }}" target="_blank">{{ dependent.app.display_name }}</a> {{ dependent.version }}</li>
 								{% endfor %}
 							</ul>
 						</p>
@@ -271,44 +297,42 @@
 
 		{# 3.0 download panel #}
 		{% if app.has_releases %}
+		{% for cx_release in cx_latest_releases %}
 		<div class="well">
-			<h6 class="panel-title muted">CYTOSCAPE 3</h6>
-			<button class="btn btn-large btn-block" id="cy-app-install-btn">
+			<!-- <h6 class="panel-title muted">CHIMERAX</h6> -->
+			<button class="btn btn-large btn-block cy-app-install-btn" platform="{{ cx_release.platform }}" workswith="{{ cx_release.works_with }}" id="{{ cx_release.id }}">
 				<i></i> {# <-- download button icon will go here #}
 				<h4></h4> {# <-- download button text will go here #}
 			</button>
-			<p><strong>Version</strong> {{ cy3_latest_release.version }}</p>
-			{% if app.license_text %}<p><strong>License</strong> <a href="{{ app.license_text }}" target="_blank">Click here</a></p>{% endif %}
-			<p><strong>Released</strong> {{ cy3_latest_release.created|date:'j M Y' }}</p>
-			<p><strong>Works with</strong> <a href="http://www.cytoscape.org" target="_blank">Cytoscape {{ cy3_latest_release.works_with }}</a></p>
-			<p><strong>Download Stats</strong> <a href="{% url 'app_stats' app.name %}" target="_blank">Click here</a>
+			<p>
+			<strong>Version</strong> {{ cx_release.version }}<br/>
+			{% if app.license_text %}<p><strong>License</strong> <a href="{{ app.license_text }}" target="_blank">Click here</a><br/>{% endif %}
+			<strong>Released</strong> {{ cx_release.created|date:'j M Y' }}<br/>
+			<strong>Works with</strong> <a href="http://www.rbvi.ucsf.edu/chimerax" target="_blank">ChimeraX {{ cx_release.works_with }}</a>
+			</p>
 		</div>
+		{% endfor %}
+		{% if not cx_latest_releases %}
+		{# in case there are no downloads for this platform... #}
+		<div class="alert alert-error">
+			No download available for
+			{% if version %}
+			ChimeraX {{ version }} on
+			{% endif %}
+			{% if platform %}
+			{{ platform }}.
+			{% else %}
+			this platform.
+			{% endif %}
+			See <b>Release History</b> for versions available
+			on other ChimeraX versions and platforms.
+		</div>
+		{% endif %}
 		{% endif %}
 		{# end 3.0 download panel #}
-			
-		{# 2.x download panel #}
-		{% if app.cy_2x_plugin_download %}
-		<div class="well">
-			<h6 class="panel-title muted">CYTOSCAPE 2</h6>
-			{% if app.has_releases %}
-			<p><strong>Version</strong> <a class="cy-app-2x-download-popover" href="{{ app.cy_2x_plugin_download }}">{{ app.cy_2x_plugin_version }}</a></p>
-			{% else %}
-			<button class="btn btn-large btn-primary btn-block cy-app-2x-download-popover" id="cy-app-install-btn" onClick="window.location.href='https://github.com/cytoscape/cy2_plugin_archive'" >
-				<i class="icon-cy-install-download"></i>
-				<h4>Download</h4>
-			</button>
-			<p><strong>Version</strong> {{ app.cy_2x_plugin_version }}</p>
-			{% if app.license_text %}<p><strong>License</strong> <a href="{{ app.license_text }}" target="_blank">Click here</a></p>{% endif %}
-			{% endif %}
-			{% if app.cy_2x_plugin_release_date %}<p><strong>Released</strong> {{ app.cy_2x_plugin_release_date|date:'j M Y' }}</p>{% endif %}
-			{% if app.cy_2x_versions %}<p><strong>Works with</strong> <a href="http://www.cytoscape.org" target="_blank">Cytoscape {{ app.cy_2x_versions }}</a></p>{% endif %}
-		<!--	<p><strong>Download Stats</strong> <a href="http://chianti.ucsd.edu/cyto_web/plugins/plugindownloadstatistics.php">Click here</a></p> -->
-		</div>
-		{% endif %}
-		{# end 2.x download panel #}
-				
-		{# in case there are no downloads... #}
-		{% if not app.has_releases and not app.cy_2x_plugin_download %}
+
+		{# in case there are no downloads at all... #}
+		{% if not app.has_releases %}
 		<div class="alert alert-error">
 			No download available.
 		</div>
@@ -317,19 +341,27 @@
 		{# app resources #}
 		<div class="alert">
 			<ul class="nav nav-list">
-			<!--  li class="nav-header" -->
-			
-			<h5>		<!-- i class="fa fa-circle-o-notch fa-spin" style="font-size:16px"><!/i -->&ensp; RESOURCES</font> </h5>
-			<!--/li --> 
-
-				<li><a href="https://cytoscape.org/documentation_users.html" target="_blank">
+				<li class="nav-header">
+					Resources
+				</li>
+				<li><a href="mailto:chimerax-users@cgl.ucsf.edu">
 					<i class="icon-question-sign"></i>
 					Ask a question
 				</a></li>
 
-				<li><a href="https://www.biostars.org/local/search/page/?q=cytoscape+{{ app.fullname }}" target="_blank"><i class="icon-comment"></i> Search BioStars</a></li>
+				<li>
+				[Searching help desk answers not available yet]
+				<!--
+				<a href="https://groups.google.com/forum/?fromgroups#!searchin/cytoscape-helpdesk/{{ app.display_name }}" target="_blank">
+					<i class="icon-comment"></i>
+					Search posts
+				</a>
+				-->
+				</li>
+
 				<li class="divider"></li>
 
+				<li id="downloadstats"><a href="{% url 'app_stats' app.name %}" target="_blank">Download Stats</a></li>
 				{% if app.website %}
 				<li><a href="{{ app.website }}" target="_blank">
 					<i class="icon-home"></i> Website
@@ -382,7 +414,7 @@
 		<h3>Delete All Ratings</h3>
 	</div>
 	<div class="modal-body">
-		Are you sure you want to delete all of your app's ratings?
+		Are you sure you want to delete all of your bundle's ratings?
 	</div>
 	<div class="modal-footer">
 		<form target="" method="post" style="margin: 0;">
@@ -425,15 +457,18 @@
 {# End vote popover content #}
 
 <script type="text/javascript" src="{% get_static_prefix %}apps/js/app_page.js"></script>
-	
+
 <script type="text/javascript">
 $('.has-tooltip').tooltip();
 {% if app.has_releases %}
-AppPage.setup_install("{{ app.name|escapejs }}",
-	"{{ app.fullname|escapejs }}",
-	"{% url 'release_download' app.name cy3_latest_release.version %}", 
-	"{{ cy3_latest_release.version }}",
+{% for cx_release in cx_latest_releases %}
+AppPage.setup_install("{{ cx_release.id }}",
+	"{{ app.name|escapejs }}",
+	"{{ app.display_name|escapejs }}",
+	"{% url 'release_download' app.name cx_release.version cx_release.id %}", 
+	"{{ cx_release.version }}",
 	"{% url 'getstarted_app_install' %}");
+{% endfor %}
 {% endif %}
 AppPage.setup_cy_2x_download_popover('{% get_static_prefix %}apps/img/plugins_dir.png');
 
@@ -442,7 +477,7 @@ AppPage.setup_details();
 {% endif %}
 
 AppPage.setup_stars();
-
 AppPage.setup_release_notes();
+AppPage.setup_download_stats();
 </script>
 {% endblock %}

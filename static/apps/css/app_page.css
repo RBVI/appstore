@@ -72,14 +72,27 @@
     margin-bottom: 1em;
 }
 
-#cy-app-install-btn {
+.cy-app-install-btn {
 	margin-bottom: 0.7em;
 }
 
-#cy-app-install-btn h4 {
+.cy-app-install-btn h4 {
 	display: inline;
 	vertical-align: middle;
 	margin-left: 0.3em;
+}
+
+.cy-app-install-label {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.well {
+    padding: 12px;
+}
+
+.well p {
+    margin: 0;
 }
 
 [class^="icon-cy-install-"], [class*="icon-cy-install-"] {

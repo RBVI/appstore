@@ -19,7 +19,7 @@ def testPackage(module, pipPkgName = None):
 def testVersion(module, expected_version, version, pipPkgName = None):
   satisfied = True
   for i in range(min(len(version), len(expected_version))):
-    if version[i] != expected_version[i]:
+    if str(version[i]) != str(expected_version[i]):
       satisfied = False
       break
   if satisfied:

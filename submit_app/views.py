@@ -8,6 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadReque
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 from util.view_util import html_response, json_response, get_object_or_none
 from util.id_util import fullname_to_name
@@ -15,7 +16,35 @@ from apps.models import Release, App, Author, OrderedAuthor
 from apps.views import _parse_iso_date
 from .models import AppPending
 from .pomparse import PomAttrNames, parse_pom
-from .processjar import process_jar
+from .processwheel import process_wheel, release_dependencies
+import logging
+from cgi import escape
+
+logger = logging.getLogger(__name__)
+
+
+class _TemporaryBundle:
+
+    def __init__(self, f):
+        self.filename = f.name
+        self.fileobj = f
+        self.temp_dir = None
+
+    def __enter__(self):
+        import os.path, tempfile
+        self.temp_dir = tempfile.mkdtemp()
+        self.name = os.path.join(self.temp_dir, os.path.basename(self.filename))
+        with open(self.name, "wb") as f:
+            for chunk in self.fileobj.chunks():
+                f.write(chunk)
+        return self
+
+    def __exit__(self, *args):
+        if self.temp_dir:
+            import shutil
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+
 
 # Presents an app submission form and accepts app submissions.
 @login_required
@@ -25,22 +54,26 @@ def submit_app(request):
         expect_app_name = request.POST.get('expect_app_name')
         f = request.FILES.get('file')
         if f:
-            try:
-                fullname, version, works_with, app_dependencies, has_export_pkg = process_jar(f, expect_app_name)
-                pending = _create_pending(request.user, fullname, version, works_with, app_dependencies, f)
-                _send_email_for_pending(pending)
-                version_pattern1 ="^[0-9].[0-9].[0-9]+"
-                version_pattern1 = re.compile(version_pattern1)
-                version_pattern2 = "^[0-9].[0-9]+"
-                version_pattern2 = re.compile(version_pattern2)
-                if (bool(version_pattern1.match(version))!=True and bool(version_pattern2.match(version))!=True):
-                    raise ValueError("The version is not in proper pattern. It should have 2 order version numbering (e.g: x.y) or 3 order version numbering (e.g: x.y.z)")
-                if has_export_pkg:
-                    return HttpResponseRedirect(reverse('submit-api', args=[pending.id]))
-                else:
-                    return HttpResponseRedirect(reverse('confirm-submission', args=[pending.id]))
-            except ValueError as e:
-                context['error_msg'] = str(e)
+            # We need a real file with the matching name for wheels
+            # so we need to save the content and remove it later
+            with _TemporaryBundle(f) as tb:
+                try:
+                    bundle = process_wheel(tb.name, expect_app_name)
+                    try:
+                        app_dependencies = release_dependencies(
+                                                        bundle.app_dependencies)
+                    except ValueError as e:
+                        raise ValueError('problem with dependencies: ' + str(e))
+                    pending = _create_pending(request.user, bundle.package,
+                                              bundle.version, bundle.platform,
+                                              bundle.works_with,
+                                              app_dependencies,
+                                              bundle.release_notes, f)
+                    _send_email_for_pending(pending)
+                    return HttpResponseRedirect(reverse('confirm-submission',
+                                                        args=[pending.id]))
+                except ValueError, e:
+                    context['error_msg'] = str(e)
     else:
         expect_app_name = request.GET.get('expect_app_name')
         if expect_app_name:
@@ -53,6 +86,7 @@ def _user_cancelled(request, pending):
     return HttpResponseRedirect(reverse('submit-app'))
 
 def _user_accepted(request, pending):
+    info_name = pending.fullname
     app = get_object_or_none(App, name = fullname_to_name(pending.fullname))
     if app:
         if not app.is_editor(request.user):
@@ -84,19 +118,21 @@ def confirm_submission(request, id):
         pending.pom_xml_file.close()
     return html_response('confirm.html', {'pending': pending, 'pom_attrs': pom_attrs}, request)
 
-def _create_pending(submitter, fullname, version, cy_works_with, app_dependencies, release_file):
+def _create_pending(submitter, fullname, version, platform, cy_works_with,
+                    app_dependencies, release_notes, release_file):
     name = fullname_to_name(fullname)
     app = get_object_or_none(App, name = name)
     if app:
         if not app.is_editor(submitter):
             raise ValueError('cannot be accepted because you are not an editor')
-        release = get_object_or_none(Release, app = app, version = version)
+        release = get_object_or_none(Release, app = app, version = version, platform = platform)
         if release and release.active:
             raise ValueError('cannot be accepted because the app %s already has a release with version %s. You can delete this version by going to the Release History tab in the app edit page' % (app.fullname, version))
 
     pending = AppPending.objects.create(submitter      = submitter,
                                         fullname       = fullname,
                                         version        = version,
+                                        platform       = platform,
                                         cy_works_with  = cy_works_with)
     for dependency in app_dependencies:
         pending.dependencies.add(dependency)
@@ -112,7 +148,7 @@ The following app has been submitted:
     Version: {version}
     Submitter: {submitter_name} {submitter_email}
 """.format(id = pending.id, fullname = pending.fullname, version = pending.version, submitter_name = pending.submitter.username, submitter_email = pending.submitter.email)
-    send_mail('Cytoscape App Store - App Submitted', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
+    send_mail('ChimeraX Toolshed - Bundle Submitted', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
 
 def _verify_javadocs_jar(file):
     error_msg = None
@@ -160,7 +196,7 @@ def submit_api(request, id):
     return html_response('submit_api.html', {'pending': pending, 'error_msg': error_msg}, request)
 
 def _send_email_for_accepted_app(to_email, from_email, app_fullname, app_name, server_url):
-    subject = u'Cytoscape App Store - {app_fullname} Has Been Approved'.format(app_fullname = app_fullname)
+    subject = u'ChimeraX Toolshed - {app_fullname} Has Been Approved'.format(app_fullname = app_fullname)
     app_url = reverse('app_page', args=[app_name])
     msg = u"""Your app has been approved! Here is your app page:
 
@@ -179,7 +215,7 @@ If you would like other people to be able to edit the app page, have them sign i
 to the App Store, then add their email addresses to the Editors box, located in
 the top-right.
 
-- Cytoscape App Store Team
+- ChimeraX Team
 """.format(app_url = app_url, author_email = to_email, server_url = server_url)
     send_mail(subject, msg, from_email, (to_email,))
 
@@ -188,20 +224,32 @@ def _get_server_url(request):
     port = request.META['SERVER_PORT']
     if port == '80':
         return 'http://%s' % name
+    elif port == '443':
+        return 'https://%s' % name
     else:
         return 'http://%s:%s' % (name, port)
 
 def _pending_app_accept(pending, request):
     name = fullname_to_name(pending.fullname)
     # we always create a new app, because only new apps require accepting
-    app = App.objects.create(fullname = pending.fullname, name = name)
-    app.active = True
-    app.editors.add(pending.submitter)
-    app.save()
+    try:
+        logger.debug("_pending_app_accept: create %r %r" % (pending.fullname, name))
+        app = App.objects.create(fullname = pending.fullname, name = name)
+        app.active = True
+        logger.debug("_pending_app_accept: add editor")
+        app.editors.add(pending.submitter)
+        logger.debug("_pending_app_accept: save")
+        app.save()
 
-    pending.make_release(app)
-    pending.delete_files()
-    pending.delete()
+        logger.debug("_pending_app_accept: make release")
+        pending.make_release(app)
+        logger.debug("_pending_app_accept: delete files")
+        pending.delete_files()
+        logger.debug("_pending_app_accept: delete pending")
+        pending.delete()
+    except:
+        logger.exception("_pending_app_accept: failed")
+        raise
 
     server_url = _get_server_url(request)
     _send_email_for_accepted_app(pending.submitter.email, settings.CONTACT_EMAIL, app.fullname, app.name, server_url)
@@ -215,24 +263,32 @@ _PendingAppsActions = {
     'decline': _pending_app_decline,
 }
 
+@ensure_csrf_cookie
 @login_required
 def pending_apps(request):
+    logger.debug("submit_app.pending_app: method=%s" % request.method)
     if not request.user.is_staff:
         return HttpResponseForbidden()
     if request.method == 'POST':
         action = request.POST.get('action')
         if not action:
             return HttpResponseBadRequest('action must be specified')
+        logger.debug("submit_app.pending_app action=%s" % action)
         if not action in _PendingAppsActions:
-            return HttpResponseBadRequest('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys()))
+            logger.debug("submit_app.pending_app action invalid" % action)
+            return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
         pending_id = request.POST.get('pending_id')
         if not pending_id:
             return HttpResponseBadRequest('pending_id must be specified')
         try:
             pending_app = AppPending.objects.get(id = int(pending_id))
-        except AppPending.DoesNotExist as ValueError:
+        except (AppPending.DoesNotExist, ValueError):
             return HttpResponseBadRequest('invalid pending_id')
-        _PendingAppsActions[action](pending_app, request)
+        logger.debug("submit_app.pending_app function=%s" % _PendingAppsActions[action])
+        try:
+            _PendingAppsActions[action](pending_app, request)
+        except Exception as e:
+            return HttpResponseBadRequest(escape('%s: %s' % (action, str(e))))
         if request.is_ajax():
             return json_response(True)
 
@@ -345,7 +401,7 @@ def cy2x_plugins(request):
         if not action:
             return HttpResponseBadRequest('action must be specified')
         if not action in _Cy2xPluginsActions:
-            return HttpResponseBadRequest('invalid action--must be: %s' % ', '.join(_Cy2xPluginsActions.keys()))
+            return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_Cy2xPluginsActions.keys())))
         return _Cy2xPluginsActions[action](request.POST)
     else:
         return html_response('cy2x_plugins.html', {}, request)

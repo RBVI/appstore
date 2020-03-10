@@ -9,7 +9,14 @@ from django.utils.text import unescape_entities
 from util.view_util import json_response, html_response, obj_to_dict, get_object_or_none
 from util.img_util import scale_img
 from util.id_util import fullname_to_name
-from apps.models import Tag, App, Author, OrderedAuthor, Screenshot, Release
+from app.models import Tag, App, Author, OrderedAuthor, Screenshot, Release
+from util.chimerax_util import Version, chimerax_user_agent
+from cgi import escape
+
+# import logging
+# logger = logging.getLogger(__name__)
+# "logger" messages land in cxtoolshed.log, e.g., logger.warning(msg)
+# Default logging level is WARNING for apps.views (see settings.py)
 
 # Returns a unicode string encoded in a cookie
 def _unescape_and_unquote(s):
@@ -21,7 +28,7 @@ def _unescape_and_unquote(s):
 # ============================================
 
 class _NavPanelConfig:
-	min_tag_count = 3
+	min_tag_count = 0
 	num_of_top_tags = 20
 	tag_cloud_max_font_size_em = 2.0
 	tag_cloud_min_font_size_em = 1.0
@@ -89,6 +96,7 @@ def apps_default(request):
 	downloaded_apps = App.objects.filter(active=True).order_by('downloads').reverse()[:_DefaultConfig.num_of_top_apps]
 
 	c = {
+		'cx_platform': _cx_platform(request),
 		'latest_apps': latest_apps,
 		'downloaded_apps': downloaded_apps,
 		'go_back_to': 'home',
@@ -98,6 +106,7 @@ def apps_default(request):
 def all_apps(request):
 	apps = App.objects.filter(active=True).order_by('name')
 	c = {
+		'cx_platform': _cx_platform(request),
 		'apps': apps,
 		'navbar_selected_link': 'all',
 		'go_back_to': 'All Apps',
@@ -131,16 +140,41 @@ def wall_of_apps(request):
 		apps_in_not_top_tags.update(not_top_tag.app_set.all())
 	tags.append(('other', apps_in_not_top_tags))
 	c = {
+		'cx_platform': _cx_platform(request),
 		'total_apps_count': App.objects.filter(active=True).count,
 		'tags': tags,
-		'go_back_to': 'Wall of Apps',
+		'go_back_to': 'Wall of Bundles',
 	}
 	return html_response('wall_of_apps.html', c, request)
+
+def bundle_developers(request):
+	apps = App.objects.filter(active = True).order_by('name')
+	developers = []
+	for app in apps:
+		contact = app.contact
+		if contact:
+			contact = "Contact: " + contact
+		else:
+			for editor in app.editors.all():
+				if editor.email:
+					contact = "Editor: " + editor.email
+					break
+		if not contact:
+			contact = "(No contact e-mail available)"
+		developers.append((app.display_name, contact))
+	c = {
+		'cx_platform': _cx_platform(request),
+		'total_apps_count': apps.count,
+		'developers': developers,
+		'go_back_to': 'Bundle Developers',
+	}
+	return html_response('bundle_developers.html', c, request)
 
 def apps_with_tag(request, tag_name):
 	tag = get_object_or_404(Tag, name = tag_name)
 	apps = App.objects.filter(active = True, tags = tag).order_by('name')
 	c = {
+		'cx_platform': _cx_platform(request),
 		'tag': tag,
 		'apps': apps,
 		'selected_tag_name': tag_name,
@@ -154,6 +188,7 @@ def apps_with_author(request, author_name):
 		raise Http404('No such author "%s".' % author_name)
 
 	c = {
+		'cx_platform': _cx_platform(request),
 		'author_name': author_name,
 		'apps': apps,
 		'go_back_to': '%s\'s author page' % author_name,
@@ -190,16 +225,88 @@ def _app_ratings_delete_all(app, user, post):
 
 # -- General app stuff
 
-def _latest_release(app):
+def _cx_platform(request):
+	platform = request.GET.get("platform")
+	cx_version = request.GET.get("version")
+	if platform is None and cx_version is None:
+		# If default and from ChimeraX, use requesting version/platform
+		cx_version, platform = chimerax_user_agent(request)
+	params = {}
+	if platform:
+		params["platform"] = platform
+	if cx_version:
+		params["version"] = cx_version
+	if not params:
+		return ""
+	from urllib import urlencode
+	return '?' + urlencode(params)
+
+def _latest_releases(app, platform=None, cx_version=None):
 	releases = app.releases
 	if not releases: return None
-	return releases[0] # go by the ordering provided by Release.Meta
+	# First collect by platform, with newest prerelease and release
+	# versions for each
+	newest_by_platform = {}
+	cx = Version(cx_version) if cx_version is not None else None
+	for r in releases:
+		if platform and r.platform and platform != r.platform:
+			continue
+		if cx and not cx.compatible_with(r.works_with):
+			continue
+		try:
+			newest = newest_by_platform[r.platform]
+		except KeyError:
+			newest = newest_by_platform[r.platform] = _LatestReleases()
+		v = Version(r.version)
+		newest.add_file(v, r)
+	# Return only requested platform
+	newest_releases = []
+	for p in sorted(newest_by_platform.keys()):
+		pr = newest_by_platform[p]
+		newest_releases.extend(pr.get_releases())
+		newest_releases.extend(pr.get_prereleases())
+	return newest_releases
+
+class _LatestReleases:
+
+	def __init__(self):
+		self.releases = [None, []]
+		self.prereleases = [None, []]
+
+	def add_file(self, version, file):
+		newest = self.prereleases if version.is_prerelease() else self.releases
+		self._add_file(newest, version, file)
+
+	def _add_file(self, newest, version, file):
+		if newest[0] is None or version > newest[0]:
+			newest[0] = version
+			newest[1] = [file]
+		elif version == newest[0]:
+			newest[1].append(file)
+
+	def get_releases(self):
+		return self.releases[1]
+
+	def get_prereleases(self):
+		if (self.releases[0] is None or
+			(self.prereleases[0] is not None and
+			 self.prereleases[0] > self.releases[0])):
+			return self.prereleases[1]
+		else:
+			return []
 
 def _mk_app_page(app, user, request):
+	platform = request.GET.get("platform")
+	cx_version = request.GET.get("version")
+	if platform is None and cx_version is None:
+		cx_version, platform = chimerax_user_agent(request)
 	c = {
+		'cx_platform': _cx_platform(request),
+		'platform': platform,
+		'version': cx_version,
 		'app': app,
 		'is_editor': (user and app.is_editor(user)),
-		'cy3_latest_release': _latest_release(app),
+		'cx_latest_releases': _latest_releases(app, platform, cx_version),
 		'go_back_to_title': _unescape_and_unquote(request.COOKIES.get('go_back_to_title')),
 		'go_back_to_url':   _unescape_and_unquote(request.COOKIES.get('go_back_to_url')),
 	}
@@ -219,11 +326,11 @@ def app_page(request, app_name):
 		if not action:
 			return HttpResponseBadRequest('no action specified')
 		if not action in _AppActions:
-			return HttpResponseBadRequest('action "%s" invalid--must be: %s' % (action, ', '.join(_AppActions)))
+			return HttpResponseBadRequest(escape('action "%s" invalid--must be: %s' % (action, ', '.join(_AppActions))))
 		try:
 			result = _AppActions[action](app, user, request.POST)
 		except ValueError as e:
-			return HttpResponseBadRequest(str(e))
+			return HttpResponseBadRequest(escape(str(e)))
 		if isinstance(result, HttpResponse):
 			return result
 		if request.is_ajax():
@@ -470,23 +577,24 @@ def app_page_edit(request, app_name):
 		if not action:
 			return HttpResponseBadRequest('no action specified')
 		if not action in _AppEditActions:
-			return HttpResponseBadRequest('action "%s" invalid--must be: %s' % (action, ', '.join(_AppEditActions)))
+			return HttpResponseBadRequest(escape('action "%s" invalid--must be: %s' % (action, ', '.join(_AppEditActions))))
 		try:
 			result = _AppEditActions[action](app, request)
 		except ValueError as e:
-			return HttpResponseBadRequest(str(e))
+			return HttpResponseBadRequest(escape(str(e)))
 		app.save()
 		if request.is_ajax():
 			return json_response(result)
 
 	all_tags = [tag.fullname for tag in Tag.objects.all()]
 	c = {
+		'cx_platform': _cx_platform(request),
 		'app': app,
 		'all_tags': all_tags,
 		'max_file_img_size_b': _AppPageEditConfig.max_img_size_b,
 		'max_icon_dim_px': _AppPageEditConfig.max_icon_dim_px,
 		'thumbnail_height_px': _AppPageEditConfig.thumbnail_height_px,
 		'app_description_maxlength': _AppPageEditConfig.app_description_maxlength,
-        'release_uploaded': request.GET.get('upload_release') == 'true',
+		'release_uploaded': request.GET.get('upload_release') == 'true',
 	}
 	return html_response('app_page_edit.html', c, request)

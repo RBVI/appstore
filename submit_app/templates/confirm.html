@@ -21,7 +21,7 @@
 
     <div class="row">
         <div class="span6">
-            <p>We found the following information about your app:</p>
+            <p>We found the following information about your bundle:</p>
         </div>
     </div>
 
@@ -29,29 +29,44 @@
         <div class="span8">
             <table class="table">
               <tr>
-                <td><b>Is this a new app?</b></td>
+                <td><b>Is this a new bundle?</b></td>
                 <td>
                   {% if pending.is_new_app %}
-                    Yes&mdash;a new app page will be created after an App Store administrator approves your app
+                    Yes&mdash;a new bundle page will be created after a Toolshed administrator approves your bundle
                   {% else %}
-                    No&mdash;this submission is an updated version of an existing app
+                    No&mdash;this submission is an updated version of an existing bundle
                   {% endif %}
                 </td>
               </tr>
               <tr>
-                <td><b>App Name</b></td>
-                <td>{{ pending.fullname }}</td>
+                <td><b>Bundle Name</b></td>
+                <td>
+                  {{ pending.fullname }}<br/>
+                  {% if "ChimeraX_" in pending.fullname %}
+                    (The <b>ChimeraX_</b> prefix will not be displayed in
+                    the toolshed browsing and download pages to simplify the
+                    output but is required for all other purposes.)
+                  {% else %}
+                    {{ pending.fullname }}
+                    (A <b>ChimeraX_</b> prefix for the bundle is recommended
+                    to avoid name clash with Python distributions from
+                    <a href="http://pypi.python.org">pypi.python.org</a>.
+                    The prefix will not be displayed in the toolshed browsing
+                    and download pages to simplify the output but
+                    is required for all other purposes.)
+                  {% endif %}
+                </td>
               </tr>
               <tr>
-                <td><b>App Version</b></td>
+                <td><b>Bundle Version</b></td>
                 <td>{{ pending.version }}</td>
               </tr>
               <tr>
-                <td><b>Minimum Cytoscape Version</b></td>
+                <td><b>Minimum ChimeraX Version</b></td>
                 <td>{{ pending.cy_works_with }}</td>
               </tr>
               <tr>
-                <td><b>App Dependencies</b></td>
+                <td><b>Bundle Dependencies</b></td>
                 <td>
                   {% if pending.dependencies.count %}
                       {% for release in pending.dependencies.all %}

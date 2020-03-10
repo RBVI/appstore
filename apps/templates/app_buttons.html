@@ -3,7 +3,7 @@
 {% for app in apps %}
 
     {% if not forloop.counter|divisibleby:2 %}
-      {% app_button app forloop.counter %}
+      {% app_button app forloop.counter cx_platform %}
     {% endif %}
     {% endfor %}
 </div>
@@ -12,8 +12,8 @@
 		{% for app in apps %} 
 	
     {% if forloop.counter|divisibleby:2 %}
-     
-    {% app_button app forloop.counter %}
+
+    {% app_button app forloop.counter cx_platform %}
     {% endif %}
 {% endfor %}
 </div>

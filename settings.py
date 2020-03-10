@@ -13,8 +13,9 @@ try:
     from conf.apikeys import *
     from conf.socialauth import *
     # from conf.geoip import *
-    SITE_DIR ="/var/www/CyAppStore/"
+    SITE_DIR = os.path.dirname(__file__)
 except:
+    raise SystemExit(99)
     from conf.mock import *
     SITE_DIR ="/var/www/CyAppStore/"
     DATABASES = {
@@ -26,7 +27,7 @@ except:
 #jinja_env = Environment(extensions=['jinja2.ext.loopcontrols'])
 # Django settings for CyAppStore project.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEBUG = False 
+DEBUG = True 
 TEMPLATE_DEBUG = DEBUG
 DJANGO_STATIC_AND_MEDIA = DEBUG
 #REVIEW_ALLOW_ANONYMOUS= True
@@ -98,7 +99,7 @@ if DJANGO_STATIC_AND_MEDIA:
 	STATICFILES_FINDERS = (
 	    'django.contrib.staticfiles.finders.FileSystemFinder',
 	    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-	    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+	#   'django.contrib.staticfiles.finders.DefaultStorageFinder',
 	)
 
 # List of callables that know how to import templates from various sources.
@@ -117,7 +118,7 @@ MIDDLEWARE_CLASSES = (
     'social_django.middleware.SocialAuthExceptionMiddleware',
 )
 
-ROOT_URLCONF = 'CyAppStore.urls'
+ROOT_URLCONF = 'cxtoolshed3.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -139,7 +140,7 @@ INSTALLED_APPS = (
     'whoosh',
     'haystack',
     'social_django',
-    'CyAppStore',  # this must be included to find root templates
+    'cxtoolshed3',  # this must be included to find root templates
     'apps',
     'search',
     'submit_app',
@@ -164,7 +165,7 @@ HAYSTACK_CONNECTIONS = {
 #jinja_env = Environment(extensions=['jinja2.ext.loopcontrols'])
 
 if DJANGO_STATIC_AND_MEDIA:
-	INSTALLED_APPS += ('django.contrib.staticfiles', )
+    INSTALLED_APPS += ('django.contrib.staticfiles', )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'social_django.context_processors.backends',
@@ -200,6 +201,11 @@ LOGGING = {
         'mail_admins_always': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/usr/local/projects/chimerax/www/preview/cxtoolshed3/cxtoolshed3.log',
         }
     },
     'loggers': {
@@ -213,6 +219,45 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'apps.views': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'help.views': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'submit_app.views': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'submit_app.processwheel': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'search.views': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'apps.pypi': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'apps.bundle': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     }
 }
 GEOIP_PATH = "/tmp/"
+
+# SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
+FILE_UPLOAD_PERMISSIONS = 0664

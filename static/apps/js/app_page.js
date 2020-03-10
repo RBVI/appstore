@@ -5,7 +5,7 @@ var AppPage = (function($) {
      ================================================================
 	*/
 
-	var AppManagerURL = 'http://127.0.0.1:2607/';
+	var AppManagerURL = 'https://127.0.0.1:2607/';
 
 	function is_manager_running(callback) {
 		$.ajax(AppManagerURL + 'status/',
@@ -26,12 +26,14 @@ var AppPage = (function($) {
             callback);
     }
 
-	var install_btn = $('#cy-app-install-btn');
     var install_btn_last_class = [];
 
-	function setup_install_btn(btn_class, icon_class, btn_text, func) {
-        if (install_btn_last_class.length !== 0)
-            install_btn.removeClass(install_btn_last_class.pop());
+	function setup_install_btn(install_btn, btn_class, icon_class, btn_text, func) {
+        var last_class = install_btn_last_class[install_btn];
+        if (install_btn in install_btn_last_class) {
+            install_btn.removeClass(install_btn_last_class[install_btn]);
+            delete install_btn_last_class[install_btn];
+        }
 		install_btn.addClass(btn_class);
         install_btn_last_class.push(btn_class);
 
@@ -63,21 +65,48 @@ var AppPage = (function($) {
         }
 	}
 
-	function set_install_btn_to_download(release_url) {
-		setup_install_btn('btn-primary', 'icon-cy-install-download', 'Download',
+	function set_install_btn_to_download(install_btn, release_url) {
+        var label;
+        var app_platform = install_btn.attr("platform");
+        if (!app_platform) {
+            if (is_chimerax)
+                label = "Install";
+            else
+                label = "Download";
+        }
+        else {
+            var my_platform = "";
+            if (navigator.appVersion.indexOf("Win") != -1)
+                my_platform = "Windows";
+            else if (navigator.appVersion.indexOf("Mac") != -1)
+                my_platform = "macOS";
+            else if (navigator.appVersion.indexOf("Linux") != -1)
+                my_platform = "Linux";
+            var installable = is_chimerax && app_platform == my_platform;
+            if (installable) {
+                var app_workswith = install_btn.attr("workswith");
+                installable = version_compatible(app_workswith);
+            }
+            if (installable)
+                label = "Install";
+            else
+                label = '<div class="cy-app-install-label">'
+                        + app_platform + "<br>Download</div>";
+		}
+		setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
             function() {
                 window.location.href = release_url;
             });
 	}
 
-	function set_install_btn_to_installing() {
-		setup_install_btn('btn-info', 'icon-cy-install-install', 'Installing...');
+	function set_install_btn_to_installing(install_btn) {
+		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Installing...');
     }
 
-	function set_install_btn_to_install(app_name, latest_release_version) {
-		setup_install_btn('btn-info', 'icon-cy-install-install', 'Install',
+	function set_install_btn_to_install(install_btn, app_name, latest_release_version) {
+		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Install',
             function() {
-                set_install_btn_to_installing();
+                set_install_btn_to_installing(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
                     if (result['install_status'] === 'success') {
                         CyMsgs.add_msg(result['name'] + ' has been installed! Go to Cytoscape to use it.', 'success');
@@ -90,14 +119,14 @@ var AppPage = (function($) {
             });
 	}
 
-	function set_install_btn_to_upgrading() {
-		setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
+	function set_install_btn_to_upgrading(install_btn) {
+		setup_install_btn(install_btn, 'btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
     }
 
-	function set_install_btn_to_upgrade(app_name, latest_release_version) {
+	function set_install_btn_to_upgrade(install_btn, app_name, latest_release_version) {
 		setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrade',
             function() {
-                set_install_btn_to_upgrading();
+                set_install_btn_to_upgrading(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
                     if (result['install_status'] === 'success') {
                         CyMsgs.add_msg(result['name'] + ' has been updated! Go to Cytoscape to use it.', 'success');
@@ -110,13 +139,14 @@ var AppPage = (function($) {
             });
 	}
 
-	function set_install_btn_to_installed() {
-		setup_install_btn('btn-success', 'icon-cy-install-installed', 'Installed');
+	function set_install_btn_to_installed(install_btn) {
+		setup_install_btn(install_btn, 'btn-success', 'icon-cy-install-installed', 'Installed');
 	}
 
-	function setup_install(app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
-        set_install_btn_to_download(latest_release_url);
+	function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
+        set_install_btn_to_download($('#'+release_id), latest_release_url);
 
+		/* Do not bother checking if ChimeraX is running
 		is_manager_running(function(is_running) {
 			if (is_running) {
 				get_app_status(app_fullname, function(app_status) {
@@ -136,6 +166,7 @@ var AppPage = (function($) {
 				CyMsgs.add_msg('Want an easier way to install apps? <a href="' + install_app_help_url + '" target="_blank">Click here</a> to learn how!', 'info');
 			}
 		});
+		*/
 	}
 
 	function setup_cy_2x_download_popover(plugins_dir_img) {
@@ -240,6 +271,96 @@ var AppPage = (function($) {
     
     /*
      ================================================================
+       Download Stats
+     ================================================================
+    */
+    
+    function setup_download_stats() {
+		if (is_chimerax)
+            $('#downloadstats').html("Download Stats requires Flash and is not available from ChimeraX");
+    }
+    
+    /*
+     ================================================================
+       UserAgent and Version
+     ================================================================
+    */
+
+    var useragent = "";
+    var ua_version = "";
+    var is_chimerax = false;
+
+    (function(){
+        var ua_string = navigator.userAgent.trim();
+        var cx = ua_string.indexOf("UCSF-ChimeraX");
+        if (cx == -1)
+            useragent = ua_string;
+        else {
+            var slash = ua_string.indexOf("/", cx);
+            if (slash == -1)
+                useragent = ua_string
+            else {
+                useragent = ua_string.substring(cx, slash);
+                var start = slash + 1;
+                var end = start;
+                while (end < ua_string.length) {
+                    if (/\s/.test(ua_string[end]))
+                        break;
+                    end += 1;
+                }
+                ua_version = ua_string.substring(start, end);
+                is_chimerax = true;
+            }
+        }
+    })();
+
+    function version_compatible(needed) {
+        var match = /\((.*=)(.+)\)/.exec(needed);
+        if (match == null)
+            return true;
+        var operator = match[1];
+        var needed_version = version_array(match[2]);
+        var have_version = version_array(ua_version);
+        return compare_version(operator, have_version, needed_version);
+    }
+
+    function version_array(v) {
+        return v.split('.').map(Number);
+    }
+
+    function compare_version(op, have, want) {
+        var length = Math.min(have.length, want.length);
+        var cmp = 0;    // -1 if have<want, 0 if same, 1 if have>want
+        for (var i = 0; i < length; i++) {
+            if (have < want) {
+                cmp = -1;
+                break;
+            } else if (have > want) {
+                cmp = 1;
+                break;
+            }
+        }
+        if (cmp == 0) {
+            if (have.length < want.length)
+                cmp = -1;
+            else if (have.length > want.length)
+                cmp = 1;
+        }
+        if (op == "==")
+            return cmp == 0;
+        else if (op == ">=")
+            return cmp >= 0;
+        else if (op == ">")
+            return cmp > 0;
+        else if (op == "<=")
+            return cmp <= 0;
+        else if (op == "<")
+            return cmp < 0;
+        return false;
+    }
+    
+    /*
+     ================================================================
        Init
      ================================================================
     */
@@ -247,8 +368,9 @@ var AppPage = (function($) {
     return {
 	'setup_install': setup_install,
 	'setup_cy_2x_download_popover': setup_cy_2x_download_popover,
-        'setup_stars': setup_stars,
-        'setup_details': setup_details,
-        'setup_release_notes': setup_release_notes,
+    'setup_stars': setup_stars,
+    'setup_details': setup_details,
+    'setup_release_notes': setup_release_notes,
+    'setup_download_stats': setup_download_stats,
     }
 })($);
