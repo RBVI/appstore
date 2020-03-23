@@ -9,12 +9,12 @@ from django.utils.text import unescape_entities
 from util.view_util import json_response, html_response, obj_to_dict, get_object_or_none
 from util.img_util import scale_img
 from util.id_util import fullname_to_name
-from app.models import Tag, App, Author, OrderedAuthor, Screenshot, Release
+from .models import Tag, App, Author, OrderedAuthor, Screenshot, Release
 from util.chimerax_util import Version, chimerax_user_agent
 from cgi import escape
 
-# import logging
-# logger = logging.getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 # "logger" messages land in cxtoolshed.log, e.g., logger.warning(msg)
 # Default logging level is WARNING for apps.views (see settings.py)
 
@@ -104,7 +104,10 @@ def apps_default(request):
 	return html_response('apps_default.html', c, request, processors = (_nav_panel_context, ))
 
 def all_apps(request):
-	apps = App.objects.filter(active=True).order_by('name')
+	import operator
+	apps = App.objects.filter(active=True)
+	apps = list(apps)
+	apps.sort(key=operator.attrgetter('display_name'))
 	c = {
 		'cx_platform': _cx_platform(request),
 		'apps': apps,
@@ -148,7 +151,10 @@ def wall_of_apps(request):
 	return html_response('wall_of_apps.html', c, request)
 
 def bundle_developers(request):
-	apps = App.objects.filter(active = True).order_by('name')
+	import operator
+	apps = App.objects.filter(active=True)
+	apps = list(apps)
+	apps.sort(key=operator.attrgetter('display_name'))
 	developers = []
 	for app in apps:
 		contact = app.contact
@@ -172,7 +178,10 @@ def bundle_developers(request):
 
 def apps_with_tag(request, tag_name):
 	tag = get_object_or_404(Tag, name = tag_name)
-	apps = App.objects.filter(active = True, tags = tag).order_by('name')
+	import operator
+	apps = App.objects.filter(active=True, tags=tag)
+	apps = list(apps)
+	apps.sort(key=operator.attrgetter('display_name'))
 	c = {
 		'cx_platform': _cx_platform(request),
 		'tag': tag,
@@ -183,7 +192,10 @@ def apps_with_tag(request, tag_name):
 	return html_response('apps_with_tag.html', c, request, processors = (_nav_panel_context, ))
 
 def apps_with_author(request, author_name):
-	apps = App.objects.filter(active = True, authors__name__exact = author_name).order_by('name')
+	import operator
+	apps = App.objects.filter(active = True, authors__name__exact = author_name)
+	apps = list(apps)
+	apps.sort(key=operator.attrgetter('display_name'))
 	if not apps:
 		raise Http404('No such author "%s".' % author_name)
 
@@ -274,7 +286,7 @@ class _LatestReleases:
 		self.prereleases = [None, []]
 
 	def add_file(self, version, file):
-		newest = self.prereleases if version.is_prerelease() else self.releases
+		newest = self.prereleases if version.is_prerelease else self.releases
 		self._add_file(newest, version, file)
 
 	def _add_file(self, newest, version, file):
@@ -319,7 +331,7 @@ _AppActions = {
 
 def app_page(request, app_name):
 	app = get_object_or_404(App, active = True, name = app_name)
-	user = request.user if request.user.is_authenticated() else None
+	user = request.user if request.user.is_authenticated else None
 
 	if request.method == 'POST':
 		action = request.POST.get('action')
@@ -552,7 +564,6 @@ _AppEditActions = {
 	'save_tutorial':      _mk_basic_field_saver('tutorial'),
 	'save_citation':      _mk_basic_field_saver('citation'),
 	'save_coderepo':      _mk_basic_field_saver('coderepo'),
-        'save_automation':  _mk_basic_field_saver('automation'),
 	'save_contact':       _mk_basic_field_saver('contact'),
 	'save_details':       _mk_basic_field_saver('details'),
 	'save_tags':          _save_tags,

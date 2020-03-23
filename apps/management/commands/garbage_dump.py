@@ -59,18 +59,18 @@ def rm_unused_media_files():
 
 class Command(BaseCommand):
 	def handle(self, *args, **options):
-		print 'Tag:'
+		print('Tag:')
 		for tag in rm_empty_tags():
-			print '  ' + tag
-		print
+			print('  ' + tag)
+		print()
 
-		print 'Author:'
+		print('Author:')
 		for author in rm_empty_authors():
-			print '  ' + author
-		print
+			print('  ' + author)
+		print()
 
 	        '''
-		print 'Media:'
+		print('Media:')
 		for file_path in rm_unused_media_files():
-			print '  ' + file_path
+			print('  ' + file_path)
 		'''

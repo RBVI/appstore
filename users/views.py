@@ -1,5 +1,5 @@
 from django.contrib import auth
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -17,7 +17,7 @@ import logging
 
 def login(request):
     next_url = request.GET.get('next', reverse('default-page'))
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect(next_url)
     return html_response('login.html', {'navbar_selected': 'signin', 'next_url': next_url}, request)
 
@@ -30,7 +30,7 @@ NAMESPACE = getattr(settings, setting_name('URL_NAMESPACE'), None) or 'social'
 @csrf_exempt
 @psa('{0}:complete'.format(NAMESPACE))
 def login_done(request, backend, *args, **kwargs):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return complete(request, backend, *args, **kwargs)
     else:
         try:

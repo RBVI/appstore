@@ -183,68 +183,11 @@ class Bundle:
             return ss
 
 
-class Version:
-    """Version is similar to distutils.version.StrictVersion
-    but allows for more than three digits before an optional
-    alphanumeric label.  Unlike StrictVersion, the trailing
-    alphanumeric label part is compared as a string rather
-    than further broken into an alphabetic label and an
-    integer version number.  This is to avoid having to
-    handle illegal version numbers, but it does mean the
-    sorting might go a1<a10<a2."""
+from distlib.version import LegacyVersion
+class Version(LegacyVersion):
 
     import re
     RENeeded = re.compile("\((?P<op>[<>=]+)(?P<version>.*)\)")
-
-    def __init__(self, s):
-        self._raw = s
-        n = 0
-        while n < len(s):
-            if s[n].isdigit() or s[n] == '.':
-                n += 1
-            else:
-                break
-        self.value = [int(v) for v in s[:n].split('.')]
-        if n < len(s):
-            self.value.append(s[n:])
-
-    def __str__(self):
-        return '.'.join([str(v) for v in self.value])
-
-    def __cmp__(self, other):
-        n = 0
-        limit = min(len(self.value), len(other.value))
-        for n in range(limit):
-            if isinstance(self.value[n], int):
-                if isinstance(other.value[n], int):
-                    # Both integers
-                    delta = self.value[n] - other.value[n]
-                    if delta == 0:
-                        # Same version so far
-                        continue
-                    else:
-                        # Different version at n
-                        return delta
-                else:
-                    # Version with more integers is "larger"
-                    return 1
-            else:
-                if isinstance(other.value[n], int):
-                    # Version with more integers is "larger"
-                    return -1
-                else:
-                    # Both non-integers
-                    delta = cmp(self.value[n], other.value[n])
-                    if delta == 0:
-                        # Same version so far
-                        continue
-                    else:
-                        return delta
-        # Same all the way through, longer is "larger"
-        return cmp(len(self.value), len(other.value))
-
-    def is_prerelease(self):
-        return not isinstance(self.value[-1], int)
 
     def compatible_with(self, needed_version):
         m = self.RENeeded.match(needed_version)
@@ -252,18 +195,21 @@ class Version:
             return False
         op = m.group("op")
         version = Version(m.group("version"))
-        compare = cmp(self, version)
         # Most common operators are >= and ==
         if op == ">=":
-            return compare >= 0
+            return self >= version
         elif op == "==":
-            return compare == 0
+            return self == version
         elif op == ">":
-            return compare > 0
+            return self > version
         elif op == "<":
-            return compare < 0
+            return selv < version
         elif op == "<=":
-            return compare <= 0
+            return self <= version
+        elif op == "~=":
+            pass  # TODO
+        elif op == "===":
+            return str(self) == m.group("version")
         return False
 
 
@@ -290,21 +236,21 @@ def chimerax_user_agent(request):
 
 
 if __name__ == "__main__":
-    if False:
+    if True:
         v = Version("0.9")
         need = [ "(>=0.1)", "(==0.8)", "(>=0.8)", "(==0.9)" ]
         print(v)
         for n in need:
-            print n, v.compatible_with(n)
-    if False:
+            print(n, v.compatible_with(n))
+    if True:
         v1 = Version("1.0.1")
         v1b1 = Version("1.0.1b1")
         v1b2 = Version("1.0.1b2")
         v2 = Version("1.0.2")
-        print v1 < v1b1, "should be True"
-        print v1b2 < v1b1, "should be False"
-        print v1 < v2, "should be True"
-        print v2 < v1b1, "should be False"
+        print(v1 > v1b1, "should be True")
+        print(v1b2 < v1b1, "should be False")
+        print(v1 < v2, "should be True")
+        print(v2 < v1b1, "should be False")
     if False:
         import os, os.path
         # root = "d:/chimerax/src/bundles"
@@ -314,14 +260,14 @@ if __name__ == "__main__":
                 if not filename.endswith(".whl"):
                     continue
                 b = Bundle(os.path.join(dirpath, filename))
-                print "bundle", b.package, b.version, b.platform
-                print "summary", b.summary
-                print "requires", b.requires
-                #print "screenshot", b.screenshot is not None
-                #print "release notes", b.release_notes
+                print("bundle", b.package, b.version, b.platform)
+                print("summary", b.summary)
+                print("requires", b.requires)
+                #print("screenshot", b.screenshot is not None)
+                #print("release notes", b.release_notes)
                 info = b.info()
                 for info_type in sorted(info.keys()):
                     info_data = info[info_type]
                     for name, value in info_data.items():
-                        print "info", info_type, name, value
-                print
+                        print("info", info_type, name, value)
+                print()

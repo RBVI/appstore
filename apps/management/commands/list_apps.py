@@ -2,7 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -19,4 +19,4 @@ class Command(BaseCommand):
             self._list_bundle(app)
 
     def _list_bundle(self, app):
-        print >> self.stdout, app.name, app.fullname, "active:", app.active
+        print(app.name, app.fullname, "active:", app.active)

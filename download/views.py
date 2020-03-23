@@ -1,7 +1,7 @@
 import datetime
 
 from django.shortcuts import get_object_or_404
-from django.contrib.gis.geoip import GeoIP
+# from django.contrib.gis.geoip2 import GeoIP2
 from django.http import HttpResponseRedirect
 
 from util.view_util import html_response, json_response, ipaddr_str_to_long, ipaddr_long_to_str
@@ -12,7 +12,7 @@ from download.models import ReleaseDownloadsByDate, AppDownloadsByGeoLoc, Downlo
 #   Download release
 # ===================================
 
-geoIP = GeoIP()
+# geoIP = GeoIP2()
 
 def _client_ipaddr(request):
     forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

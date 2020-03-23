@@ -22,15 +22,15 @@ def find_bundle(cmd, bundle):
     from apps.models import App
     apps = App.objects.filter(name__contains=bundle)
     if len(apps) == 0:
-        print >> cmd.stderr, "no match for bundle \"%s\"" % bundle
+        print("no match for bundle \"%s\"" % bundle, file=sys.stderr)
         return None
     elif len(apps) > 1:
         for app in apps:
             if app.name == bundle:
                 return app
-        print >> cmd.stderr, "too many matches for bundle \"%s\"" % bundle
+        print(cmd.stderr, "too many matches for bundle \"%s\"" % bundle, file=sys.stderr)
         for app in apps:
-            print >> cmd.stderr, "  ", app.name
+            print("  ", app.name, file=sys.stderr)
         return None
     else:
         return apps[0]
@@ -47,14 +47,14 @@ def find_bundle_version(cmd, bundle, version, platform):
     else:
         rels = Release.objects.filter(app=app, version=version)
     if len(rels) == 0:
-        print >> cmd.stderr, ("no match for bundle \"%s\" version \"%s\""
-                                % (bundle, version))
+        print("no match for bundle \"%s\" version \"%s\"" % (bundle, version),
+              file=sys.stderr)
         return None
     elif len(rels) > 1:
-        print >> cmd.stderr, ("too many matches for bundle \"%s\" "
-                                "version \"%s\"" % (bundle, version))
+        print("too many matches for bundle \"%s\" " "version \"%s\"" % (bundle, version),
+              file=sys.stderr)
         for rel in rels:
-            print >> cmd.stderr, "  ", app.name, rel.version
+            print("  ", app.name, rel.version, file=sys.stderr)
         return None
     else:
         return rels[0]
@@ -65,13 +65,13 @@ def find_release_by_id(cmd, release_id):
     from apps.models import Release
     rels = Release.objects.filter(id=release_id)
     if len(rels) == 0:
-        print >> cmd.stderr, ("no match for release id \"%s\"" % release_id)
+        print("no match for release id \"%s\"" % release_id, file=sys.stderr)
         return None
     elif len(rels) > 1:
-        print >> cmd.stderr, ("too many matches for release id \"%s\" "
-                                % release_id)
+        print("too many matches for release id \"%s\" " % release_id,
+              file=sys.stderr)
         for rel in rels:
-            print >> cmd.stderr, "  ", app.name, rel.version
+            print("  ", app.name, rel.version, file=sys.stderr)
         return None
     else:
         return rels[0]
@@ -92,9 +92,9 @@ def erase_app(cmd, app, dry_run):
     # Clear associations
     #
     if dry_run:
-        print >> cmd.stdout, "clear authors"
-        print >> cmd.stdout, "clear editor"
-        print >> cmd.stdout, "clear tags"
+        print("clear authors")
+        print("clear editor")
+        print("clear tags")
     else:
         app.authors.clear()
         app.editors.clear()
@@ -109,12 +109,12 @@ def erase_app(cmd, app, dry_run):
     from apps.models import Screenshot
     if dry_run:
         if app.icon:
-            print >> cmd.stdout, "delete icon file", app.icon.name
+            print("delete icon file", app.icon.name)
         for sh in Screenshot.objects.filter(app=app):
             if sh.screenshot:
-                print >> cmd.stdout, "delete screenshot file", sh.screenshot.name
+                print("delete screenshot file", sh.screenshot.name)
             if sh.thumbnail:
-                print >> cmd.stdout, "delete thumbnail file", sh.thumbnail.name
+                print("delete thumbnail file", sh.thumbnail.name)
     else:
         if app.icon:
             app.icon.delete()
@@ -139,7 +139,7 @@ def erase_app(cmd, app, dry_run):
     # Remove this bundle
     #
     if dry_run:
-        print >> cmd.stdout, "delete bundle", app
+        print("delete bundle", app)
     else:
         app.delete()
 
@@ -156,9 +156,9 @@ def erase_release(cmd, rel, dry_run=True):
     #deps = rel.dependencies.all()
     deps = Release.objects.filter(dependencies__app__name=app.name).filter(dependencies__version=rel.version)
     if len(deps) > 0:
-        print >> cmd.stderr, "cannot delete release with dependencies"
+        print("cannot delete release with dependencies", file=sys.stderr)
         for dep in deps:
-            print >> cmd.stderr, "  ", dep.app.name, dep.version
+            print("  ", dep.app.name, dep.version, file=sys.stderr)
         return
 
     #
@@ -166,16 +166,15 @@ def erase_release(cmd, rel, dry_run=True):
     #
     all_rels = Release.objects.all()
     if len(all_rels) == 1:
-        print >> cmd.stderr, ("Warning: \"%s\" is the only release "
-                                "of bundle \"%s\""
-                                % (rel.version, app.name))
+        print("Warning: \"%s\" is the only release of bundle \"%s\"" % (rel.version, app.name),
+              file=sys.stderr)
 
     #
     # XXX: Might want to get confirmation from caller here
     #
     if dry_run:
-        print >> cmd.stdout, "Dry run only.  No actual deletion."
-    print >> cmd.stdout, ("Delete bundle \"%s\" version \"%s\""
+        print("Dry run only.  No actual deletion.")
+    print("Delete bundle \"%s\" version \"%s\""
                             % (app.name, rel.version))
 
     #
@@ -184,7 +183,7 @@ def erase_release(cmd, rel, dry_run=True):
     # Remove release file
     if rel.release_file:
         if dry_run:
-            print >> cmd.stdout, "delete file", rel.release_file.name
+            print("delete file", rel.release_file.name)
         else:
             rel.delete_files()
 
@@ -194,9 +193,9 @@ def erase_release(cmd, rel, dry_run=True):
     from download.models import Download, ReleaseDownloadsByDate
     if dry_run:
         for d in Download.objects.filter(release=rel):
-            print >> cmd.stdout, "delete Download instance", d
+            print("delete Download instance", d)
         for r in ReleaseDownloadsByDate.objects.filter(release=rel):
-            print >> cmd.stdout, "delete ReleaseDownloadsByDate instance", r
+            print("delete ReleaseDownloadsByDate instance", r)
     else:
         Download.objects.filter(release=rel).delete()
         ReleaseDownloadsByDate.objects.filter(release=rel).delete()
@@ -211,7 +210,7 @@ def erase_release(cmd, rel, dry_run=True):
     # Remove this release
     #
     if dry_run:
-        print >> cmd.stdout, "delete release", rel
+        print("delete release", rel)
     else:
         rel.delete()
 
@@ -220,17 +219,17 @@ def update_metadata(cmd, rel):
     "Update metdata for a release from its wheel"
     rf = rel.release_file
     if not rf:
-        print >> cmd.stderr, "No file associated with release", rel
+        print("No file associated with release", rel, file=sys.stderr)
         return
     path = rf.storage.path(rf.name)
     if not path.endswith(".whl"):
-        print >> cmd.stderr, "Release file is not a wheel", rf
+        print("Release file is not a wheel", rf, file=sys.stderr)
         return
     from util.chimerax_util import Bundle
     try:
         b = Bundle(path)
     except IOError:
-        print >> cmd.stderr, "Release file is missing", path
+        print("Release file is missing", path, file=sys.stderr)
         return
     from apps.models import ReleaseMetadata
     # XXX: Copied from submit_app/models.py
@@ -267,7 +266,7 @@ def update_metadata(cmd, rel):
                                     release=rel, type=info_type,
                                     name=name, key=key, value=v)
                         md.save()
-    print >> cmd.stdout, "Updated metadata for", rel
+    print("Updated metadata for", rel)
 
 def print_help(cmd):
     import sys, os.path

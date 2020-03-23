@@ -2,7 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -32,4 +32,4 @@ class Command(BaseCommand):
             else:
                 email = None
                 email_type = None
-        print >> self.stdout, '\t'.join([app.display_name, email, email_type])
+        print('\t'.join([app.display_name, email, email_type]))

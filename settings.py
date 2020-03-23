@@ -91,7 +91,7 @@ if DJANGO_STATIC_AND_MEDIA:
 	    # Put strings here, like "/home/html/static" or "C:/www/django/static".
 	    # Always use forward slashes, even on Windows.
 	    # Don't forget to use absolute paths, not relative paths.
-	    filejoin(SITE_DIR, 'static'),
+	    # filejoin(SITE_DIR, 'static'), -- "should not contain the STATIC_ROOT setting."
 	)
 
 	# List of finder classes that know how to find static files in
@@ -102,47 +102,62 @@ if DJANGO_STATIC_AND_MEDIA:
 	#   'django.contrib.staticfiles.finders.DefaultStorageFinder',
 	)
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            filejoin(SITE_DIR, 'templates'),
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+		'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
+# # List of callables that know how to import templates from various sources.
+# TEMPLATE_LOADERS = (
+#     'django.template.loaders.filesystem.Loader',
+#     'django.template.loaders.app_directories.Loader',
+# #     'django.template.loaders.eggs.Loader',
+# )
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
-)
+]
 
-ROOT_URLCONF = 'cxtoolshed3.urls'
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    filejoin(SITE_DIR, 'templates'),
-    filejoin(SITE_DIR, '/home/jeff/.local/lib/python3.6/site-packages/django/contrib/admin/templates'),
-)
+ROOT_URLCONF = 'urls'
 
 INSTALLED_APPS = (
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
-    'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.sites',
     'whoosh',
     'haystack',
     'social_django',
-    'cxtoolshed3',  # this must be included to find root templates
     'apps',
-    'search',
+    #'search',
     'submit_app',
     'users',
     'help',
@@ -166,18 +181,6 @@ HAYSTACK_CONNECTIONS = {
 
 if DJANGO_STATIC_AND_MEDIA:
     INSTALLED_APPS += ('django.contrib.staticfiles', )
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'social_django.context_processors.backends',
-    'social_django.context_processors.login_redirect',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.request',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-)
-
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -258,6 +261,7 @@ LOGGING = {
 }
 GEOIP_PATH = "/tmp/"
 
-# SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+FILE_UPLOAD_PERMISSIONS = 0o664
 
-FILE_UPLOAD_PERMISSIONS = 0664
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Strict'

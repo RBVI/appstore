@@ -116,7 +116,6 @@ var AppPageEdit = (function($)
         field_change($('#cy-app-tutorial'), field_modified('tutorial'));
         field_change($('#cy-app-citation'), field_modified('citation'));
         field_change($('#cy-app-coderepo'), field_modified('coderepo'));
-	field_change($('#cy-app-automation'), field_modified('automation'));
         field_change($('#cy-app-contact'), field_modified('contact'));
     }
         

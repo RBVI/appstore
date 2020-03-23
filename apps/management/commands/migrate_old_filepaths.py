@@ -34,16 +34,16 @@ class Command(BaseCommand):
         if absfilepath == absexpectedpath and isfile(absexpectedpath): continue
 
         if not isdir(expecteddirpath):
-          print 'mkdir', dirname(absexpectedpath)
+          print('mkdir', dirname(absexpectedpath))
           makedirs(dirname(absexpectedpath))
 
         if isfile(absfilepath):
-          print 'mv', absfilepath, absexpectedpath
+          print('mv', absfilepath, absexpectedpath)
           rename(absfilepath, absexpectedpath)
         elif isfile(absexpectedpath):
-          print '%s.%d: incorrect path in db; ok' % (model_name, obj.id)
+          print('%s.%d: incorrect path in db; ok' % (model_name, obj.id))
         else:
-          print 'MISSING FILE! (%s.%d) %s' % (model_name, obj.id, absfilepath)
+          print('MISSING FILE! (%s.%d) %s' % (model_name, obj.id, absfilepath))
 
         filefield.name = expectedpath
         obj.save()

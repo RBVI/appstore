@@ -18,14 +18,14 @@ except ImportError:
     from conf.mock import MVN_BIN_PATH, MVN_SETTINGS_PATH, EMAIL_ADDR
 
 class AppPending(models.Model):
-    submitter     = models.ForeignKey(User)
+    submitter     = models.ForeignKey(User, models.CASCADE)
     fullname      = models.CharField(max_length=127)
     version       = models.CharField(max_length=31)
     platform      = models.CharField(max_length=15)
     cy_works_with = models.CharField(max_length=31)
     created       = models.DateTimeField(auto_now_add=True)
     release_file  = models.FileField(upload_to='pending_releases')
-    dependencies  = models.ManyToManyField(Release, related_name='+', blank=True, null=True)
+    dependencies  = models.ManyToManyField(Release, related_name='+', blank=True)
     javadocs_jar_file = models.FileField(upload_to='pending_releases', blank=True, null=True)
     pom_xml_file      = models.FileField(upload_to='pending_releases', blank=True, null=True)
 

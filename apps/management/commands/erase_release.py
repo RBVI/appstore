@@ -2,7 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -18,16 +18,16 @@ class Command(BaseCommand):
     @fix_line_ending
     def handle(self, *args, **options):
         if len(args) != 2 and len(args) != 3:
-            from utils import print_help
+            from .utils import print_help
             print_help(self)
             return
         dry_run = not options["delete"]
         bundle = args[0]
         version = args[1]
         platform = args[2] if len(args) == 3 else None
-        from utils import find_bundle_version
+        from .utils import find_bundle_version
         rel = find_bundle_version(self, bundle, version, platform)
         if rel is None:
             return
-        from utils import erase_release
+        from .utils import erase_release
         erase_release(self, rel, dry_run)

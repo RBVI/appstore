@@ -1,5 +1,6 @@
-from django.conf.urls import patterns, include, url
+from django.urls import include, re_path
+from . import views
 
-urlpatterns = patterns('',
-    url(r'^$', 'search.views.search', name='search'),
-)
+urlpatterns = [
+    re_path(r'^$', views.search, name='search'),
+]

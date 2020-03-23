@@ -94,6 +94,6 @@ def main(args):
     if email_to:
         email_msg(email_to, msg, 'Updates to plugins.xml')
     else:
-        print msg
+        print(msg)
 
 main(sys.argv[1:])

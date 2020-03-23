@@ -22,9 +22,9 @@ class Command(BaseCommand):
     for country, region, city in dup_names:
       dup_geolocs = GeoLoc.objects.filter(country = country, region = region, city = city)
       for dup_geoloc in dup_geolocs:
-        #print 'GeoLoc', dup_geoloc, dup_geoloc.id, ', dls:',
+        #print('GeoLoc', dup_geoloc, dup_geoloc.id, ', dls:', end='')
         for dl in AppDownloadsByGeoLoc.objects.filter(geoloc = dup_geoloc):
-          #print (dl.app.name if dl.app else 'none'), dl.id, ' | ',
+          #print(dl.app.name if dl.app else 'none'), dl.id, ' | ', end='')
           dl.delete()
         dup_geoloc.delete()
 

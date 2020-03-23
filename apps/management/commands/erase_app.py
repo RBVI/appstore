@@ -2,7 +2,7 @@
 
 from optparse import make_option, OptionError
 from django.core.management.base import BaseCommand, CommandError
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -18,14 +18,14 @@ class Command(BaseCommand):
     @fix_line_ending
     def handle(self, *args, **options):
         if len(args) != 1:
-            from utils import print_help
+            from .utils import print_help
             print_help(self)
             return
         dry_run = not options["delete"]
         bundle = args[0]
-        from utils import find_bundle
+        from .utils import find_bundle
         app = find_bundle(self, bundle)
         if app is None:
             return
-        from utils import erase_app
+        from .utils import erase_app
         erase_app(self, app, dry_run)

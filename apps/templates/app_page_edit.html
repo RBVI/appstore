@@ -14,7 +14,7 @@
 <script type="text/javascript" src="{% get_static_prefix %}apps/js/jquery.tablednd.js"></script>
 {% endblock %}
 
-{% block title %}- Edit {{ app.fullname }}{% endblock %}
+{% block title %}- Edit {{ app.display_name }}{% endblock %}
 
 {% block content %}
 {# app header #}
@@ -25,7 +25,7 @@
   <div class="span7">
     <h2 id="app-title">
       <span rel="tooltip" title="Your bundle name cannot be changed">
-        {{ app.fullname }}
+        {{ app.display_name }}
       </span>
     </h2>
     <input class="span7" id="cy-app-description" type="text" placeholder="Enter a short description of your bundle here" value="{% if app.description %}{{ app.description|escape }}{% endif %}" maxlength="{{ app_description_maxlength }}">
@@ -260,11 +260,6 @@
       <fieldset class="control-group" id="cy-app-coderepo">
         <label><i class="icon-list-alt"></i> Code Repository:</label>
         <input type="text" value="{% if app.coderepo %}{{ app.coderepo }}{% endif %}">
-      </fieldset>
-      <fieldset class="control-group" id="cy-app-automation">
-	  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <label><i class="fa fa-gear fa-spin" style="color:black"></i> Automation Support:</label>
-        <input type="text" value="{% if app.automation %}{{ app.automation }}{% endif %}">
       </fieldset>
       <fieldset class="control-group" id="cy-app-contact">
         <label><i class="icon-envelope"></i> Contact Email:</label>

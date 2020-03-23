@@ -19,8 +19,5 @@
 /download/geolite/last_updated
 /logs
 /myvirtualenv
-/xapian-core-1.4.5
-/xapian-bindings-1.4.5
-/xapian_indices
 /whoosh_index
-cxtoolshed.log
+cxtoolshed3.log

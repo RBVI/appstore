@@ -105,7 +105,7 @@
 
 		<!--
 		{% if app.competition_winner_dec_2012 %}
-		<a href="http://nrnb.org/competitions.html" target="_blank">
+		<a href="https://nrnb.org/competitions.html" target="_blank">
 			<img src="{% get_static_prefix %}apps/img/trophy.png" class="has-tooltip" data-toggle="tooltip" data-title="This app won the December 2012 App Competition.">
 		</a>
 		{% endif %}
@@ -114,11 +114,6 @@
 		{% if app.coderepo %}
 		<a href="{{ app.coderepo }}" target="_blank">
 			<img src="{% get_static_prefix %}apps/img/open-source.png" class="has-tooltip" data-toggle="tooltip" data-title="This app is open source.">
-		</a>
-		{% endif %}
-		{% if app.automation %}
-		<a href="{{ app.automation }}" target="_blank">
-			<img src="{% get_static_prefix %}apps/img/automation.png" class="has-tooltip" data-toggle="tooltip" data-title="This app supports automation.">
 		</a>
 		{% endif %}
 		{# end badges #}
@@ -209,7 +204,7 @@
 			{# Releases tab #}
 			{% if app.has_releases %}
 			<div class="tab-pane" id="cy-app-releases-tab">
-				{% for release in app.releases %}
+				{% for release in app.sorted_releases %}
 				<div class="row">
 					<div class="span8">
 						{# Release version #}
@@ -308,7 +303,7 @@
 			<strong>Version</strong> {{ cx_release.version }}<br/>
 			{% if app.license_text %}<p><strong>License</strong> <a href="{{ app.license_text }}" target="_blank">Click here</a><br/>{% endif %}
 			<strong>Released</strong> {{ cx_release.created|date:'j M Y' }}<br/>
-			<strong>Works with</strong> <a href="http://www.rbvi.ucsf.edu/chimerax" target="_blank">ChimeraX {{ cx_release.works_with }}</a>
+			<strong>Works with</strong> <a href="https://www.rbvi.ucsf.edu/chimerax" target="_blank">ChimeraX {{ cx_release.works_with }}</a>
 			</p>
 		</div>
 		{% endfor %}
@@ -375,7 +370,7 @@
 				{% endif %}
 
 				{% if app.citation %}
-				<li><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ app.citation }}" target="_blank">
+				<li><a href="https://www.ncbi.nlm.nih.gov/pubmed/{{ app.citation }}" target="_blank">
 					<i class="icon-heart"></i> Cite this App
 				</a></li>
 				{% endif %}

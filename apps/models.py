@@ -12,7 +12,7 @@ except:
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 class Author(models.Model):
 	name        = models.CharField(max_length=255)
@@ -83,7 +83,6 @@ class App(models.Model):
     tutorial     = models.URLField(blank=True, null=True)
     citation     = models.CharField(max_length=31, blank=True, null=True)
     coderepo     = models.URLField(blank=True, null=True)
-    automation   = models.URLField(blank=True, null=True)
     contact      = models.EmailField(blank=True, null=True)
 
     stars        = models.PositiveIntegerField(default=0)
@@ -102,7 +101,7 @@ class App(models.Model):
             return True
         if user in self.editors.all():
             return True
-        li =[usr.email for usr in self.editors.all()]
+        li = [usr.email for usr in self.editors.all()]
         return user.email in li
         
 
@@ -123,7 +122,16 @@ class App(models.Model):
 
     @property
     def releases(self):
-        return self.release_set.filter(active=True).all()
+        releases = list(self.release_set.filter(active=True).all())
+        releases.sort(reverse=True)
+        return releases
+
+    @property
+    def sorted_releases(self):
+        # return releases in newest to oldest order
+        releases = list(self.release_set.filter(active=True).all())
+        releases.sort(reverse=True)
+        return releases
 
     def update_has_releases(self):
         self.has_releases = (self.release_set.filter(active=True).count() > 0)
@@ -144,8 +152,8 @@ class App(models.Model):
         return self.name
 
 class OrderedAuthor(models.Model):
-    author       = models.ForeignKey(Author)
-    app          = models.ForeignKey(App)
+    author       = models.ForeignKey(Author, models.CASCADE)
+    app          = models.ForeignKey(App, models.CASCADE)
     author_order = models.PositiveSmallIntegerField(default = 0)
 
     def __unicode__(self):
@@ -160,7 +168,7 @@ def release_file_path(release, filename):
     return pathjoin(release.app.name, 'releases', release.version, filename)
 
 class Release(models.Model):
-    app           = models.ForeignKey(App)
+    app           = models.ForeignKey(App, models.CASCADE)
     version       = models.CharField(max_length=31)
     platform      = models.CharField(max_length=15)
     works_with    = models.CharField(max_length=31)
@@ -171,6 +179,9 @@ class Release(models.Model):
     release_file  = models.FileField(upload_to=release_file_path)
     hexchecksum   = models.CharField(max_length=511, blank=True, null=True)
     dependencies  = models.ManyToManyField('self', related_name='dependents', symmetrical=False)
+
+    def __lt__(self, other):
+        return (self.app, self.version, self.platform) < (other.app, other.version, other.platform)
 
     @property
     def version_tuple(self):
@@ -284,7 +295,7 @@ def thumbnail_path(screenshot, filename):
     return pathjoin(screenshot.app.name, 'thumbnails', filename)
 
 class Screenshot(models.Model):
-    app        = models.ForeignKey(App)
+    app        = models.ForeignKey(App, models.CASCADE)
     screenshot = models.ImageField(upload_to=screenshot_path)
     thumbnail  = models.ImageField(upload_to=thumbnail_path)
 
@@ -309,7 +320,7 @@ def camel_case_split(str):
     return [''.join(word) for word in words] 
 
 class ReleaseAPI(models.Model):
-    release           = models.ForeignKey(Release)
+    release           = models.ForeignKey(Release, models.CASCADE)
     javadocs_jar_file = models.FileField(upload_to=javadocs_path)
     pom_xml_file      = models.FileField(upload_to=pom_xml_path)
 
@@ -333,7 +344,7 @@ class ReleaseAPI(models.Model):
         self.pom_xml_file.delete()
 
 class ReleaseMetadata(models.Model):
-    release           = models.ForeignKey(Release)
+    release           = models.ForeignKey(Release, models.CASCADE)
     type              = models.CharField(max_length=127)
     name              = models.CharField(max_length=127)
     key               = models.CharField(max_length=127)

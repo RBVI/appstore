@@ -4,7 +4,7 @@ from apps.models import App
 register = template.Library()
 
 @register.inclusion_tag('app_button.html')
-def app_button(app, order_index):
+def app_button(app, order_index, cx_platform):
     try:
         app.star_percentage = 100 * app.object.stars / 5 / app.object.votes if app.object.votes else 0
         c = {}
@@ -33,7 +33,7 @@ def app_button_by_name(app_name):
         c['app'] = app
         return c 
 @register.inclusion_tag('app_buttons.html')
-def app_buttons(apps):
+def app_buttons(apps, cx_platform):
     return {'apps': list(apps), 'cx_platform': cx_platform}
 
 

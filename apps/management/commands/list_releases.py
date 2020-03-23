@@ -2,7 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -33,6 +33,6 @@ class Command(BaseCommand):
             self._list_version(app, rel)
 
     def _list_version(self, app, rel):
-        print >> self.stdout, app.name, rel.version, "active:", rel.active
+        print(app.name, rel.version, "active:", rel.active)
         f = rel.release_file
-        print >> self.stdout, "  ", f.storage.path(f.name)
+        print("  ", f.storage.path(f.name))

@@ -3,7 +3,7 @@ from os.path import basename
 from urllib.request import urlopen
 import re
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
 from django.conf import settings
 from django.core.mail import send_mail
@@ -72,7 +72,7 @@ def submit_app(request):
                     _send_email_for_pending(pending)
                     return HttpResponseRedirect(reverse('confirm-submission',
                                                         args=[pending.id]))
-                except ValueError, e:
+                except ValueError as e:
                     context['error_msg'] = str(e)
     else:
         expect_app_name = request.GET.get('expect_app_name')

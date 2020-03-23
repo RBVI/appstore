@@ -1,6 +1,9 @@
-django < 1.9  # requires django.utils.importlib
-python-geoip
-django-social-auth
+django >= 3
+whoosh
+haystack
+sqlparse
 Pillow
-gevent
-xapiand
+geoip2
+# django-geoip2-extras
+django-haystack >= 3.0b1
+distlib

@@ -36,7 +36,7 @@ def handler(request):
         try:
             response = HttpResponse(d._marshaled_dispatch(data),
                                     content_type='text/xml')
-        except Exception, e:
+        except Exception as e:
             logger.exception(e)
             raise
     else:
@@ -413,11 +413,11 @@ def browse(classifiers):
         try:
             s = cmap[c.lower()]
         except KeyError:
-            print "no releases match", c.lower()
+            print("no releases match", c.lower())
             # Nothing had this classifier, just return empty list
             return []
         else:
-            print c.lower(), s
+            print(c.lower(), s)
             if results is None:
                 results = s
             else:

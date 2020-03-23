@@ -2,7 +2,7 @@
 
 from optparse import make_option
 from django.core.management.base import BaseCommand
-from utils import fix_line_ending
+from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -15,7 +15,7 @@ class Command(BaseCommand):
             self.extract_all_bundles()
         elif len(args) == 1:
             bundle = args[0]
-            from utils import find_bundle
+            from .utils import find_bundle
             app = find_bundle(self, bundle)
             if app is None:
                 return
@@ -25,13 +25,13 @@ class Command(BaseCommand):
             app = find_bundle(self, bundle)
             if app is None:
                 return
-            from utils import find_bundle_version
+            from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, None)
             if rel is None:
                 return
             self.extract_release(app, rel)
         else:
-            from utils import print_help
+            from .utils import print_help
             print_help(self)
             return
 
