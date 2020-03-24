@@ -250,7 +250,7 @@ def _cx_platform(request):
 		params["version"] = cx_version
 	if not params:
 		return ""
-	from urllib import urlencode
+	from urllib.parse import urlencode
 	return '?' + urlencode(params)
 
 def _latest_releases(app, platform=None, cx_version=None):

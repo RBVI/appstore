@@ -6,26 +6,24 @@ from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
-    args = "bundle"
-    help = "delete all references to specified bundle"
-    option_list = BaseCommand.option_list + (
-                    make_option("--delete",
-                                action="store_true",
-                                dest="delete",
-                                default=False,
-                                help="really delete instead of dry run"),)
+    help = "delete all references to specified app"
+
+    def add_arguments(self, parser):
+        parser.add_argument("--delete",
+                            action="store_true",
+                            dest="delete",
+                            default=False,
+                            help="really delete instead of dry run")
+        parser.add_argument("app_name",
+                            help="The internal app name")
 
     @fix_line_ending
     def handle(self, *args, **options):
-        if len(args) != 1:
-            from .utils import print_help
-            print_help(self)
-            return
         dry_run = not options["delete"]
-        bundle = args[0]
+        app_name = options['app_name']
         from .utils import find_bundle
-        app = find_bundle(self, bundle)
+        app = find_bundle(self, app_name)
         if app is None:
-            return
+            raise SystemExit(1)
         from .utils import erase_app
         erase_app(self, app, dry_run)

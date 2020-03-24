@@ -13,11 +13,15 @@ var PendingApps = (function() {
                 $.post('',
                        {'action': action,
                        'pending_id': pending_id},
-                       function() {
+                       function(result) {
                             pending_tag.hide('slow', function() {
                                 pending_tag.remove();
                             });
-                            msg = msg.replace('%s', app_name + ' ' + app_version);
+                            if (typeof result === 'string' || result instanceof String) {
+                                msg = "Submission failed: " + result;
+                            } else {
+                                msg = msg.replace('%s', app_name + ' ' + app_version);
+                            }
                             var msg_tag = $('<div>').
                                 addClass('alert').
                                 addClass('alert-' + msg_type).

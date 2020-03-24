@@ -85,7 +85,7 @@ class AppPending(models.Model):
                     for key, value in values.items():
                         # key: "synopsis", "categories ccd", etc.
                         # value: either a string or a list
-                        if isinstance(value, basestring):
+                        if isinstance(value, str):
                             md, _ = ReleaseMetadata.objects.get_or_create(
                                         release=release, type=info_type,
                                         name=name, key=key, value=value)

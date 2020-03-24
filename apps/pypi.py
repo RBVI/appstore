@@ -381,9 +381,9 @@ def search(spec, operator="and"):
             vlist = _get_release_info(r, attr)
             if vlist is None:
                 continue
-            if isinstance(vlist, basestring):
+            if isinstance(vlist, str):
                 vlist = [vlist]
-            if isinstance(values, basestring):
+            if isinstance(values, str):
                 values = [values]
             if _search_matches(values, vlist):
                 keep.add(r)

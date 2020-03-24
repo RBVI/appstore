@@ -1,6 +1,8 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
+import sys
 
 def fix_line_ending(f):
+    return f  ## TODO
     from functools import wraps
     @wraps(f)
     def wrapped_f(self, *args, **kw):
@@ -255,7 +257,7 @@ def update_metadata(cmd, rel):
             for key, value in values.items():
                 # key: "synopsis", "categories ccd", etc.
                 # value: either a string or a list
-                if isinstance(value, basestring):
+                if isinstance(value, str):
                     md, _ = ReleaseMetadata.objects.get_or_create(
                                 release=rel, type=info_type,
                                 name=name, key=key, value=value)

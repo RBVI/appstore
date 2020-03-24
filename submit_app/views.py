@@ -247,8 +247,9 @@ def _pending_app_accept(pending, request):
         pending.delete_files()
         logger.debug("_pending_app_accept: delete pending")
         pending.delete()
-    except:
+    except Exception as e:
         logger.exception("_pending_app_accept: failed")
+        pending.delete()
         raise
 
     server_url = _get_server_url(request)
@@ -272,22 +273,32 @@ def pending_apps(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         if not action:
+            if request.is_ajax():
+                return json_response('action must be specified')
             return HttpResponseBadRequest('action must be specified')
         logger.debug("submit_app.pending_app action=%s" % action)
         if not action in _PendingAppsActions:
             logger.debug("submit_app.pending_app action invalid" % action)
+            if request.is_ajax():
+                return json_response(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
             return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
         pending_id = request.POST.get('pending_id')
         if not pending_id:
+            if request.is_ajax():
+                return json_response('pending_id must be specified')
             return HttpResponseBadRequest('pending_id must be specified')
         try:
             pending_app = AppPending.objects.get(id = int(pending_id))
         except (AppPending.DoesNotExist, ValueError):
+            if request.is_ajax():
+                return json_response('invalid pending_id')
             return HttpResponseBadRequest('invalid pending_id')
         logger.debug("submit_app.pending_app function=%s" % _PendingAppsActions[action])
         try:
             _PendingAppsActions[action](pending_app, request)
         except Exception as e:
+            if request.is_ajax():
+                return json_response(escape('%s: %s' % (action, str(e))))
             return HttpResponseBadRequest(escape('%s: %s' % (action, str(e))))
         if request.is_ajax():
             return json_response(True)
