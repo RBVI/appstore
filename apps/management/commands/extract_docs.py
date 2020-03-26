@@ -1,27 +1,30 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 
-from optparse import make_option
 from django.core.management.base import BaseCommand
-from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
     args = "[bundle [version]]"
     help = "extract documentation from bundle"
 
-    @fix_line_ending
+    def add_arguments(self, parser):
+        parser.add_argument("bundle", ncargs='?',
+                            help="bundle name")
+        parser.add_argument("version", ncargs='?',
+                            help="bundle version")
+
     def handle(self, *args, **options):
-        if len(args) == 0:
+        bundle = options['bundle']
+        version = options['version']
+        if bundle is None and version is None:
             self.extract_all_bundles()
-        elif len(args) == 1:
-            bundle = args[0]
+        elif version is None:
             from .utils import find_bundle
             app = find_bundle(self, bundle)
             if app is None:
                 return
             self.extract_bundle(app)
-        elif len(args) == 2:
-            bundle, version = args
+        else:
             app = find_bundle(self, bundle)
             if app is None:
                 return
@@ -30,10 +33,6 @@ class Command(BaseCommand):
             if rel is None:
                 return
             self.extract_release(app, rel)
-        else:
-            from .utils import print_help
-            print_help(self)
-            return
 
     def extract_all_bundles(self):
         from apps.models import App

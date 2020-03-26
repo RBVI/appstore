@@ -1,17 +1,18 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 
-from optparse import make_option
 from django.core.management.base import BaseCommand
-from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
-    args = "[bundle]"
     help = "list all releases of a bundle"
 
-    @fix_line_ending
+    def add_arguments(self, parser):
+        parser.add_argument("bundle", ncarg='?',
+                            help="The bundle name")
+
     def handle(self, *args, **options):
-        if len(args) == 0:
+        bundle = options['bundle']
+        if bundle is None:
             self.list_all_releases()
         else:
             for bundle in args:

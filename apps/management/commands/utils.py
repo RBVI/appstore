@@ -1,23 +1,6 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 import sys
 
-def fix_line_ending(f):
-    return f  ## TODO
-    from functools import wraps
-    @wraps(f)
-    def wrapped_f(self, *args, **kw):
-        try:
-            save = self.stdout.ending
-            self.stdout.ending = ''
-        except AttributeError:
-            pass
-        rv = f(self, *args, **kw)
-        try:
-            self.stdout.ending = save
-        except NameError:
-            pass
-        return rv
-    return wrapped_f
 
 def find_bundle(cmd, bundle):
     "Find the specified bundle"
@@ -269,9 +252,3 @@ def update_metadata(cmd, rel):
                                     name=name, key=key, value=v)
                         md.save()
     print("Updated metadata for", rel)
-
-def print_help(cmd):
-    import sys, os.path
-    prog = os.path.split(sys.argv[0])[-1]
-    subcommand = cmd.__class__.__module__.split('.')[-1]
-    cmd.print_help(prog, subcommand)

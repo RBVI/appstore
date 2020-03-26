@@ -1,8 +1,6 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 
-from optparse import make_option, OptionError
 from django.core.management.base import BaseCommand, CommandError
-from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
@@ -17,7 +15,6 @@ class Command(BaseCommand):
         parser.add_argument("app_name",
                             help="The internal app name")
 
-    @fix_line_ending
     def handle(self, *args, **options):
         dry_run = not options["delete"]
         app_name = options['app_name']

@@ -1,43 +1,46 @@
 # vim: set expandtab shiftwidth=4 softtabstop=4:
 
-from optparse import make_option
 from django.core.management.base import BaseCommand
-from .utils import fix_line_ending
 
 class Command(BaseCommand):
 
-    args = "[bundle [version [platform]]]"
     help = "update metadata associated with a bundle version"
 
-    @fix_line_ending
+    def add_arguments(self, parser):
+        parser.add_argument("bundle", ncarg='?',
+                            help="The bundle name")
+        parser.add_argument("version", ncarg='?',
+                            help="The bundle version")
+        parser.add_argument("platform", ncarg='?',
+                            help="The platform")
+
     def handle(self, *args, **options):
-        if len(args) == 0:
+        bundle = options['bundle']
+        version = options['version']
+        platform = options['platform']
+        if bundle is None and version is None and platform is None:
             self.update_all_bundles()
-        elif len(args) == 1:
+        elif version is None and platform is None:
             bundle = args[0]
             from .utils import find_bundle
             app = find_bundle(self, bundle)
             if app is None:
                 return
             self.update_bundle(app)
-        elif len(args) == 2:
+        elif platform is None:
             bundle, version = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, None)
             if rel is None:
                 return
             self.update_release(rel)
-        elif len(args) == 3:
+        else:
             bundle, version, platform = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, platform)
             if rel is None:
                 return
             self.update_release(rel)
-        else:
-            from .utils import print_help
-            print_help(self)
-            return
 
     def update_all_bundles(self):
         from apps.models import App
