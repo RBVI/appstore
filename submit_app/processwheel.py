@@ -38,7 +38,7 @@ def process_wheel(filename, expect_app_name):
         if len(parts) == 1:
             # Version is missing, make something up for now
             name = parts[0]
-            version = "(>=0.1)"
+            version = "(~=0.1)"
         else:
             name = parts[0]
             version = parts[1].strip()

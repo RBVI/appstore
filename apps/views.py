@@ -10,7 +10,7 @@ from util.view_util import json_response, html_response, obj_to_dict, get_object
 from util.img_util import scale_img
 from util.id_util import fullname_to_name
 from .models import Tag, App, Author, OrderedAuthor, Screenshot, Release
-from util.chimerax_util import Version, chimerax_user_agent
+from util.chimerax_util import Version, compatible_with, chimerax_user_agent
 from cgi import escape
 
 import logging
@@ -263,7 +263,7 @@ def _latest_releases(app, platform=None, cx_version=None):
 	for r in releases:
 		if platform and r.platform and platform != r.platform:
 			continue
-		if cx and not cx.compatible_with(r.works_with):
+		if cx and not compatible_with(cx, r.works_with):
 			continue
 		try:
 			newest = newest_by_platform[r.platform]

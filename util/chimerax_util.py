@@ -13,6 +13,8 @@ Callers may query :py:class:`Bundle` instances for information
 such as bundle name, version, dependencies, description, summary,
 icon, screenshot, etc.
 """
+from packaging.version import Version
+
 
 class Bundle:
     def __init__(self, filename):
@@ -183,34 +185,13 @@ class Bundle:
             return ss
 
 
-from distlib.version import LegacyVersion
-class Version(LegacyVersion):
-
-    import re
-    RENeeded = re.compile("\((?P<op>[<>=]+)(?P<version>.*)\)")
-
-    def compatible_with(self, needed_version):
-        m = self.RENeeded.match(needed_version)
-        if not m:
-            return False
-        op = m.group("op")
-        version = Version(m.group("version"))
-        # Most common operators are >= and ==
-        if op == ">=":
-            return self >= version
-        elif op == "==":
-            return self == version
-        elif op == ">":
-            return self > version
-        elif op == "<":
-            return selv < version
-        elif op == "<=":
-            return self <= version
-        elif op == "~=":
-            pass  # TODO
-        elif op == "===":
-            return str(self) == m.group("version")
-        return False
+def compatible_with(version, needed_version):
+    if needed_version.startswith('('):
+        assert needed_version[-1] == ')'
+        needed_version = needed_version[1:-1]
+    from packaging.specifiers import SpecifierSet
+    spec = SpecifierSet(needed_version, prereleases=True)
+    return spec.contains(version)
 
 
 import re
@@ -237,11 +218,11 @@ def chimerax_user_agent(request):
 
 if __name__ == "__main__":
     if True:
-        v = Version("0.9")
-        need = [ "(>=0.1)", "(==0.8)", "(>=0.8)", "(==0.9)" ]
+        v = Version("0.9.2")
+        need = [ "(>=0.1)", "(==0.8)", "(>=0.8)", "(==0.9.2)", "(>0.9.1,<1)", "(~=0.9.1)", "(~=0.9.3)" ]
         print(v)
         for n in need:
-            print(n, v.compatible_with(n))
+            print(n, compatible_with(v, n))
     if True:
         v1 = Version("1.0.1")
         v1b1 = Version("1.0.1b1")

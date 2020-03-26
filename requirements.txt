@@ -7,5 +7,5 @@ geoip2
 # django-geoip2-extras
 django-haystack >= 3.0b1
 # ChimeraX-specific packages
-distlib
 pkginfo
+packaging
