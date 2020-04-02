@@ -1,5 +1,5 @@
 from haystack import indexes
-from apps.models import App, Author, Tag
+from .models import App, Author, Tag
 
 def camel_case_split(str): 
     words = [[str[0]]] 

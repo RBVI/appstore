@@ -190,7 +190,7 @@ def _search_matches(tvlist, vlist):
 def _get_classifiers():
     global _classifier_map
     if _classifier_map is None:
-        from models import Release
+        from .models import Release
         from django.conf import settings
         from util.chimerax_util import Bundle
         import os.path
@@ -211,7 +211,7 @@ def _get_classifiers():
 
 def _format_package_versions(package, version):
     import os.path
-    from models import Release
+    from .models import Release
     if not package:
         releases = Release.objects.filter(active=True)
     else:
@@ -253,7 +253,7 @@ def implemented(f):
 def list_packages():
     """Retrieve a list of the package names registered with the
     package index. Returns a list of name strings."""
-    from models import App
+    from .models import App
     return [app.fullname for app in set(App.objects.filter(active=True))]
 
 @implemented
@@ -262,7 +262,7 @@ def package_releases(package_name, show_hidden=False):
     package_name, ordered by version.
 
     The show_hidden flag is now ignored. All versions are returned."""
-    from models import Release
+    from .models import Release
     releases = Release.objects.filter(active=True, app__fullname=package_name)
     return [r.version for r in releases]
 
@@ -270,7 +270,7 @@ def package_releases(package_name, show_hidden=False):
 def package_roles(package_name):
     """Retrieve a list of [role, user] for a given package_name.
     Role is either Maintainer or Owner."""
-    from models import App
+    from .models import App
     apps = App.objects.filter(fullname=package_name)
     roles = []
     for app in apps:
@@ -284,7 +284,7 @@ def package_roles(package_name):
 def user_packages(user):
     """Retrieve a list of [role, package_name] for a given user.
     Role is either Maintainer or Owner."""
-    from models import App
+    from .models import App
     packages = []
     apps = App.objects.filter(authors__name=user)
     for app in apps:
@@ -298,7 +298,7 @@ def user_packages(user):
 def release_downloads(package_name, release_version):
     """Retrieve a list of [filename, download_count] for a given
     package_name and release_version."""
-    from models import Release
+    from .models import Release
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,
                                       version=release_version)
@@ -316,7 +316,7 @@ def release_urls(package_name, release_version):
     """Retrieve a list of download URLs for the given release_version.
     Returns a list of dicts."""
     # See documentation for dictionary keys
-    from models import Release
+    from .models import Release
     from django.conf import settings
     import os, datetime, os.path
     releases = Release.objects.filter(active=True,
@@ -352,7 +352,7 @@ def release_data(package_name, release_version):
     """Retrieve metadata describing a specific release_version.
     Returns a dictionary."""
     # See documentation for dictionary keys
-    from models import Release
+    from .models import Release
     import os, datetime
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,
@@ -372,7 +372,7 @@ def release_data(package_name, release_version):
 def search(spec, operator="and"):
     """Search the package database using the indicated search spec."""
     # See URL for detailed description
-    from models import Release
+    from .models import Release
     releases = set(Release.objects.filter(active=True))
     or_results = set()
     for attr, values in spec.items():
@@ -431,7 +431,7 @@ def browse(classifiers):
 def top_packages(number=None):
     """Retrieve the sorted list of packages ranked by number of
     downloads. Optionally limit the list to the number given."""
-    from models import App
+    from .models import App
     apps = list(App.objects.filter(active=True))
     apps.sort(key=lambda app: app.downloads)
     apps.reverse()
@@ -443,7 +443,7 @@ def top_packages(number=None):
 def updated_releases(since):
     """Retrieve a list of package releases made since the given
     timestamp. The releases will be listed in descending release date."""
-    from models import Release
+    from .models import Release
     releases = Release.objects.filter(active=True)
     keep = []
     for r in releases:
@@ -458,7 +458,7 @@ def changed_packages(since):
     """Retrieve a list of package names where those packages have
     been changed since the given timestamp. The packages will be
     listed in descending date of most recent change."""
-    from models import Release
+    from .models import Release
     releases = Release.objects.filter(active=True)
     keep = []
     for r in releases:

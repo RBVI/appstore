@@ -87,7 +87,7 @@ _ReleaseDataAttrs = [
 
 def _format_bundle(name, version):
     import os.path
-    from models import Release
+    from .models import Release
     if not name:
         releases = Release.objects.filter(active=True)
     else:

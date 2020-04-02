@@ -145,7 +145,7 @@ def new_version(request):
     return html_response('devel_new.html', context, request)
 
 def _get_parameters(request):
-    from apps.views import _cx_platform
+    from .views import _cx_platform
     return {
         'cx_platform': _cx_platform(request),
         'go_back_to': 'home',
@@ -153,7 +153,7 @@ def _get_parameters(request):
 
 def _get_bundles():
     import os
-    from apps.models import App
+    from .models import App
     from util.chimerax_util import Bundle
     bundles = [Bundle(os.path.join(REPO_DIR, filename))
                for filename in os.listdir(REPO_DIR)
@@ -228,7 +228,7 @@ def _clean_bundles():
 def _create_app(submitter, full_path, fullname, version, platform,
                 works_with, app_dependencies, release_notes):
     import os.path
-    from apps.models import App
+    from .models import App
     from util.id_util import fullname_to_name
     messages = ["%s = %s %s" % (full_path, fullname, version)]
     # Create app (see _pending_app_accept in submit_app/views.py)
@@ -246,7 +246,7 @@ def _create_app(submitter, full_path, fullname, version, platform,
     return app, messages
 
 def _find_app(fullname):
-    from apps.models import App
+    from .models import App
     try:
         return App.objects.get(fullname=fullname)
     except App.DoesNotExist:
@@ -257,7 +257,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     from datetime import datetime
     import os.path
     from django.core.files import File
-    from apps.models import Release
+    from .models import Release
     from submit_app.processwheel import release_dependencies
     messages = []
     # Create release (see _make_release in submit_app/models.py)
@@ -285,7 +285,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     return messages
 
 def _edit_app(app, context, request):
-    from models import Tag
+    from .models import Tag
     from views import _AppPageEditConfig as config
     from util.view_util import html_response
     all_tags = [tag.fullname for tag in Tag.objects.all()]
