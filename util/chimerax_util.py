@@ -202,7 +202,7 @@ REUAChimeraX = re.compile(r".*UCSF-ChimeraX/(?P<version>\S+) "
 def chimerax_user_agent(request):
     """Return ChimeraX version and platform from user agent string."""
 
-    m = REUAChimeraX.match(request.META["HTTP_USER_AGENT"])
+    m = REUAChimeraX.match(request.META.get("HTTP_USER_AGENT", ""))
     if m:
         # Note that we only use the ChimeraX-provided information
         # instead of the more general user agent data.  The platform
