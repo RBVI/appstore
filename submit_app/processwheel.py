@@ -179,7 +179,7 @@ def sort_bundles_by_dependencies(bundles):
 # is compatible with the toolshed version scheme.  Standard
 # version numbers like "0.1.4" work fine.
 import re
-_DependencyVersionRE = re.compile(r'\s*\(\s*([=!<>]*)\s*(\S+)\)')
+_DependencyVersionRE = re.compile(r'\s*\(\s*([=!<>~]*)\s*(\S+)\)')
 _VersionRE = re.compile(r'^(\d+)(?:\.(\d+))?(?:\.(\d+|\*))?(?:\.([\w-]+))?$')
 
 def _dependency_version(s):
