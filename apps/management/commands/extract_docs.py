@@ -49,7 +49,7 @@ class Command(BaseCommand):
         version = None
         release = None
         for rel in Release.objects.filter(app=app):
-            ver = rel.version_tuple
+            ver = rel.pip_version
             if version is None or ver > version:
                 version = ver
                 release = rel
