@@ -181,18 +181,15 @@ class Release(models.Model):
     dependencies  = models.ManyToManyField('self', related_name='dependents', symmetrical=False)
 
     def __lt__(self, other):
-        return (self.app, self.version, self.platform) < (other.app, other.version, other.platform)
+        return (self.app, self.version_tuple, self.platform) < (other.app, other.version_tuple, other.platform)
 
     @property
     def version_tuple(self):
-        matched = VersionRE.match(self.version)
-        if not matched:
-            return None
-        (major, minor, patch, tag) = matched.groups()
-        major = int(major)
-        minor = int(minor) if minor else None
-        patch = int(patch) if patch else None
-        return (major, minor, patch, tag)
+        from packaging.version import Version
+        v = Version(self.version)
+        if v.pre is not None:
+            return v.release + v.pre
+        return v.release
 
     @property
     def created_iso(self):
