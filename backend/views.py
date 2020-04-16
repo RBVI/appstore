@@ -1,5 +1,5 @@
-from apps.models import App
-from util.view_util import obj_to_dict, iter_to_dict, json_response
+from ..apps.models import App
+from ..util.view_util import obj_to_dict, iter_to_dict, json_response
 
 def _app_to_obj(app):
 	result = obj_to_dict(app, ('fullname', 'description', 'icon_url',  'page_url', 'downloads', 'stars_percentage', 'votes', 'citation'))

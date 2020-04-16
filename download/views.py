@@ -4,9 +4,9 @@ from django.shortcuts import get_object_or_404
 # from django.contrib.gis.geoip2 import GeoIP2
 from django.http import HttpResponseRedirect
 
-from util.view_util import html_response, json_response, ipaddr_str_to_long, ipaddr_long_to_str
-from apps.models import App, Release
-from download.models import ReleaseDownloadsByDate, AppDownloadsByGeoLoc, Download, GeoLoc
+from ..util.view_util import html_response, json_response, ipaddr_str_to_long, ipaddr_long_to_str
+from ..apps.models import App, Release
+from .models import ReleaseDownloadsByDate, AppDownloadsByGeoLoc, Download, GeoLoc
 
 # ===================================
 #   Download release

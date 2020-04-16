@@ -43,23 +43,23 @@ class Command(BaseCommand):
             self.update_release(rel)
 
     def update_all_bundles(self):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.all():
             self.update_all_releases(app)
 
     def update_bundle(self, bundle):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.filter(name__contains=bundle):
             self.update_all_releases(app)
 
     def update_all_releases(self, app):
-        from apps.models import Release
+        from cxtoolshed3.apps.models import Release
         for rel in Release.objects.filter(app=app):
             self.update_release(rel)
 
     def update_release(self, rel):
         # Get rid of of old metadata
-        from apps.models import ReleaseMetadata
+        from cxtoolshed3.apps.models import ReleaseMetadata
         ReleaseMetadata.objects.filter(release=rel).delete()
         from .utils import update_metadata
         update_metadata(self, rel)

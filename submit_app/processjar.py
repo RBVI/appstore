@@ -1,8 +1,8 @@
 from zipfile import ZipFile, BadZipfile
 from .mfparse import parse_manifest, max_of_lower_cytoscape_pkg_versions, parse_app_dependencies
-from apps.models import App, Release, VersionRE
+from ..apps.models import App, Release, VersionRE
 from django.utils.encoding import smart_text
-from util.view_util import get_object_or_none
+from ..util.view_util import get_object_or_none
 #import manifesttool.parse
 #from jarmanifest import manifest as mf
 _MANIFEST_FILE_NAME = 'META-INF/MANIFEST.MF'

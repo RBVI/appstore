@@ -12,7 +12,7 @@ from social_core.backends.oauth import BaseOAuth1, BaseOAuth2
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
 from social_django.utils import psa, load_strategy
-from util.view_util import html_response
+from ..util.view_util import html_response
 import logging
 
 def login(request):

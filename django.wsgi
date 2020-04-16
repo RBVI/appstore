@@ -6,12 +6,12 @@ import sys
 SITE_DIR = os.path.dirname(__file__)
 SITE_PARENT_DIR = os.path.dirname(SITE_DIR)
 
-# if SITE_PARENT_DIR not in sys.path:
-# 	sys.path.append(SITE_PARENT_DIR)
-if SITE_DIR not in sys.path:
-	sys.path.append(SITE_DIR)
-os.environ['PYTHON_EGG_CACHE'] = os.path.join(SITE_DIR, '.python-egg')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+if SITE_PARENT_DIR not in sys.path:
+	sys.path.append(SITE_PARENT_DIR)
+# if SITE_DIR not in sys.path:
+# 	sys.path.append(SITE_DIR)
+# os.environ['PYTHON_EGG_CACHE'] = os.path.join(SITE_DIR, '.python-egg')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'cxtoolshed3.settings'
 import django
 django.setup()
 import django.core.handlers.wsgi

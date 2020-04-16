@@ -42,17 +42,17 @@ class Command(BaseCommand):
             self.list_release(rel)
 
     def list_all_bundles(self):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.all():
             self.list_all_releases(app)
 
     def list_bundle(self, bundle):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.filter(name__contains=bundle):
             self.list_all_releases(app)
 
     def list_all_releases(self, app):
-        from apps.models import Release
+        from cxtoolshed3.apps.models import Release
         for rel in Release.objects.filter(app=app):
             self.list_release(rel)
 

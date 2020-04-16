@@ -192,7 +192,7 @@ def _get_classifiers():
     if _classifier_map is None:
         from .models import Release
         from django.conf import settings
-        from util.chimerax_util import Bundle
+        from ..util.chimerax_util import Bundle
         import os.path
         _classifier_map = {}
         releases = Release.objects.filter(active=True)

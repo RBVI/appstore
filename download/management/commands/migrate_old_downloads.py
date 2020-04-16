@@ -3,8 +3,8 @@ from django.db import connection
 from django.core.management.base import BaseCommand
 from django.contrib.gis.geoip2 import GeoIP2
 
-from apps.models import Release
-from download.models import GeoLoc, ReleaseDownloadsByDate, AppDownloadsByGeoLoc, Download
+from cxtoolshed3.apps.models import Release
+from cxtoolshed3.download.models import GeoLoc, ReleaseDownloadsByDate, AppDownloadsByGeoLoc, Download
 from util.view_util import ipaddr_long_to_str
 
 def increment_count(klass, **args):

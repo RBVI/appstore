@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from download.models import GeoLoc, AppDownloadsByGeoLoc
+from cxtoolshed3.download.models import GeoLoc, AppDownloadsByGeoLoc
 
 def get_dup_names():
     dup_names = set()

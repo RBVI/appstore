@@ -1,4 +1,4 @@
-from apps.models import VersionRE
+from ..apps.models import VersionRE
 from collections import defaultdict
 
 # This file contains functions for parsing manifest files.

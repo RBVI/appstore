@@ -1,6 +1,6 @@
 from django.db.models import Model, CharField, PositiveIntegerField, ForeignKey, DateField, SET_NULL, CASCADE
-from apps.models import App, Release
-from util.view_util import ipaddr_long_to_str
+from ..apps.models import App, Release
+from ..util.view_util import ipaddr_long_to_str
 
 class Download(Model):
     release = ForeignKey(Release, CASCADE, related_name='app_download_stats')

@@ -1,8 +1,8 @@
 from zipfile import BadZipfile
-from apps.models import App, Release, VersionRE
+from ..apps.models import App, Release, VersionRE
 from django.utils.encoding import smart_text
-from util.view_util import get_object_or_none
-from util.chimerax_util import Bundle
+from ..util.view_util import get_object_or_none
+from ..util.chimerax_util import Bundle
 
 import logging
 logger = logging.getLogger(__name__)

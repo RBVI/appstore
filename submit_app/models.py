@@ -1,10 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-from apps.models import App, Release, ReleaseAPI, ReleaseMetadata
-from util.id_util import fullname_to_name
-from util.view_util import get_object_or_none
-from util.chimerax_util import Bundle
+from ..apps.models import App, Release, ReleaseAPI, ReleaseMetadata
+from ..util.id_util import fullname_to_name
+from ..util.view_util import get_object_or_none
+from ..util.chimerax_util import Bundle
 from os.path import basename, join as pathjoin
 from threading import Thread
 import subprocess
@@ -12,10 +12,10 @@ import datetime
 from django.core.mail import send_mail
 import warnings
 try:
-    from conf.mvn import MVN_BIN_PATH, MVN_SETTINGS_PATH
-    from conf.emails import EMAIL_ADDR
+    from ..conf.mvn import MVN_BIN_PATH, MVN_SETTINGS_PATH
+    from ..conf.emails import EMAIL_ADDR
 except ImportError:
-    from conf.mock import MVN_BIN_PATH, MVN_SETTINGS_PATH, EMAIL_ADDR
+    from ..conf.mock import MVN_BIN_PATH, MVN_SETTINGS_PATH, EMAIL_ADDR
 
 class AppPending(models.Model):
     submitter     = models.ForeignKey(User, models.CASCADE)

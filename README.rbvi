@@ -1,0 +1,10 @@
+This is the ChimeraX Toolshed.
+We cloned the Cytoscape AppStore git repository
+and created a "cxtoolshed" branch, which contains
+all of our changes to the code.  To run the Toolshed,
+we still have to supply some customization files
+because we use the same code base for both the preview
+and production Toolshed.
+
+Customization files are in the "conf" directory and
+are listed in .gitignore.

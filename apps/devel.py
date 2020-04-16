@@ -8,7 +8,7 @@ def staff_required(login_url=None):
 
 @staff_required()
 def release(request):
-    from util.view_util import html_response
+    from ..util.view_util import html_response
     context = _get_parameters(request)
     new_bundles, new_versions, released = _get_bundles()
     context["new_bundles"] = new_bundles
@@ -18,7 +18,7 @@ def release(request):
 
 @staff_required()
 def clean(request):
-    from util.view_util import html_response
+    from ..util.view_util import html_response
     context = _get_parameters(request)
     errors, expired, current, ignored = _clean_bundles()
     context["expired"] = expired
@@ -31,9 +31,9 @@ def clean(request):
 def new_bundle(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
-    from util.view_util import html_response
-    from submit_app.processwheel import process_wheel
-    from submit_app.processwheel import sort_bundles_by_dependencies
+    from ..util.view_util import html_response
+    from ..submit_app.processwheel import process_wheel
+    from ..submit_app.processwheel import sort_bundles_by_dependencies
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
     filenames = parameters.get("file", [])
@@ -90,10 +90,10 @@ def new_bundle(request):
 def new_version(request):
     import os, os.path
     from django.http import HttpResponseBadRequest
-    from util.view_util import html_response
-    from util.id_util import fullname_to_name
-    from submit_app.processwheel import process_wheel
-    from submit_app.processwheel import sort_bundles_by_dependencies
+    from ..util.view_util import html_response
+    from ..util.id_util import fullname_to_name
+    from ..submit_app.processwheel import process_wheel
+    from ..submit_app.processwheel import sort_bundles_by_dependencies
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
     filenames = parameters.get("file", [])
@@ -154,7 +154,7 @@ def _get_parameters(request):
 def _get_bundles():
     import os
     from .models import App
-    from util.chimerax_util import Bundle
+    from ..util.chimerax_util import Bundle
     bundles = [Bundle(os.path.join(REPO_DIR, filename))
                for filename in os.listdir(REPO_DIR)
                if filename.endswith(".whl")]
@@ -229,7 +229,7 @@ def _create_app(submitter, full_path, fullname, version, platform,
                 works_with, app_dependencies, release_notes):
     import os.path
     from .models import App
-    from util.id_util import fullname_to_name
+    from ..util.id_util import fullname_to_name
     messages = ["%s = %s %s" % (full_path, fullname, version)]
     # Create app (see _pending_app_accept in submit_app/views.py)
     name = fullname_to_name(fullname)
@@ -258,7 +258,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     import os.path
     from django.core.files import File
     from .models import Release
-    from submit_app.processwheel import release_dependencies
+    from ..submit_app.processwheel import release_dependencies
     messages = []
     # Create release (see _make_release in submit_app/models.py)
     release, _ = Release.objects.get_or_create(app=app, version=version,
@@ -286,8 +286,8 @@ def _create_release(app, submitter, full_path, name, fullname, version,
 
 def _edit_app(app, context, request):
     from .models import Tag
-    from views import _AppPageEditConfig as config
-    from util.view_util import html_response
+    from .views import _AppPageEditConfig as config
+    from ..util.view_util import html_response
     all_tags = [tag.fullname for tag in Tag.objects.all()]
     context.update({
         'app': app,

@@ -35,17 +35,17 @@ class Command(BaseCommand):
             self.extract_release(app, rel)
 
     def extract_all_bundles(self):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.all():
             self.extract_newest_release(app)
 
     def extract_bundle(self, bundle):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.filter(name__contains=bundle):
             self.extract_newest_release(app)
 
     def extract_newest_release(self, app):
-        from apps.models import Release
+        from cxtoolshed3.apps.models import Release
         version = None
         release = None
         for rel in Release.objects.filter(app=app):

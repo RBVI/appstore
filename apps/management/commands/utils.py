@@ -4,7 +4,7 @@ import sys
 
 def find_bundle(cmd, bundle):
     "Find the specified bundle"
-    from apps.models import App
+    from cxtoolshed3.apps.models import App
     apps = App.objects.filter(name__contains=bundle)
     if len(apps) == 0:
         print("no match for bundle \"%s\"" % bundle, file=sys.stderr)
@@ -26,7 +26,7 @@ def find_bundle_version(cmd, bundle, version, platform):
     app = find_bundle(cmd, bundle)
     if app is None:
         return None
-    from apps.models import Release
+    from cxtoolshed3.apps.models import Release
     if platform:
         rels = Release.objects.filter(app=app, version=version, platform=platform)
     else:
@@ -47,7 +47,7 @@ def find_bundle_version(cmd, bundle, version, platform):
 
 def find_release_by_id(cmd, release_id):
     "Find the specified version of the bundle"
-    from apps.models import Release
+    from cxtoolshed3.apps.models import Release
     rels = Release.objects.filter(id=release_id)
     if len(rels) == 0:
         print("no match for release id \"%s\"" % release_id, file=sys.stderr)
@@ -68,7 +68,7 @@ def erase_app(cmd, app, dry_run):
     # Remove all versions (including non-active ones, which
     # is why we do not use "app.releases")
     #
-    from apps.models import Release
+    from cxtoolshed3.apps.models import Release
     rels = Release.objects.filter(app=app)
     for rel in app.releases:
         erase_release(cmd, rel, dry_run)
@@ -91,7 +91,7 @@ def erase_app(cmd, app, dry_run):
     #
     # Remove icon and screenshot files
     #
-    from apps.models import Screenshot
+    from cxtoolshed3.apps.models import Screenshot
     if dry_run:
         if app.icon:
             print("delete icon file", app.icon.name)
@@ -113,7 +113,7 @@ def erase_app(cmd, app, dry_run):
     #
     # Remove download references
     #
-    from download.models import AppDownloadsByGeoLoc
+    from cxtoolshed3.download.models import AppDownloadsByGeoLoc
     if dry_run:
         for d in AppDownloadsByGeoLoc.objects.filter(app=app):
             d.delete()
@@ -133,7 +133,7 @@ def erase_release(cmd, rel, dry_run=True):
     """Erase all traces of release from database and media storage."""
 
     app = rel.app
-    from apps.models import Release, ReleaseAPI
+    from cxtoolshed3.apps.models import Release, ReleaseAPI
 
     #
     # Make sure there are no dependents on this version
@@ -175,7 +175,7 @@ def erase_release(cmd, rel, dry_run=True):
     #
     # Remove download references
     #
-    from download.models import Download, ReleaseDownloadsByDate
+    from cxtoolshed3.download.models import Download, ReleaseDownloadsByDate
     if dry_run:
         for d in Download.objects.filter(release=rel):
             print("delete Download instance", d)
@@ -188,7 +188,7 @@ def erase_release(cmd, rel, dry_run=True):
     #
     # Delete release metadata
     #
-    from apps.models import ReleaseMetadata
+    from cxtoolshed3.apps.models import ReleaseMetadata
     ReleaseMetadata.objects.filter(release=rel).delete()
 
     #
@@ -210,13 +210,13 @@ def update_metadata(cmd, rel):
     if not path.endswith(".whl"):
         print("Release file is not a wheel", rf, file=sys.stderr)
         return
-    from util.chimerax_util import Bundle
+    from cxtoolshed3.util.chimerax_util import Bundle
     try:
         b = Bundle(path)
     except IOError:
         print("Release file is missing", path, file=sys.stderr)
         return
-    from apps.models import ReleaseMetadata
+    from cxtoolshed3.apps.models import ReleaseMetadata
     # XXX: Copied from submit_app/models.py
     # Get version from bundle data
     md, _ = ReleaseMetadata.objects.get_or_create(

@@ -1,4 +1,4 @@
 from django.contrib import admin
-from submit_app.models import *
+from .models import *
 
 admin.site.register(AppPending)

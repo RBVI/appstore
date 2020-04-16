@@ -2,8 +2,8 @@ import os
 import os.path
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from apps.models import App, Release, ReleaseAPI, Screenshot, Tag, Author
-from submit_app.models import AppPending
+from cxtoolshed3.apps.models import App, Release, ReleaseAPI, Screenshot, Tag, Author
+from cxtoolshed3.submit_app.models import AppPending
 
 def rm_empty_tags():
 	for tag in Tag.objects.all():
@@ -69,7 +69,7 @@ class Command(BaseCommand):
 			print('  ' + author)
 		print()
 
-	        '''
+		'''
 		print('Media:')
 		for file_path in rm_unused_media_files():
 			print('  ' + file_path)

@@ -5,9 +5,9 @@ from collections import defaultdict
 
 from django.core.management.base import BaseCommand
 
-from apps.models import App, Author, OrderedAuthor
-from cxtoolshed.util.id_util import fullname_to_name
-from cxtoolshed.apps.views import _parse_iso_date
+from cxtoolshed3.apps.models import App, Author, OrderedAuthor
+from cxtoolshed3.util.id_util import fullname_to_name
+from cxtoolshed3.apps.views import _parse_iso_date
 
 PLUGINS_XML_URL = 'http://cytoscape.org/plugins/plugins.xml'
 

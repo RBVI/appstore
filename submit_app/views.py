@@ -10,10 +10,10 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
-from util.view_util import html_response, json_response, get_object_or_none
-from util.id_util import fullname_to_name
-from apps.models import Release, App, Author, OrderedAuthor
-from apps.views import _parse_iso_date
+from ..util.view_util import html_response, json_response, get_object_or_none
+from ..util.id_util import fullname_to_name
+from ..apps.models import Release, App, Author, OrderedAuthor
+from ..apps.views import _parse_iso_date
 from .models import AppPending
 from .pomparse import PomAttrNames, parse_pom
 from .processwheel import process_wheel, release_dependencies

@@ -1,4 +1,4 @@
-from util.view_util import html_response
+from ..util.view_util import html_response
 from django.conf import settings
 from django.core.mail import send_mail
 

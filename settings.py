@@ -7,16 +7,16 @@ except ImportError:
 
 # credentials provided
 try:
-    from conf.paths import *
-    from conf.emails import *
-    from conf.dbs import *
-    from conf.apikeys import *
-    from conf.socialauth import *
-    # from conf.geoip import *
+    from .conf.paths import *
+    from .conf.emails import *
+    from .conf.dbs import *
+    from .conf.apikeys import *
+    from .conf.socialauth import *
+    # from .conf.geoip import *
     SITE_DIR = os.path.dirname(__file__)
 except:
     raise SystemExit(99)
-    from conf.mock import *
+    from .conf.mock import *
     SITE_DIR ="/var/www/CyAppStore/"
     DATABASES = {
         'default':{
@@ -144,7 +144,7 @@ MIDDLEWARE = [
     'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'cxtoolshed3.urls'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -156,13 +156,13 @@ INSTALLED_APPS = (
     'whoosh',
     'haystack',
     'social_django',
-    'apps',
+    'cxtoolshed3.apps',
     #'search',
-    'submit_app',
-    'users',
-    'help',
-    'backend',
-    'download',
+    'cxtoolshed3.submit_app',
+    'cxtoolshed3.users',
+    'cxtoolshed3.help',
+    'cxtoolshed3.backend',
+    'cxtoolshed3.download',
     #'review',
     )
 
@@ -217,42 +217,42 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'users.views': {
+        'cxtoolshed3.users.views': {
             'handlers': ['mail_admins_always'],
             'level': 'ERROR',
             'propagate': True,
         },
-        'apps.views': {
+        'cxtoolshed3.apps.views': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
-        'help.views': {
+        'cxtoolshed3.help.views': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
-        'submit_app.views': {
+        'cxtoolshed3.submit_app.views': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
-        'submit_app.processwheel': {
+        'cxtoolshed3.submit_app.processwheel': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
-        'search.views': {
+        #'search.views': {
+        #    'handlers': ['file'],
+        #    'level': 'WARNING',
+        #    'propagate': True,
+        #},
+        'cxtoolshed3.apps.pypi': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
-        'apps.pypi': {
-            'handlers': ['file'],
-            'level': 'WARNING',
-            'propagate': True,
-        },
-        'apps.bundle': {
+        'cxtoolshed3.apps.bundle': {
             'handlers': ['file'],
             'level': 'DEBUG',
             'propagate': True,
@@ -260,6 +260,7 @@ LOGGING = {
     }
 }
 GEOIP_PATH = "/tmp/"
+GEOIP_LIBRARY_PATH = "/"
 
 FILE_UPLOAD_PERMISSIONS = 0o664
 

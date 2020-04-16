@@ -10,7 +10,7 @@ class Command(BaseCommand):
         self.list_developers()
 
     def list_developers(self):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         developers = []
         for app in App.objects.filter(active = True):
             self.list_developer(app)

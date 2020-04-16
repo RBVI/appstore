@@ -10,7 +10,7 @@ class Command(BaseCommand):
         self.list_all_bundles()
 
     def list_all_bundles(self):
-        from apps.models import App
+        from cxtoolshed3.apps.models import App
         for app in App.objects.all():
             self._list_bundle(app)
 

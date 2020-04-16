@@ -1,5 +1,5 @@
 from django import template
-from apps.models import App
+from cxtoolshed3.apps.models import App
 
 register = template.Library()
 
