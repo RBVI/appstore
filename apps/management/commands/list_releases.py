@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "list all releases of a bundle"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundle", ncarg='?',
+        parser.add_argument("bundle", nargs='?',
                             help="The bundle name")
 
     def handle(self, *args, **options):

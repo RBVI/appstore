@@ -7,11 +7,11 @@ class Command(BaseCommand):
     help = "update metadata associated with a bundle version"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundle", ncarg='?',
+        parser.add_argument("bundle", nargs='?',
                             help="The bundle name")
-        parser.add_argument("version", ncarg='?',
+        parser.add_argument("version", nargs='?',
                             help="The bundle version")
-        parser.add_argument("platform", ncarg='?',
+        parser.add_argument("platform", nargs='?',
                             help="The platform")
 
     def handle(self, *args, **options):

@@ -8,9 +8,9 @@ class Command(BaseCommand):
     help = "extract documentation from bundle"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundle", ncargs='?',
+        parser.add_argument("bundle", nargs='?',
                             help="bundle name")
-        parser.add_argument("version", ncargs='?',
+        parser.add_argument("version", nargs='?',
                             help="bundle version")
 
     def handle(self, *args, **options):
