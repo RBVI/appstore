@@ -21,6 +21,7 @@ class Bundle:
         import pkginfo
         self.path = filename    # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
+        Version(self._wheel.version)  # throw ValueError if version isn't legal
         self._dist_info = self.package + '-' + self.version + '.dist-info'
         self._zip = None
         # There does not seem a standard way of getting a platform
