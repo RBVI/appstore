@@ -1,6 +1,7 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
 

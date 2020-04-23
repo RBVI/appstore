@@ -1,24 +1,25 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
 
     help = "list all releases of a bundle"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundle", nargs='?',
+        parser.add_argument("bundles", nargs='*',
                             help="The bundle name")
 
     def handle(self, *args, **options):
-        bundle = options['bundle']
-        if bundle is None:
+        bundles = options['bundles']
+        if not bundles:
             self.list_all_releases()
         else:
-            for bundle in args:
+            for bundle in bundles:
                 self.list_release(bundle)
 
-    def list_all_releases(self, ):
+    def list_all_releases(self):
         from cxtoolshed3.apps.models import App
         for app in App.objects.all():
             self._list_bundle(app)

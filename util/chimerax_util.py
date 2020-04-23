@@ -1,4 +1,4 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 """
 chimerax_util: ChimeraX-specific utilities
@@ -13,6 +13,7 @@ Callers may query :py:class:`Bundle` instances for information
 such as bundle name, version, dependencies, description, summary,
 icon, screenshot, etc.
 """
+import re
 from packaging.version import Version
 
 
@@ -77,31 +78,31 @@ class Bundle:
                     continue
                 name = parts[2]
                 value = {
-                    "categories":get_list_items(parts[3]),
-                    "synopsis":parts[4],
+                    "categories": get_list_items(parts[3]),
+                    "synopsis": parts[4],
                 }
             elif info_type == "selector":
                 if len(parts) != 4 and len(parts) != 5:
                     continue
                 name = parts[2]
                 value = {
-                    "synopsis":parts[3]
+                    "synopsis": parts[3]
                 }
                 if len(parts) == 5:
                     value["atomic"] = parts[4]
             elif info_type == "dataformat":
-                if len(parts) not in [11,12]:
+                if len(parts) not in [11, 12]:
                     continue
                 name = parts[2]
                 value = {
-                    "nicknames":get_list_items(parts[3]),
-                    "category":parts[4],
-                    "suffixes":get_list_items(parts[5]),
-                    "mime_types":get_list_items(parts[6]),
-                    "url":parts[7],
-                    "dangerous":parts[8],
-                    "icon":parts[9],
-                    "synopsis":parts[10],
+                    "nicknames": get_list_items(parts[3]),
+                    "category": parts[4],
+                    "suffixes": get_list_items(parts[5]),
+                    "mime_types": get_list_items(parts[6]),
+                    "url": parts[7],
+                    "dangerous": parts[8],
+                    "icon": parts[9],
+                    "synopsis": parts[10],
                 }
                 if len(parts) == 12:
                     value["encoding"] = parts[11]
@@ -110,18 +111,18 @@ class Bundle:
                     continue
                 name = parts[2]
                 value = {
-                    "format":parts[3],
-                    "suffixes":get_list_items(parts[4]),
-                    "example":parts[5],
-                    "is_default":parts[6],
+                    "format": parts[3],
+                    "suffixes": get_list_items(parts[4]),
+                    "example": parts[5],
+                    "is_default": parts[6],
                 }
             elif info_type in ["open", "save"]:
-                if len(parts) not in [5,6]:
+                if len(parts) not in [5, 6]:
                     continue
                 name = parts[2]
                 value = {
-                    "tag":parts[3],
-                    "is_default":parts[4],
+                    "tag": parts[3],
+                    "is_default": parts[4],
                 }
                 if len(parts) == 6:
                     value["keywords"] = get_list_items(parts[5])
@@ -195,7 +196,6 @@ def compatible_with(version, needed_version):
     return spec.contains(version)
 
 
-import re
 REUAChimeraX = re.compile(r".*UCSF-ChimeraX/(?P<version>\S+) "
                           r"\((?P<platform>.*)\).*")
 
@@ -220,7 +220,15 @@ def chimerax_user_agent(request):
 if __name__ == "__main__":
     if True:
         v = Version("0.9.2")
-        need = [ "(>=0.1)", "(==0.8)", "(>=0.8)", "(==0.9.2)", "(>0.9.1,<1)", "(~=0.9.1)", "(~=0.9.3)" ]
+        need = [
+            "(>=0.1)",
+            "(==0.8)",
+            "(>=0.8)",
+            "(==0.9.2)",
+            "(>0.9.1,<1)",
+            "(~=0.9.1)",
+            "(~=0.9.3)"
+        ]
         print(v)
         for n in need:
             print(n, compatible_with(v, n))
@@ -234,7 +242,7 @@ if __name__ == "__main__":
         print(v1 < v2, "should be True")
         print(v2 < v1b1, "should be False")
     if False:
-        import os, os.path
+        import os
         # root = "d:/chimerax/src/bundles"
         root = "testdata"
         for dirpath, dirnames, filenames in os.walk(root):
@@ -245,8 +253,8 @@ if __name__ == "__main__":
                 print("bundle", b.package, b.version, b.platform)
                 print("summary", b.summary)
                 print("requires", b.requires)
-                #print("screenshot", b.screenshot is not None)
-                #print("release notes", b.release_notes)
+                # print("screenshot", b.screenshot is not None)
+                # print("release notes", b.release_notes)
                 info = b.info()
                 for info_type in sorted(info.keys()):
                     info_data = info[info_type]

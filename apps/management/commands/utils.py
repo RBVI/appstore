@@ -1,4 +1,4 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 import sys
 
 
@@ -56,7 +56,7 @@ def find_release_by_id(cmd, release_id):
         print("too many matches for release id \"%s\" " % release_id,
               file=sys.stderr)
         for rel in rels:
-            print("  ", app.name, rel.version, file=sys.stderr)
+            print("  ", rel.app.name, rel.version, file=sys.stderr)
         return None
     else:
         return rels[0]
@@ -69,6 +69,7 @@ def erase_app(cmd, app, dry_run):
     # is why we do not use "app.releases")
     #
     from cxtoolshed3.apps.models import Release
+    # TODO: why Release.objects.filter?
     rels = Release.objects.filter(app=app)
     for rel in app.releases:
         erase_release(cmd, rel, dry_run)
@@ -133,13 +134,14 @@ def erase_release(cmd, rel, dry_run=True):
     """Erase all traces of release from database and media storage."""
 
     app = rel.app
-    from cxtoolshed3.apps.models import Release, ReleaseAPI
+    from cxtoolshed3.apps.models import Release
 
     #
     # Make sure there are no dependents on this version
     #
-    #deps = rel.dependencies.all()
-    deps = Release.objects.filter(dependencies__app__name=app.name).filter(dependencies__version=rel.version)
+    # deps = rel.dependencies.all()
+    deps = Release.objects.filter(dependencies__app__name=app.name).filter(
+        dependencies__version=rel.version)
     if len(deps) > 0:
         print("cannot delete release with dependencies", file=sys.stderr)
         for dep in deps:
@@ -159,8 +161,7 @@ def erase_release(cmd, rel, dry_run=True):
     #
     if dry_run:
         print("Dry run only.  No actual deletion.")
-    print("Delete bundle \"%s\" version \"%s\""
-                            % (app.name, rel.version))
+    print("Delete bundle \"%s\" version \"%s\"" % (app.name, rel.version))
 
     #
     # Remove release media file

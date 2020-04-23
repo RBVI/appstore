@@ -1,6 +1,7 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
 
@@ -11,8 +12,7 @@ class Command(BaseCommand):
 
     def list_developers(self):
         from cxtoolshed3.apps.models import App
-        developers = []
-        for app in App.objects.filter(active = True):
+        for app in App.objects.filter(active=True):
             self.list_developer(app)
 
     def list_developer(self, app):

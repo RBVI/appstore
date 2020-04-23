@@ -1,4 +1,4 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 #
 # "handler" is referenced from ../urls.py
@@ -12,6 +12,7 @@ import os.path
 # "logger" messages should show in cxtoolshed.log.  See settings.py
 
 DbName = os.path.join(settings.SITE_DIR, "request_logs.db")
+
 
 @csrf_exempt
 def handler(request):
@@ -50,8 +51,8 @@ def handler(request):
     response = _format_bundle(name, version)
     return response
 
-# =============================================================
 
+# =============================================================
 #
 # Constants
 #
@@ -81,12 +82,12 @@ _ReleaseDataAttrs = [
     "docs_url",
 ]
 
+
 #
 # Utility routines
 #
 
 def _format_bundle(name, version):
-    import os.path
     from .models import Release
     if not name:
         releases = Release.objects.filter(active=True)
@@ -106,6 +107,7 @@ def _format_bundle(name, version):
     response = HttpResponse(json.dumps(dlist), content_type='application/json')
     return response
 
+
 def log_uuid(uuid):
     """Log UUID and return row identifier."""
     import sqlite3
@@ -122,6 +124,7 @@ def _check_table(db, table_name, create_script):
     c.execute(SQL_CheckTable, (table_name,))
     if not c.fetchall():
         c.executescript(create_script)
+
 
 #
 # SQL statements

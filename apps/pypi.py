@@ -1,4 +1,4 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 #
 # "handler" is referenced from ../urls.py
@@ -7,7 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from cgi import escape
 
+
 logger = logging.getLogger(__name__)
+
 
 @csrf_exempt
 def handler(request):
@@ -56,11 +58,12 @@ def handler(request):
         response = _format_package_versions(package, version)
     return response
 
-# =============================================================
 
+# =============================================================
 #
 # Constants
 #
+
 _ReleaseDataAttrs = [
     "name",
     "version",
@@ -94,6 +97,7 @@ _dispatcher = None
 _server_url = ""
 _classifier_map = None
 
+
 #
 # Utility routines
 #
@@ -106,6 +110,7 @@ def _get_dispatcher(request):
             _dispatcher.register_function(f)
         _dispatcher.register_introspection_functions()
     return _dispatcher
+
 
 def _get_wheel_info(r):
     import os.path
@@ -122,6 +127,7 @@ def _get_wheel_info(r):
     md["abi"] = parts[-2]
     md["platform"] = parts[-1]
     return md
+
 
 def _get_release_info(r, attr):
     "Return a list of strings for attribute, or None if not available"
@@ -173,11 +179,13 @@ def _get_release_info(r, attr):
     else:
         return values
 
+
 def _release_url(server_url, r):
     return server_url + r.release_download_url
     # Include hash information with URL
-    #name, digest = r.hexchecksum.split(':')
-    #return server_url + r.release_download_url + '#' + name + '=' + digest
+    # name, digest = r.hexchecksum.split(':')
+    # return server_url + r.release_download_url + '#' + name + '=' + digest
+
 
 def _search_matches(tvlist, vlist):
     vlist = [v.lower() for v in vlist]
@@ -186,6 +194,7 @@ def _search_matches(tvlist, vlist):
             if tv.lower() in v:
                 return True
     return False
+
 
 def _get_classifiers():
     global _classifier_map
@@ -208,6 +217,7 @@ def _get_classifiers():
                     rset = _classifier_map[key] = set()
                 rset.add(value)
     return _classifier_map
+
 
 def _format_package_versions(package, version):
     import os.path
@@ -236,8 +246,8 @@ def _format_package_versions(package, version):
     response = HttpResponse('\n'.join(lines), content_type='text/html')
     return response
 
-# =============================================================
 
+# =============================================================
 #
 # PyPI XML-RPC API and doc strings are from
 # https://warehouse.pypa.io/api-reference/xml-rpc
@@ -245,9 +255,11 @@ def _format_package_versions(package, version):
 
 _implemented = []
 
+
 def implemented(f):
     _implemented.append(f)
     return f
+
 
 @implemented
 def list_packages():
@@ -255,6 +267,7 @@ def list_packages():
     package index. Returns a list of name strings."""
     from .models import App
     return [app.fullname for app in set(App.objects.filter(active=True))]
+
 
 @implemented
 def package_releases(package_name, show_hidden=False):
@@ -265,6 +278,7 @@ def package_releases(package_name, show_hidden=False):
     from .models import Release
     releases = Release.objects.filter(active=True, app__fullname=package_name)
     return [r.version for r in releases]
+
 
 @implemented
 def package_roles(package_name):
@@ -280,6 +294,7 @@ def package_roles(package_name):
             roles.append(["Maintainer", e.username])
     return roles
 
+
 @implemented
 def user_packages(user):
     """Retrieve a list of [role, package_name] for a given user.
@@ -293,6 +308,7 @@ def user_packages(user):
     for app in apps:
         packages.append(["Maintainer", app.fullname])
     return packages
+
 
 @implemented
 def release_downloads(package_name, release_version):
@@ -311,6 +327,7 @@ def release_downloads(package_name, release_version):
         downloads.append([winfo["filename"], r.app.downloads])
     return downloads
 
+
 @implemented
 def release_urls(package_name, release_version):
     """Retrieve a list of download URLs for the given release_version.
@@ -318,7 +335,7 @@ def release_urls(package_name, release_version):
     # See documentation for dictionary keys
     from .models import Release
     from django.conf import settings
-    import os, datetime, os.path
+    import os
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,
                                       version=release_version)
@@ -347,13 +364,13 @@ def release_urls(package_name, release_version):
         urls.append(d)
     return urls
 
+
 @implemented
 def release_data(package_name, release_version):
     """Retrieve metadata describing a specific release_version.
     Returns a dictionary."""
     # See documentation for dictionary keys
     from .models import Release
-    import os, datetime
     releases = Release.objects.filter(active=True,
                                       app__fullname=package_name,
                                       version=release_version)
@@ -367,6 +384,7 @@ def release_data(package_name, release_version):
                 continue
             data[attr] = v
     return data
+
 
 @implemented
 def search(spec, operator="and"):
@@ -397,10 +415,13 @@ def search(spec, operator="and"):
         container = or_results
     results = []
     for r in container:
-        results.append({"name":r.app.fullname,
-                        "version":r.version,
-                        "summary":str(r.app.description)})
+        results.append({
+            "name": r.app.fullname,
+            "version": r.version,
+            "summary": str(r.app.description)
+        })
     return results
+
 
 @implemented
 def browse(classifiers):
@@ -427,6 +448,7 @@ def browse(classifiers):
     else:
         return list(results)
 
+
 @implemented
 def top_packages(number=None):
     """Retrieve the sorted list of packages ranked by number of
@@ -438,6 +460,7 @@ def top_packages(number=None):
     if number is not None:
         apps = apps[:number]
     return [app.fullname for app in apps]
+
 
 @implemented
 def updated_releases(since):
@@ -452,6 +475,7 @@ def updated_releases(since):
     keep.sort(key=lambda r: r.created)
     keep.reverse()
     return [[r.app.fullname, r.version] for r in keep]
+
 
 @implemented
 def changed_packages(since):

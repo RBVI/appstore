@@ -1,10 +1,14 @@
+#
+# vi: set shiftwidth=4 expandtab:
 from django.contrib.auth.decorators import user_passes_test
 from cgi import escape
 
 REPO_DIR = "/usr/local/projects/chimerax/builds/repo"
 
+
 def staff_required(login_url=None):
     return user_passes_test(lambda u: u.is_staff, login_url=login_url)
+
 
 @staff_required()
 def release(request):
@@ -15,6 +19,7 @@ def release(request):
     context["new_versions"] = new_versions
     context["released"] = released
     return html_response('devel_release.html', context, request)
+
 
 @staff_required()
 def clean(request):
@@ -27,9 +32,10 @@ def clean(request):
     context["errors"] = errors
     return html_response('devel_clean.html', context, request)
 
+
 @staff_required()
 def new_bundle(request):
-    import os, os.path
+    import os
     from django.http import HttpResponseBadRequest
     from ..util.view_util import html_response
     from ..submit_app.processwheel import process_wheel
@@ -64,20 +70,20 @@ def new_bundle(request):
             for bundle in bundles:
                 try:
                     fullname = bundle.package
-                    #messages.append("new_bundle: %s %s %s %s" %
-                    #                (fullname, bundle.package,
-                    #                 bundle.version, bundle.platform))
-                    #messages.append("  works_with: %s" % str(bundle.works_with))
-                    #for dep in bundle.app_dependencies:
-                    #    messages.append("  dep: %s" % str(dep))
+                    # messages.append("new_bundle: %s %s %s %s" %
+                    #                 (fullname, bundle.package,
+                    #                  bundle.version, bundle.platform))
+                    # messages.append("  works_with: %s" % str(bundle.works_with))
+                    # for dep in bundle.app_dependencies:
+                    #     messages.append("  dep: %s" % str(dep))
                     app, msgs = _create_app(request.user, bundle.path, fullname,
                                             bundle.version, bundle.platform,
                                             bundle.works_with,
                                             bundle.app_dependencies,
                                             bundle.release_notes)
                     messages.append("Bundle \"%s\" released" % bundle.package)
-                    #if msgs:
-                    #   messages.extend(msgs)
+                    # if msgs:
+                    #    messages.extend(msgs)
                 except Exception as e:
                     error_messages.append("Exception: %s: %s" % (filename, str(e)))
         except Exception as e:
@@ -86,9 +92,10 @@ def new_bundle(request):
     context["error_msgs"] = error_messages
     return html_response('devel_new.html', context, request)
 
+
 @staff_required()
 def new_version(request):
-    import os, os.path
+    import os
     from django.http import HttpResponseBadRequest
     from ..util.view_util import html_response
     from ..util.id_util import fullname_to_name
@@ -134,8 +141,8 @@ def new_version(request):
                                            bundle.app_dependencies,
                                            bundle.release_notes)
                     messages.append("Bundle \"%s\" updated" % bundle.package)
-                    #if msgs:
-                    #   messages.extend(msgs)
+                    # if msgs:
+                    #    messages.extend(msgs)
                 except Exception as e:
                     error_messages.append("Exception: %s: %s" % (filename, str(e)))
         except Exception as e:
@@ -144,12 +151,14 @@ def new_version(request):
     context["error_msgs"] = error_messages
     return html_response('devel_new.html', context, request)
 
+
 def _get_parameters(request):
     from .views import _cx_platform
     return {
         'cx_platform': _cx_platform(request),
         'go_back_to': 'home',
     }
+
 
 def _get_bundles():
     import os
@@ -200,10 +209,10 @@ def _get_bundles():
         released.sort(key=lambda b: b.package)
     return new_bundles, new_versions, released
 
+
 def _clean_bundles():
     import os
     from datetime import datetime, timedelta
-    import traceback
     current = 0
     expired = 0
     ignored = 0
@@ -225,9 +234,9 @@ def _clean_bundles():
                 errors.append(str(e))
     return errors, expired, current, ignored
 
+
 def _create_app(submitter, full_path, fullname, version, platform,
                 works_with, app_dependencies, release_notes):
-    import os.path
     from .models import App
     from ..util.id_util import fullname_to_name
     messages = ["%s = %s %s" % (full_path, fullname, version)]
@@ -245,12 +254,14 @@ def _create_app(submitter, full_path, fullname, version, platform,
                                     app_dependencies, release_notes))
     return app, messages
 
+
 def _find_app(fullname):
     from .models import App
     try:
         return App.objects.get(fullname=fullname)
     except App.DoesNotExist:
         return None
+
 
 def _create_release(app, submitter, full_path, name, fullname, version,
                     platform, works_with, app_dependencies, release_notes):
@@ -283,6 +294,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
     app.latest_release_date = release.created
     app.save()
     return messages
+
 
 def _edit_app(app, context, request):
     from .models import Tag

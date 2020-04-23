@@ -1,6 +1,7 @@
-# vim: set expandtab shiftwidth=4 softtabstop=4:
+# vim: set expandtab shiftwidth=4:
 
 from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
 
@@ -53,7 +54,7 @@ class Command(BaseCommand):
             if version is None or ver > version:
                 version = ver
                 release = rel
-        self.extract_release(app, rel)
+        self.extract_release(app, release)
 
     def extract_release(self, app, rel):
         dist = rel.distribution()
@@ -61,11 +62,12 @@ class Command(BaseCommand):
             return
         bundle_name = dist["bundle_name"]
         bundle_info = dist["bundle"][bundle_name]
-        version = rel.version
         package = bundle_info["app_package_name"]
         doc_path = package.replace('.', '/') + "/doc/"
         skip = len(package) + 1
-        import zipfile, os.path, settings
+        import zipfile
+        import os
+        import settings
         with zipfile.ZipFile(rel.release_file.path) as zf:
             save_dir = None
             for zi in zf.infolist():
@@ -84,7 +86,7 @@ class Command(BaseCommand):
 
 
 def makedir_if_missing(dirpath):
-    import os.path, os
+    import os
     if os.path.exists(dirpath):
         return
     parent = os.path.dirname(dirpath)
