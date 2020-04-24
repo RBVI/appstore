@@ -492,13 +492,13 @@ else
                     (?:\n[ ]*)?             // one optional newline followed by spaces
 
                     \[
-                    (.*?)                   // id = $3
+                    ([^\]]*?)                   // id = $3
                     \]
                 )
                 ()()()()                    // pad remaining backreferences
             /g, writeAnchorTag);
             */
-            text = text.replace(/(\[((?:\[[^\]]*\]|[^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, writeAnchorTag);
+            text = text.replace(/(\[((?:\[[^\]]*\]|[^\[\]])*)\][ ]?(?:\n[ ]*)?\[([^\]]*?)\])()()()()/g, writeAnchorTag);
 
             //
             // Next, inline-style links: [link text](url "optional title")
@@ -619,20 +619,20 @@ else
             text = text.replace(/
                 (                   // wrap whole match in $1
                     !\[
-                    (.*?)           // alt text = $2
+                    ([^\]]*?)           // alt text = $2
                     \]
 
                     [ ]?            // one optional space
                     (?:\n[ ]*)?     // one optional newline followed by spaces
 
                     \[
-                    (.*?)           // id = $3
+                    ([^\]]*?)           // id = $3
                     \]
                 )
                 ()()()()            // pad rest of backreferences
             /g, writeImageTag);
             */
-            text = text.replace(/(!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, writeImageTag);
+            text = text.replace(/(!\[([^\]]*?)\][ ]?(?:\n[ ]*)?\[([^\]]*?)\])()()()()/g, writeImageTag);
 
             //
             // Next, handle inline images:  ![alt text](url "optional title")
@@ -642,7 +642,7 @@ else
             text = text.replace(/
                 (                   // wrap whole match in $1
                     !\[
-                    (.*?)           // alt text = $2
+                    ([^\]]*?)           // alt text = $2
                     \]
                     \s?             // One optional whitespace character
                     \(              // literal paren
@@ -660,7 +660,7 @@ else
                 )
             /g, writeImageTag);
             */
-            text = text.replace(/(!\[(.*?)\]\s?\([ \t]*()<?(\S+?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, writeImageTag);
+            text = text.replace(/(!\[([^\]]*?)\]\s?\([ \t]*()<?(\S+?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, writeImageTag);
 
             return text;
         }
@@ -1244,7 +1244,7 @@ else
         function _DoMediaWikiLinks(text) {
             // Replace named links like this: [http://cytoscape.org Cytoscape] or [http://cytoscape.org]
             replacer = 
-            text = text.replace(/\[((https?|ftp):[^'">\s]+)(\s)*(\S.*)?\]/gi,
+            text = text.replace(/\[((https?|ftp):[^'">\s]+)(\s)*(\S[^\]]*)?\]/gi,
                 function (wholematch, m1, m2, m3, m4) {
                     if (!m4) m4 = m1;
                     return "<a href=\"" + m1 + "\">" + pluginHooks.plainLinkText(m4) + "</a>";
