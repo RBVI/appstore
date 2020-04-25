@@ -63,7 +63,8 @@ def submit_app(request):
                         app_dependencies = release_dependencies(
                                                         bundle.app_dependencies)
                     except ValueError as e:
-                        context['error_msg'] = ': warning: is missing dependencies: ' + str(e)
+                        # context['error_msg'] = ': warning: is missing dependencies: ' + str(e)
+                        raise ValueError(': is missing dependencies: ' + str(e))
                     pending = _create_pending(request.user, bundle.package,
                                               bundle.version, bundle.platform,
                                               bundle.works_with,
