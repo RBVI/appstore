@@ -59,18 +59,15 @@ def submit_app(request):
             with _TemporaryBundle(f) as tb:
                 try:
                     bundle = process_wheel(tb.name, expect_app_name)
-                    try:
-                        app_dependencies = release_dependencies(
-                                                        bundle.app_dependencies)
-                    except ValueError as e:
-                        # context['error_msg'] = ': warning: is missing dependencies: ' + str(e)
-                        raise ValueError(': is missing dependencies: ' + str(e))
+                    app_dependencies, missing = release_dependencies(
+						bundle.app_dependencies)
                     pending = _create_pending(request.user, bundle.package,
                                               bundle.version, bundle.platform,
                                               bundle.works_with,
                                               app_dependencies,
-                                              bundle.release_notes, f)
-                    _send_email_for_pending(pending)
+                                              bundle.release_notes, f, missing)
+                    host = request.META.get('HTTP_HOST', 'unknown')
+                    _send_email_for_pending(pending, host)
                     return HttpResponseRedirect(reverse('confirm-submission',
                                                         args=[pending.id]))
                 except ValueError as e:
@@ -120,7 +117,7 @@ def confirm_submission(request, id):
     return html_response('confirm.html', {'pending': pending, 'pom_attrs': pom_attrs}, request)
 
 def _create_pending(submitter, fullname, version, platform, cy_works_with,
-                    app_dependencies, release_notes, release_file):
+                    app_dependencies, release_notes, release_file, missing):
     name = fullname_to_name(fullname)
     app = get_object_or_none(App, name = name)
     if app:
@@ -137,11 +134,13 @@ def _create_pending(submitter, fullname, version, platform, cy_works_with,
                                         cy_works_with  = cy_works_with)
     for dependency in app_dependencies:
         pending.dependencies.add(dependency)
+    # for m in missing:
+    #     pending.missing.add(m)
     pending.release_file.save(basename(release_file.name), release_file)
     pending.save()
     return pending
 
-def _send_email_for_pending(pending):
+def _send_email_for_pending(pending, host):
     msg = u"""
 The following app has been submitted:
     ID: {id}
@@ -149,7 +148,7 @@ The following app has been submitted:
     Version: {version}
     Submitter: {submitter_name} {submitter_email}
 """.format(id = pending.id, fullname = pending.fullname, version = pending.version, submitter_name = pending.submitter.username, submitter_email = pending.submitter.email)
-    send_mail('ChimeraX Toolshed - Bundle Submitted', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
+    send_mail('ChimeraX Toolshed (%s) - Bundle Submitted' % host, msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
 
 def _verify_javadocs_jar(file):
     error_msg = None

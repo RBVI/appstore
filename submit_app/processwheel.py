@@ -61,13 +61,16 @@ def process_wheel(filename, expect_app_name):
 
 def release_dependencies(app_dependencies):
     releases = []
+    missing = []
     for dependency in app_dependencies:
         app_name, app_version = dependency
         # _find_release will throw exception and terminate on error
-        r = _find_release(app_name, app_version)
-        if r:
+        try:
+            r = _find_release(app_name, app_version)
             releases.append(r)
-    return releases
+        except Exception:
+            missing.append(f"{app_name} {app_version}")
+    return releases, missing
 
 
 def _find_release(app_name, app_version):
