@@ -453,7 +453,7 @@ def _check_editor(app, request):
 	editor_email = request.POST.get('editor_email')
 	if not editor_email:
 		raise ValueError('no editor_email specified')
-	user = get_object_or_none(User, email=editor_email).last()
+	user = User.objects.filter(email=editor_email).last()
 	return user.username if user else False
 
 def _save_editors(app, request):
