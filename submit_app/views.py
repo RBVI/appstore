@@ -141,14 +141,14 @@ def _create_pending(submitter, fullname, version, platform, cy_works_with,
     return pending
 
 def _send_email_for_pending(pending, host):
-    msg = u"""
-The following app has been submitted:
-    ID: {id}
-    Name: {fullname}
-    Version: {version}
-    Submitter: {submitter_name} {submitter_email}
-""".format(id = pending.id, fullname = pending.fullname, version = pending.version, submitter_name = pending.submitter.username, submitter_email = pending.submitter.email)
-    send_mail('ChimeraX Toolshed (%s) - Bundle Submitted' % host, msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
+    msg = f"""
+The following app has been submitted to {host}:
+    ID: {pending.id}
+    Name: {pending.fullname}
+    Version: {pending.version}
+    Submitter: {pending.submitter.username} {pending.submitter.email}
+"""
+    send_mail(f'Bundle Submitted to ChimeraX Toolshed {host}', msg, settings.EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
 
 def _verify_javadocs_jar(file):
     error_msg = None
