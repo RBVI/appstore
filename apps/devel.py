@@ -63,7 +63,7 @@ def new_bundle(request):
     try:
         sort_bundles_by_dependencies(bundles)
     except Exception as e:
-        messages.append("warning checking dependencies" % str(e))
+        messages.append("warning checking dependencies: %s" % str(e))
     try:
         # Then try installing them in order
         for bundle in bundles:
@@ -123,7 +123,7 @@ def new_version(request):
     try:
         sort_bundles_by_dependencies(bundles)
     except Exception as e:
-        messages.append("warning checking dependencies" % str(e))
+        messages.append("warning checking dependencies: %s" % str(e))
     try:
         for bundle in bundles:
             try:
