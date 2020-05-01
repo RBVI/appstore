@@ -134,8 +134,8 @@ def _create_pending(submitter, fullname, version, platform, cy_works_with,
                                         cy_works_with  = cy_works_with)
     for dependency in app_dependencies:
         pending.dependencies.add(dependency)
-    # for m in missing:
-    #     pending.missing.add(m)
+    for m in missing:
+        pending.missing_deps.append(m)
     pending.release_file.save(basename(release_file.name), release_file)
     pending.save()
     return pending

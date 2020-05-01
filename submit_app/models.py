@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django_mysql.models import ListCharField
 from ..apps.models import App, Release, ReleaseAPI, ReleaseMetadata
 from ..util.id_util import fullname_to_name
 from ..util.view_util import get_object_or_none
@@ -26,6 +27,7 @@ class AppPending(models.Model):
     created       = models.DateTimeField(auto_now_add=True)
     release_file  = models.FileField(upload_to='pending_releases')
     dependencies  = models.ManyToManyField(Release, related_name='+', blank=True)
+    missing_deps  = ListCharField(base_field=models.CharField(max_length=255), max_length=8192, blank=True)
     javadocs_jar_file = models.FileField(upload_to='pending_releases', blank=True, null=True)
     pom_xml_file      = models.FileField(upload_to='pending_releases', blank=True, null=True)
 

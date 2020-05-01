@@ -6,6 +6,7 @@ Pillow
 geoip2
 # django-geoip2-extras
 django-haystack >= 3.0b1
+Django-MySQL ~= 3.0
 # ChimeraX-specific packages
 pkginfo
 packaging

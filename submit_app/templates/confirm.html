@@ -75,6 +75,9 @@
                   {% else %}
                     None
                   {% endif %}
+                  {% for missing in pending.missing_deps %}
+                    <p><i class="icon-warning-sign"></i> {{ missing }}</p>
+                  {% endfor %}
                 </td>
               </tr>
             </table>
