@@ -6,6 +6,18 @@
     h2 { margin-bottom: 0.5em; }
     .span4 { margin-bottom: 1em; }
   </style>
+
+  {% if cx_platform == "" %}
+  <div class="row">
+    <div class="span8">
+      <i>The best way to use the Toolshed is by running the
+      <a href="https://www.rbvi.ucsf.edu/chimerax/">ChimeraX</a> application
+      and clicking <b>More Tools...</b> in the <b>Tools</b> menu.
+      Then you can directly install bundles into ChimeraX,
+      instead of downloading the bundle and installing it separately.</i>
+    </div>
+  </div>
+  {% endif %}
   <div class="row">
     <div class="span4"><h2>Newest Releases</h2></div>
   </div>
