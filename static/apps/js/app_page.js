@@ -1,24 +1,24 @@
 var AppPage = (function($) {
-	/*
+    /*
      ================================================================
        Install via Cytoscape 3 App Manager
      ================================================================
-	*/
+    */
 
-	var AppManagerURL = 'https://127.0.0.1:2607/';
+    var AppManagerURL = 'https://127.0.0.1:2607/';
 
-	function is_manager_running(callback) {
-		$.ajax(AppManagerURL + 'status/',
-			{'type': 'GET',
-			 'success': function() { callback(true); },
-			 'error': function() { callback(false); }});
-	}
-	
-	function get_app_status(fullname, callback) {
-		$.getJSON(AppManagerURL + 'status/' + fullname,
-			{},
-			callback);
-	}
+    function is_manager_running(callback) {
+        $.ajax(AppManagerURL + 'status/',
+            {'type': 'GET',
+             'success': function() { callback(true); },
+             'error': function() { callback(false); }});
+    }
+    
+    function get_app_status(fullname, callback) {
+        $.getJSON(AppManagerURL + 'status/' + fullname,
+            {},
+            callback);
+    }
 
     function install_app(app_name, app_version, callback) {
         $.getJSON(AppManagerURL + 'install/' + app_name + '/' + app_version,
@@ -28,23 +28,23 @@ var AppPage = (function($) {
 
     var install_btn_last_class = [];
 
-	function setup_install_btn(install_btn, btn_class, icon_class, btn_text, func) {
+    function setup_install_btn(install_btn, btn_class, icon_class, btn_text, func) {
         var last_class = install_btn_last_class[install_btn];
         if (install_btn in install_btn_last_class) {
             install_btn.removeClass(install_btn_last_class[install_btn]);
             delete install_btn_last_class[install_btn];
         }
-		install_btn.addClass(btn_class);
+        install_btn.addClass(btn_class);
         install_btn_last_class.push(btn_class);
 
-		install_btn.find('i').attr('class', '');
-		install_btn.find('i').addClass(icon_class);
+        install_btn.find('i').attr('class', '');
+        install_btn.find('i').addClass(icon_class);
 
-		install_btn.find('h4').html(btn_text);
+        install_btn.find('h4').html(btn_text);
 
         install_btn.off('click');
         install_btn.removeClass('disabled');
-		if (func) {
+        if (func) {
             var license_modal = $('#license_modal');
             if (license_modal.size() !== 0) {
                 license_modal.find('.btn-primary').click(function() {
@@ -60,16 +60,18 @@ var AppPage = (function($) {
                 /* license modal doesn't exist in DOM */
                 install_btn.click(func);
             }
-		} else {
-			install_btn.addClass('disabled');
+        } else {
+            install_btn.addClass('disabled');
         }
-	}
+    }
 
-	function set_install_btn_to_download(install_btn, release_url) {
+    function set_install_btn_to_download(install_btn, release_url) {
         var label;
         var app_platform = install_btn.attr("platform");
+        var app_workswith = install_btn.attr("workswith");
+        var installable = is_chimerax && version_compatible(app_workswith);
         if (!app_platform) {
-            if (is_chimerax)
+            if (installable)
                 label = "Install";
             else
                 label = "Download";
@@ -82,29 +84,25 @@ var AppPage = (function($) {
                 my_platform = "macOS";
             else if (navigator.appVersion.indexOf("Linux") != -1)
                 my_platform = "Linux";
-            var installable = is_chimerax && app_platform == my_platform;
-            if (installable) {
-                var app_workswith = install_btn.attr("workswith");
-                installable = version_compatible(app_workswith);
-            }
+            installable = installable && app_platform == my_platform;
             if (installable)
                 label = "Install";
             else
                 label = '<div class="cy-app-install-label">'
                         + app_platform + "<br>Download</div>";
-		}
-		setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
+        }
+        setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
             function() {
                 window.location.href = release_url;
             });
-	}
-
-	function set_install_btn_to_installing(install_btn) {
-		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Installing...');
     }
 
-	function set_install_btn_to_install(install_btn, app_name, latest_release_version) {
-		setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Install',
+    function set_install_btn_to_installing(install_btn) {
+        setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Installing...');
+    }
+
+    function set_install_btn_to_install(install_btn, app_name, latest_release_version) {
+        setup_install_btn(install_btn, 'btn-info', 'icon-cy-install-install', 'Install',
             function() {
                 set_install_btn_to_installing(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
@@ -117,14 +115,14 @@ var AppPage = (function($) {
                     }
                 });
             });
-	}
-
-	function set_install_btn_to_upgrading(install_btn) {
-		setup_install_btn(install_btn, 'btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
     }
 
-	function set_install_btn_to_upgrade(install_btn, app_name, latest_release_version) {
-		setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrade',
+    function set_install_btn_to_upgrading(install_btn) {
+        setup_install_btn(install_btn, 'btn-warning', 'icon-cy-install-upgrade', 'Upgrading...');
+    }
+
+    function set_install_btn_to_upgrade(install_btn, app_name, latest_release_version) {
+        setup_install_btn('btn-warning', 'icon-cy-install-upgrade', 'Upgrade',
             function() {
                 set_install_btn_to_upgrading(install_btn);
                 install_app(app_name, latest_release_version, function(result) {
@@ -137,48 +135,48 @@ var AppPage = (function($) {
                     }
                 });
             });
-	}
+    }
 
-	function set_install_btn_to_installed(install_btn) {
-		setup_install_btn(install_btn, 'btn-success', 'icon-cy-install-installed', 'Installed');
-	}
+    function set_install_btn_to_installed(install_btn) {
+        setup_install_btn(install_btn, 'btn-success', 'icon-cy-install-installed', 'Installed');
+    }
 
-	function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
+    function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
         set_install_btn_to_download($('#'+release_id), latest_release_url);
 
-		/* Do not bother checking if ChimeraX is running
-		is_manager_running(function(is_running) {
-			if (is_running) {
-				get_app_status(app_fullname, function(app_status) {
-					if (app_status.status === 'not-found' || app_status.status === 'uninstalled') {
-						set_install_btn_to_install(app_fullname, latest_release_version);
-					} else if (app_status.status === 'installed') {
-						var installed_version = app_status.version;
+        /* Do not bother checking if ChimeraX is running
+        is_manager_running(function(is_running) {
+            if (is_running) {
+                get_app_status(app_fullname, function(app_status) {
+                    if (app_status.status === 'not-found' || app_status.status === 'uninstalled') {
+                        set_install_btn_to_install(app_fullname, latest_release_version);
+                    } else if (app_status.status === 'installed') {
+                        var installed_version = app_status.version;
 
-						if (installed_version === latest_release_version) {
-							set_install_btn_to_installed();
-						} else {
-							set_install_btn_to_upgrade(app_fullname, latest_release_version);
-						}
-					}
-				});
-			} else {
-				CyMsgs.add_msg('Want an easier way to install apps? <a href="' + install_app_help_url + '" target="_blank">Click here</a> to learn how!', 'info');
-			}
-		});
-		*/
-	}
+                        if (installed_version === latest_release_version) {
+                            set_install_btn_to_installed();
+                        } else {
+                            set_install_btn_to_upgrade(app_fullname, latest_release_version);
+                        }
+                    }
+                });
+            } else {
+                CyMsgs.add_msg('Want an easier way to install apps? <a href="' + install_app_help_url + '" target="_blank">Click here</a> to learn how!', 'info');
+            }
+        });
+        */
+    }
 
-	function setup_cy_2x_download_popover(plugins_dir_img) {
-		$('.cy-app-2x-download-popover').popover({
-			'title': 'How to Install',
-			'html': true,
-			'content': '<p>Download to your <strong>plugins</strong> folder.</p><p align="center"><img style="margin-top: 1em;" src="' + plugins_dir_img + '"></p>',
-			'placement': 'bottom',
+    function setup_cy_2x_download_popover(plugins_dir_img) {
+        $('.cy-app-2x-download-popover').popover({
+            'title': 'How to Install',
+            'html': true,
+            'content': '<p>Download to your <strong>plugins</strong> folder.</p><p align="center"><img style="margin-top: 1em;" src="' + plugins_dir_img + '"></p>',
+            'placement': 'bottom',
             'trigger': 'hover',
-		});
-	}
-	
+        });
+    }
+    
     /*
      ================================================================
        Stars
@@ -276,7 +274,7 @@ var AppPage = (function($) {
     */
     
     function setup_download_stats() {
-		if (is_chimerax)
+        if (is_chimerax)
             $('#downloadstats').html("Download Stats requires Flash and is not available from ChimeraX");
     }
     
@@ -366,11 +364,11 @@ var AppPage = (function($) {
     */
     
     return {
-	'setup_install': setup_install,
-	'setup_cy_2x_download_popover': setup_cy_2x_download_popover,
-    'setup_stars': setup_stars,
-    'setup_details': setup_details,
-    'setup_release_notes': setup_release_notes,
-    'setup_download_stats': setup_download_stats,
+        'setup_install': setup_install,
+        'setup_cy_2x_download_popover': setup_cy_2x_download_popover,
+        'setup_stars': setup_stars,
+        'setup_details': setup_details,
+        'setup_release_notes': setup_release_notes,
+        'setup_download_stats': setup_download_stats,
     }
 })($);
