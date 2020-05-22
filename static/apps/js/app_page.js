@@ -312,51 +312,99 @@ var AppPage = (function($) {
         }
     })();
 
-    function version_compatible(needed) {
-        var match = /\((.*=)(.+)\)/.exec(needed);
-        if (match == null)
-            return true;
-        var operator = match[1];
-        var needed_version = version_array(match[2]);
-        var have_version = version_array(ua_version);
-        return compare_version(operator, have_version, needed_version);
+    function version_compatible(ua_version, needed) {
+	var match = /\(([=<>~]+)(.+)\)/.exec(needed);
+	if (!match)
+	    return true;
+	var operator = match[1];
+	var needed_version = parse_version(match[2]);
+	var have_version = parse_version(ua_version);
+	return compare_version(operator, have_version, needed_version);
     }
 
-    function version_array(v) {
-        return v.split('.').map(Number);
+    function parse_version(v) {
+	// Returns list of 2 items:
+	// [0] = array of Numbers for dotted version number at the front, and
+	// [1] = string for trailing text
+	// So "1.0rc1" -> [ [1, 0], "rc1" ]
+	var match = /([0-9.]+)([^0-9.].*)/.exec(v);
+	var base_version, trailer;
+	if (!match) {
+	    base_version = v;
+	    trailer = null;
+	} else {
+	    base_version = match[1];
+	    trailer = match[2];
+	}
+	var va = base_version.split('.').map(Number);
+	return [va, trailer];
+    }
+
+    var comp_ops = {
+	'>=': function(cmp) { return cmp >= 0; },
+	'<=': function(cmp) { return cmp <= 0; },
+	'==': function(cmp) { return cmp == 0; },
+	'>':  function(cmp) { return cmp > 0; },
+	'<':  function(cmp) { return cmp < 0; },
     }
 
     function compare_version(op, have, want) {
-        var length = Math.min(have.length, want.length);
-        var cmp = 0;    // -1 if have<want, 0 if same, 1 if have>want
-        for (var i = 0; i < length; i++) {
-            if (have < want) {
-                cmp = -1;
-                break;
-            } else if (have > want) {
-                cmp = 1;
-                break;
-            }
-        }
-        if (cmp == 0) {
-            if (have.length < want.length)
-                cmp = -1;
-            else if (have.length > want.length)
-                cmp = 1;
-        }
-        if (op == "==")
-            return cmp == 0;
-        else if (op == ">=")
-            return cmp >= 0;
-        else if (op == ">")
-            return cmp > 0;
-        else if (op == "<=")
-            return cmp <= 0;
-        else if (op == "<")
-            return cmp < 0;
-        return false;
+	var have_version = have[0];
+	var want_version = want[0];
+	var comp_op = comp_ops[op];
+	if (comp_op) {
+	    var match_length = Math.min(have_version.length, want_version.length);
+	    var cmp = 0;        // -1 = have<want, 0 = have==want, 1 = have>want
+	    // Compare matching version parts
+	    for (var i = 0; i < match_length; i++)
+		if (have_version[i] < want_version[i]) {
+		    cmp = -1;
+		    break;
+		} else if (have_version[i] > want_version[i]) {
+		    cmp = 1;
+		    break;
+		}
+	    // If matching base version parts compare equal, then
+	    // the version with more parts if newer
+	    if (cmp == 0) {
+		if (have_version.length < want_version.length)
+		    cmp = -1;
+		else if (have_version.length > want_version.length)
+		    cmp = 1;
+		// If still equal, then newer trailer wins if both have trailers.
+		// If not, assume that they are the same since we have either:
+		// (a) want = 1.0b1 and have = 1.0 => release is newer, or
+		// (b) want = 1.0 and have = 1.0b1 => release is being tested.
+		else {
+		    var have_trailer = have[1];
+		    var want_trailer = want[1];
+		    if (have_trailer && want_trailer) {
+			if (have_trailer < want_trailer)
+			    cmp = -1
+			else if (have_trailer > want_trailer)
+			    cmp = 1
+		    }
+		}
+	    }
+	    // Do the actual comparison
+	    return comp_op(cmp);
+	} else if (op == '~=') {
+	    // TODO: ~= means the "want" version must match up to the last part,
+	    // and the last "want" part must be less than the matching "have" part
+	    var match_length = want_version.length - 1;
+	    if (have_version.length <= match_length)
+		// If "have" has fewer parts than "want", the existing parts either
+		// (a) match and "want" is newer, or
+		// (b) do not match and fail ~= semantics
+		return false;
+	    for (var i = 0; i < match_length; i++)
+		if (have_version[i] != want_version[i])
+		    return false;
+	    return have_version[match_length] >= want_version[match_length];
+	} else
+	    return false;
     }
-    
+
     /*
      ================================================================
        Init
