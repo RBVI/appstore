@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Create Python virtual environments for toolshed preview and production
+# web sites, so they can be updated independently
+#
+
+cd || exit 1
+
+# default packages, others will be selected using requirements.txt
+PACKAGES="flake8 distlib packaging pkginfo setuptools wheel"
+
+echo "Create Python virtual enironment for Toolshed preview site"
+python3 -s -m venv --system-site-packages --symlinks --prompt preview preview-site
+source preview-site/bin/activate
+python3 -s -m pip install --upgrade pip
+python3 -s -m pip install ${PACKAGES}
+python3 -s -m pip install -r requirements.txt
+deactivate
+
+echo "Create Python virtual enironment for Toolshed production site"
+python3 -s -m venv --system-site-packages --symlinks --prompt production production-site
+source production-site/bin/activate
+python3 -s -m pip install --upgrade pip
+python3 -s -m pip install ${PACKAGES}
+python3 -s -m pip install -r requirements.txt
+deactivate

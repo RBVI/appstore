@@ -1,4 +1,5 @@
 This is the ChimeraX Toolshed.
+
 We cloned the Cytoscape AppStore git repository
 and created a "cxtoolshed" branch, which contains
 all of our changes to the code.  To run the Toolshed,
@@ -8,3 +9,16 @@ and production Toolshed.
 
 Customization files are in the "conf" directory and
 are listed in .gitignore.
+
+Virtual Environments
+--------------------
+
+To allow for the preview and the production web sites to
+have their Python packages independently updated, there
+are two virtual environments: ~/preview-site and
+~/production-site.
+
+They are created with the "mk-venvs" shell script.
+
+To avoid cross contamination from ~/.local/lib/python3.6,
+use "python3 -s" whenever doing something from the shell.

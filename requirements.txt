@@ -7,6 +7,8 @@ geoip2
 # django-geoip2-extras
 django-haystack >= 3.0b1
 Django-MySQL ~= 3.0
+mysqlclient ~= 2.0
+social_auth_app_django ~= 4.0
 # ChimeraX-specific packages
 pkginfo
 packaging
