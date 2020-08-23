@@ -2,7 +2,7 @@
 # vi: set shiftwidth=4 expandtab:
 from zipfile import BadZipfile
 from ..apps.models import App, Release
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from ..util.view_util import get_object_or_none
 from ..util.chimerax_util import Bundle
 from packaging.version import Version
@@ -31,7 +31,7 @@ def process_wheel(filename, expect_app_name):
         raise ValueError("Not a valid wheel file: \"%s\"" % str(e))
     if bundle.platform == "Unknown":
         raise ValueError("Unsupported platform")
-    app_name = smart_text(bundle.package, errors="replace")
+    app_name = smart_str(bundle.package, errors="replace")
     if expect_app_name:
         if app_name != expect_app_name:
             raise ValueError("App name given as \"%s\" but "
@@ -51,7 +51,7 @@ def process_wheel(filename, expect_app_name):
             app_works_with = version
         else:
             app_dependencies.append((name, version))
-    app_works_with = smart_text(app_works_with, errors="replace")
+    app_works_with = smart_str(app_works_with, errors="replace")
 
     # Add some computed attributes to bundle and return
     bundle.works_with = app_works_with
