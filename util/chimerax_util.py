@@ -63,6 +63,7 @@ class Bundle:
                 continue
             info_type = parts[1].lower()
             if info_type == "bundle":
+                # ChimeraX :: Bundle :: categories :: session_versions :: api_module_name :: supercedes :: custom_init
                 if len(parts) != 7:
                     continue
                 name = self.package
@@ -74,6 +75,8 @@ class Bundle:
                     "custom_init": parts[6],
                 }
             elif info_type in ["command", "tool"]:
+                # ChimeraX :: Tool :: tool_name :: categories :: synopsis
+                # ChimeraX :: Command :: name :: categories :: synopsis
                 if len(parts) != 5:
                     continue
                 name = parts[2]
@@ -82,7 +85,8 @@ class Bundle:
                     "synopsis": parts[4],
                 }
             elif info_type == "selector":
-                if len(parts) != 4 and len(parts) != 5:
+                # Selector :: name :: synopsis [:: atomic]
+                if len(parts) not in (4, 5):
                     continue
                 name = parts[2]
                 value = {
@@ -91,7 +95,9 @@ class Bundle:
                 if len(parts) == 5:
                     value["atomic"] = parts[4]
             elif info_type == "dataformat":
-                if len(parts) not in [11, 12]:
+                # Obsolete, pre-1.0
+                # ChimeraX :: DataFormat :: format_name :: nicknames :: category :: suffixes :: mime_types :: url :: dangerous :: icon :: synopsis :: encoding
+                if len(parts) not in (11, 12):
                     continue
                 name = parts[2]
                 value = {
@@ -107,6 +113,8 @@ class Bundle:
                 if len(parts) == 12:
                     value["encoding"] = parts[11]
             elif info_type == "fetch":
+                # Obsolete, pre-1.0
+                # ChimeraX :: Fetch :: database_name :: format_name :: prefixes :: example_id :: is_default
                 if len(parts) != 7:
                     continue
                 name = parts[2]
@@ -117,6 +125,9 @@ class Bundle:
                     "is_default": parts[6],
                 }
             elif info_type in ["open", "save"]:
+                # Obsolete, pre-1.0
+                # ChimeraX :: Open :: format_name :: tag :: is_default :: keyword_arguments
+                # ChimeraX :: Save :: format_name :: tag :: is_default :: keyword_arguments
                 if len(parts) not in [5, 6]:
                     continue
                 name = parts[2]
@@ -126,8 +137,39 @@ class Bundle:
                 }
                 if len(parts) == 6:
                     value["keywords"] = get_list_items(parts[5])
+            elif info_type == 'manager':
+                # ChimeraX :: Mangager :: name [:: key:value]*
+                if len(parts) < 3:
+                    continue
+                name = parts[2]
+                value = {}
+                for p in parts[3:]:
+                    k, v = p.split(':', 1)
+                    if v[0] in '\'"':
+                        v = unescape(v[1:-1])
+                    else:
+                        v = unescape(v)
+                    value[k] = v
+            elif info_type == 'provider':
+                # ChimeraX :: Provider :: name :: manager [:: key:value]*
+                if len(parts) < 4:
+                    continue
+                name = f"{parts[3]}/{parts[2]}"  # manager / name
+                value = {}
+                for p in parts[4:]:
+                    k, v = p.split(':', 1)
+                    if v[0] in '\'"':
+                        v = unescape(v[1:-1])
+                    else:
+                        v = unescape(v)
+                    value[k] = v
             else:
-                # unknown ChimeraX metadata type, ignore for now
+                # See chimerax/src/core/toolshed/installed.py for possibilities
+                # ChimeraX :: DataDir :: directory
+                # ChimeraX :: IncludeDir :: directory
+                # ChimeraX :: LibraryDir :: directory
+                # ChimeraX :: ExecutableDir :: directory
+                # or unknown ChimeraX metadata type, ignore for now
                 continue
             for k, v in list(value.items()):
                 if not v:
@@ -217,6 +259,116 @@ def chimerax_user_agent(request):
         return None, None
 
 
+_escape_table = {
+    "'": "'",
+    '"': '"',
+    '\\': '\\',
+    '\n': '',
+    'a': '\a',  # alarm
+    'b': '\b',  # backspace
+    'f': '\f',  # formfeed
+    'n': '\n',  # newline
+    'r': '\r',  # return
+    't': '\t',  # tab
+    'v': '\v',  # vertical tab
+}
+
+
+def unescape(text):
+    """Replace backslash escape sequences with actual character.
+
+    :param text: the input text
+    :returns: the processed text
+
+    Follows Python's :ref:`string literal <python:literals>` syntax
+    for escape sequences."""
+    return unescape_with_index_map(text)[0]
+
+
+def unescape_with_index_map(text):
+    """Replace backslash escape sequences with actual character.
+
+    :param text: the input text
+    :returns: the processed text and index map from processed to input text
+
+    Follows Python's :ref:`string literal <python:literals>` syntax
+    for escape sequences."""
+    # standard Python backslashes including \N{unicode name}
+    start = 0
+    index_map = list(range(len(text)))
+    while start < len(text):
+        index = text.find('\\', start)
+        if index == -1:
+            break
+        if index == len(text) - 1:
+            break
+        escaped = text[index + 1]
+        if escaped in _escape_table:
+            text = text[:index] + _escape_table[escaped] + text[index + 2:]
+            # Assumes that replacement is a single character
+            index_map = index_map[:index] + index_map[index + 1:]
+            start = index + 1
+        elif escaped in '01234567':
+            # up to 3 octal digits
+            for count in range(2, 5):
+                if text[index + count] not in '01234567':
+                    break
+            try:
+                char = chr(int(text[index + 1: index + count], 8))
+                text = text[:index] + char + text[index + count:]
+                index_map = index_map[:index] + index_map[index + count - 1:]
+            except ValueError:
+                pass
+            start = index + 1
+        elif escaped == 'x':
+            # 2 hex digits
+            try:
+                char = chr(int(text[index + 2: index + 4], 16))
+                text = text[:index] + char + text[index + 4:]
+                index_map = index_map[:index] + index_map[index + 3:]
+            except ValueError:
+                pass
+            start = index + 1
+        elif escaped == 'u':
+            # 4 hex digits
+            try:
+                char = chr(int(text[index + 2: index + 6], 16))
+                text = text[:index] + char + text[index + 6:]
+                index_map = index_map[:index] + index_map[index + 5:]
+            except ValueError:
+                pass
+            start = index + 1
+        elif escaped == 'U':
+            # 8 hex digits
+            try:
+                char = chr(int(text[index + 2: index + 10], 16))
+                text = text[:index] + char + text[index + 10:]
+                index_map = index_map[:index] + index_map[index + 9:]
+            except ValueError:
+                pass
+            start = index + 1
+        elif escaped == 'N':
+            # named unicode character
+            if len(text) < index + 2 or text[index + 2] != '{':
+                start = index + 1
+                continue
+            end = text.find('}', index + 3)
+            if end > 0:
+                import unicodedata
+                char_name = text[index + 3:end]
+                try:
+                    char = unicodedata.lookup(char_name)
+                    text = text[:index] + char + text[end + 1:]
+                    index_map = index_map[:index] + index_map[end:]
+                except KeyError:
+                    pass
+            start = index + 1
+        else:
+            # leave backslash in text like Python
+            start = index + 1
+    return text, index_map
+
+
 if __name__ == "__main__":
     if True:
         v = Version("0.9.2")
@@ -241,7 +393,7 @@ if __name__ == "__main__":
         print(v1b2 < v1b1, "should be False")
         print(v1 < v2, "should be True")
         print(v2 < v1b1, "should be False")
-    if False:
+    if True:
         import os
         # root = "d:/chimerax/src/bundles"
         root = "testdata"

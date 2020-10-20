@@ -22,21 +22,18 @@ class Command(BaseCommand):
         if bundle is None and version is None and platform is None:
             self.update_all_bundles()
         elif version is None and platform is None:
-            bundle = args[0]
             from .utils import find_bundle
             app = find_bundle(self, bundle)
             if app is None:
                 return
             self.update_bundle(app)
         elif platform is None:
-            bundle, version = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, None)
             if rel is None:
                 return
             self.update_release(rel)
         else:
-            bundle, version, platform = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, platform)
             if rel is None:

@@ -201,11 +201,11 @@ def erase_release(cmd, rel, dry_run=True):
         rel.delete()
 
 
-def update_metadata(cmd, rel):
+def update_metadata(cmd, release):
     "Update metdata for a release from its wheel"
-    rf = rel.release_file
+    rf = release.release_file
     if not rf:
-        print("No file associated with release", rel, file=sys.stderr)
+        print("No file associated with release", release, file=sys.stderr)
         return
     path = rf.storage.path(rf.name)
     if not path.endswith(".whl"):
@@ -221,16 +221,15 @@ def update_metadata(cmd, rel):
     # XXX: Copied from submit_app/models.py
     # Get version from bundle data
     md, _ = ReleaseMetadata.objects.get_or_create(
-                release=rel, type="bundle",
+                release=release, type="bundle",
                 name=b.package, key="version", value=b.version)
     md.save()
     try:
         for req in b.requires:
-            for r in req["requires"]:
-                md, _ = ReleaseMetadata.objects.get_or_create(
-                            release=rel, type="bundle",
-                            name=b.package, key="requires", value=r)
-                md.save()
+            md, _ = ReleaseMetadata.objects.get_or_create(
+                        release=release, type="bundle",
+                        name=b.package, key="requires", value=req)
+            md.save()
     except KeyError:
         pass
     # Get rest of metadata from bundle classifiers
@@ -243,13 +242,13 @@ def update_metadata(cmd, rel):
                 # value: either a string or a list
                 if isinstance(value, str):
                     md, _ = ReleaseMetadata.objects.get_or_create(
-                                release=rel, type=info_type,
+                                release=release, type=info_type,
                                 name=name, key=key, value=value)
                     md.save()
                 else:
                     for v in value:
                         md, _ = ReleaseMetadata.objects.get_or_create(
-                                    release=rel, type=info_type,
+                                    release=release, type=info_type,
                                     name=name, key=key, value=v)
                         md.save()
-    print("Updated metadata for", rel)
+    print("Updated metadata for", release)

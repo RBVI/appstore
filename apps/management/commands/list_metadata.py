@@ -28,14 +28,12 @@ class Command(BaseCommand):
                 return
             self.list_bundle(app)
         elif platform is None:
-            bundle, version = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, None)
             if rel is None:
                 return
             self.list_release(rel)
         else:
-            bundle, version, platform = args
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, platform)
             if rel is None:
