@@ -252,6 +252,8 @@ def chimerax_user_agent(request):
         # from ChimeraX derives from "platform.system()" in Python 3.
         version = m.group("version")
         platform = m.group("platform")
+        platform, *platform_version = platform.split()
+        # platform_version = ' '.join(platform_version)
         if platform == "Darwin":
             platform = "macOS"
         return version, platform
