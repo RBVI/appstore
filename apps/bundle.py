@@ -6,6 +6,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import os.path
+from ..util.chimerax_util import Version, compatible_with, chimerax_user_agent
 
 # import logging
 # logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ def handler(request):
     #   1 = "bundle"
     #   2 = bundle_name
     #   3 = version
+    cx_version, platform = chimerax_user_agent(request)
     try:
         name = path_parts[2]
     except IndexError:
@@ -48,7 +50,7 @@ def handler(request):
         uuid = request.GET.get("uuid")
     if uuid:
         log_uuid(uuid)
-    response = _format_bundle(name, version)
+    response = _format_bundle(name, version, cx_version, platform)
     return response
 
 
@@ -87,7 +89,7 @@ _ReleaseDataAttrs = [
 # Utility routines
 #
 
-def _format_bundle(name, version):
+def _format_bundle(name, version, cx_version, platform):
     from .models import Release
     if not name:
         releases = Release.objects.filter(active=True)
@@ -100,6 +102,11 @@ def _format_bundle(name, version):
             releases = Release.objects.filter(active=True,
                                               app__name__contains=name,
                                               version=version)
+    if platform is not None:
+        releases = releases.filter(active=True, platform=platform) | releases.filter(active=True, platform="")
+    if cx_version is not None:
+        cx_version = Version(cx_version)
+        releases = [rel for rel in releases if compatible_with(cx_version, rel.works_with)]
     dlist = [d for d in [rel.distribution() for rel in releases]
              if d is not None]
     from django.http import HttpResponse
