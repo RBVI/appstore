@@ -35,7 +35,7 @@ class Bundle:
             self.platform = "macOS"
         elif platform.startswith("win_"):
             self.platform = "Windows"
-        elif platform.startswith("linux_"):
+        elif platform.startswith(("linux_", "manylinux")):
             self.platform = "Linux"
         elif platform == "any":
             self.platform = ""
