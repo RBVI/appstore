@@ -16,15 +16,6 @@ logger = logging.getLogger(__name__)
 
 def process_wheel(filename, expect_app_name):
     # Make sure it is a wheel and supports a single platform
-    import os.path
-    root, ext = os.path.splitext(os.path.basename(filename))
-    if ext != ".whl":
-        raise ValueError("\"%s\" is not a Python wheel" % filename)
-    parts = root.split('-')
-    if len(parts) != 5 and len(parts) != 6:
-        raise ValueError("\"%s\" is not a properly named Python wheel" %
-                         filename)
-
     try:
         bundle = Bundle(filename)
     except (BadZipfile, IOError, ValueError) as e:

@@ -125,7 +125,11 @@ def _create_pending(submitter, fullname, version, platform, cy_works_with,
             raise ValueError('cannot be accepted because you are not an editor')
         release = get_object_or_none(Release, app = app, version = version, platform = platform)
         if release and release.active:
-            raise ValueError('cannot be accepted because the app %s already has a release with version %s. You can delete this version by going to the Release History tab in the app edit page' % (app.fullname, version))
+            raise ValueError('cannot be accepted because the app %s already has a release with version %s' % (app.fullname, version))
+
+    pending = get_object_or_none(AppPending, fullname = fullname, version = version, platform = platform)
+    if pending:
+        raise ValueError("cannot be accepted because there is already a pending release with that name, version, and platform")
 
     pending = AppPending.objects.create(submitter      = submitter,
                                         fullname       = fullname,

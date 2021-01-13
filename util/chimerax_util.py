@@ -14,23 +14,24 @@ such as bundle name, version, dependencies, description, summary,
 icon, screenshot, etc.
 """
 import re
+from wheel_filename import parse_wheel_filename, InvalidFilenameError
 from packaging.version import Version
 
 
 class Bundle:
     def __init__(self, filename):
         import pkginfo
-        self.path = filename    # Used by apps/devel to mass release bundles
+        # do a few sanity checks
+        w = parse_wheel_filename(filename)   # throws ValueError if illegal
+        Version(w.version)  # throw ValueError if version isn't legal
+        if len(w.platform_tags) != 1:
+            raise ValueError("Bundles are limited to one platform")
+
+        sela.path = filename    # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
-        Version(self._wheel.version)  # throw ValueError if version isn't legal
         self._dist_info = self.package + '-' + self.version + '.dist-info'
         self._zip = None
-        # There does not seem a standard way of getting a platform
-        # name, so we just translate the last field in the filename
-        # into something more familiar
-        import os.path
-        base, ext = os.path.splitext(os.path.basename(filename))
-        platform = base.split('-')[-1]
+        platform = w.platform_tags[0]
         if platform.startswith("macosx_"):
             self.platform = "macOS"
         elif platform.startswith("win_"):
