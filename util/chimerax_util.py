@@ -27,7 +27,7 @@ class Bundle:
         if len(w.platform_tags) != 1:
             raise ValueError("Bundles are limited to one platform")
 
-        sela.path = filename    # Used by apps/devel to mass release bundles
+        self.path = filename    # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
         self._dist_info = self.package + '-' + self.version + '.dist-info'
         self._zip = None
