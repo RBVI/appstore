@@ -462,7 +462,8 @@ AppPage.setup_install("{{ cx_release.id }}",
 	"{{ app.display_name|escapejs }}",
 	"{% url 'release_download' app.name cx_release.version cx_release.id %}", 
 	"{{ cx_release.version }}",
-	"{% url 'getstarted_app_install' %}");
+	"{% url 'getstarted_app_install' %}",
+	"{{ cx_release.release_file }}");
 {% endfor %}
 {% endif %}
 AppPage.setup_cy_2x_download_popover('{% get_static_prefix %}apps/img/plugins_dir.png');

@@ -65,10 +65,35 @@ var AppPage = (function($) {
         }
     }
 
-    function set_install_btn_to_download(install_btn, release_url) {
+    function set_install_btn_to_download(install_btn, release_url, app_filename) {
         var label;
         var app_platform = install_btn.attr("platform");
         var app_workswith = install_btn.attr("workswith");
+        var newer_chimerax = is_chimerax && version_compatible(ua_version, "(>=1.2.dev202101280755)");
+        if (newer_chimerax) {
+            // make request for installable state of wheel
+            wheel_name = app_filename.split("/").pop()
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "installable:" + wheel_name);
+            xhr.onreadystatechange = function () {
+                if(xhr.readyState === XMLHttpRequest.DONE) {
+                    var status = xhr.status;
+                    if (status === 0 || (status >= 200 && status < 400)) {
+                        // The request has been completed successfully
+                        label = xhr.responseText;
+                    } else {
+                        // Oh no! There has been an error with the request!
+                        label = "Download";
+                    }
+                    setup_install_btn(install_btn, 'btn-primary', 'icon-cy-install-download', label,
+                                      function() {
+                                          window.location.href = release_url;
+                                      });
+                }
+            }
+            xhr.send();
+	    return;
+        }
         var installable = is_chimerax && version_compatible(app_workswith);
         if (!app_platform) {
             if (installable)
@@ -141,8 +166,8 @@ var AppPage = (function($) {
         setup_install_btn(install_btn, 'btn-success', 'icon-cy-install-installed', 'Installed');
     }
 
-    function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url) {
-        set_install_btn_to_download($('#'+release_id), latest_release_url);
+    function setup_install(release_id, app_name, app_fullname, latest_release_url, latest_release_version, install_app_help_url, app_filename) {
+        set_install_btn_to_download($('#'+release_id), latest_release_url, app_filename);
 
         /* Do not bother checking if ChimeraX is running
         is_manager_running(function(is_running) {
@@ -334,6 +359,7 @@ var AppPage = (function($) {
 	    trailer = null;
 	} else {
 	    base_version = match[1];
+	    base_version = base_version.replace(/\.+$/, '');
 	    trailer = match[2];
 	}
 	var va = base_version.split('.').map(Number);
@@ -389,6 +415,7 @@ var AppPage = (function($) {
 	    // Do the actual comparison
 	    return comp_op(cmp);
 	} else if (op == '~=') {
+	    // TODO: compare trailer if need be
 	    // TODO: ~= means the "want" version must match up to the last part,
 	    // and the last "want" part must be less than the matching "have" part
 	    var match_length = want_version.length - 1;
