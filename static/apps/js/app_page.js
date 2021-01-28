@@ -69,7 +69,7 @@ var AppPage = (function($) {
         var label;
         var app_platform = install_btn.attr("platform");
         var app_workswith = install_btn.attr("workswith");
-        var newer_chimerax = is_chimerax && version_compatible(ua_version, "(>=1.2.dev202101280755)");
+        var newer_chimerax = is_chimerax && version_compatible(ua_version, "(>=1.2.dev202101282337)");
         if (newer_chimerax) {
             // make request for installable state of wheel
             wheel_name = app_filename.split("/").pop()
