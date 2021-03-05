@@ -312,10 +312,10 @@
 		<div class="alert alert-error">
 			No download available for
 			{% if version %}
-			ChimeraX {{ version }} on
+			ChimeraX {{ version }}
 			{% endif %}
-			{% if platform %}
-			{{ platform }}.
+			{% ifnotequal platform "any" %}
+			on {{ platform }}.
 			{% else %}
 			this platform.
 			{% endif %}
