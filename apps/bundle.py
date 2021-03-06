@@ -46,11 +46,17 @@ def handler(request):
     # Additional information in query parameters or POST data
     if request.method == "POST":
         uuid = request.POST.get("uuid")
+        format_version = request.POST.get("format_version")
     else:
         uuid = request.GET.get("uuid")
+        format_version = request.GET.get("format_version")
     if uuid:
         log_uuid(uuid)
-    response = _format_bundle(name, version, cx_version, platform)
+    try:
+        format_version = int(format_version)
+    except ValueError:
+        format_version = 1
+    response = _format_bundle(name, version, cx_version, platform, format_version)
     return response
 
 
@@ -89,7 +95,7 @@ _ReleaseDataAttrs = [
 # Utility routines
 #
 
-def _format_bundle(name, version, cx_version, platform):
+def _format_bundle(name, version, cx_version, platform, format_version):
     from .models import Release
     if not name:
         releases = Release.objects.filter(active=True)
@@ -107,8 +113,10 @@ def _format_bundle(name, version, cx_version, platform):
     if cx_version is not None:
         cx_version = Version(cx_version)
         releases = [rel for rel in releases if compatible_with(cx_version, rel.works_with)]
-    dlist = [d for d in [rel.distribution() for rel in releases]
+    dlist = [d for d in [rel.distribution(format_version) for rel in releases]
              if d is not None]
+    if format_version >= 2:
+        dlist.insert(0, ['format_version', format_version])
     from django.http import HttpResponse
     import json
     response = HttpResponse(json.dumps(dlist), content_type='application/json')

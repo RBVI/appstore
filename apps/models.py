@@ -236,7 +236,7 @@ class Release(models.Model):
             api.delete_files()
             api.delete()
 
-    def distribution(self):
+    def distribution(self, format_version=1):
         "Return metadata as dictionary."
         # A bunch of values must be lists
         force_list = set([("bundle", "categories"),
@@ -270,6 +270,8 @@ class Release(models.Model):
                     value_list.append(md.value)
         if not d:
             return None
+        if format_version >= 2:
+            d["release_file"] = os.path.basename(self.release_file.path)
         app = self.app
         d["bundle_name"] = app.fullname
         d["toolshed_name"] = app.name
