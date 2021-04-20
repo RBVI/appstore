@@ -35,6 +35,6 @@ class Command(BaseCommand):
             self._list_version(app, rel)
 
     def _list_version(self, app, rel):
-        print(app.name, rel.version, "active:", rel.active)
+        print(app.name, rel.version, "active:", rel.active, rel.works_with)
         f = rel.release_file
         print("  ", f.storage.path(f.name))
