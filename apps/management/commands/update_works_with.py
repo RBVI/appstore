@@ -42,11 +42,12 @@ class Command(BaseCommand):
             self.update_bundle(app, replace, add)
         elif platform is None:
             from .utils import find_bundle_version
-            rel = find_bundle_version(self, bundle, version, None)
-            if rel is None:
+            rels = find_bundle_version(self, bundle, version, None, return_multiple=True)
+            if rels is None:
                 print("not find bundle with that version")
                 raise SystemExit(1)
-            self.update_release(rel, replace, add)
+            for rel in rels:
+                self.update_release(rel, replace, add)
         else:
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, platform)

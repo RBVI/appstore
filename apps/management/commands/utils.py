@@ -21,7 +21,7 @@ def find_bundle(cmd, bundle):
         return apps[0]
 
 
-def find_bundle_version(cmd, bundle, version, platform):
+def find_bundle_version(cmd, bundle, version, platform, *, return_multiple=True):
     "Find the specified version of the bundle"
     app = find_bundle(cmd, bundle)
     if app is None:
@@ -35,6 +35,8 @@ def find_bundle_version(cmd, bundle, version, platform):
         print("no match for bundle \"%s\" version \"%s\"" % (bundle, version),
               file=sys.stderr)
         return None
+    elif return_multiple:
+        return rels
     elif len(rels) > 1:
         print("too many matches for bundle \"%s\" " "version \"%s\"" % (bundle, version),
               file=sys.stderr)

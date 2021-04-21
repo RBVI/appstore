@@ -29,10 +29,11 @@ class Command(BaseCommand):
             self.update_bundle(app)
         elif platform is None:
             from .utils import find_bundle_version
-            rel = find_bundle_version(self, bundle, version, None)
-            if rel is None:
+            rels = find_bundle_version(self, bundle, version, None, return_multiple=True)
+            if rels is None:
                 return
-            self.update_release(rel)
+            for rel in rels:
+                self.update_release(rel)
         else:
             from .utils import find_bundle_version
             rel = find_bundle_version(self, bundle, version, platform)
