@@ -39,7 +39,7 @@ def find_bundle_version(cmd, bundle, version, platform):
         print("too many matches for bundle \"%s\" " "version \"%s\"" % (bundle, version),
               file=sys.stderr)
         for rel in rels:
-            print("  ", app.name, rel.version, file=sys.stderr)
+            print("  ", app.name, rel.version, rel.platform, file=sys.stderr)
         return None
     else:
         return rels[0]
