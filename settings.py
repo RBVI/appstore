@@ -266,3 +266,7 @@ FILE_UPLOAD_PERMISSIONS = 0o664
 
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'Strict'
+
+# Starting with Django 3.2:
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
