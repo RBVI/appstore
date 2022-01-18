@@ -54,7 +54,7 @@ def handler(request):
         log_uuid(uuid)
     try:
         format_version = int(format_version)
-    except ValueError:
+    except (TypeError, ValueError):
         format_version = 1
     response = _format_bundle(name, version, cx_version, platform, format_version)
     return response
