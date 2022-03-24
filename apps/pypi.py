@@ -249,6 +249,8 @@ def _format_package_versions(package, version):
 
 # =============================================================
 #
+# PyPI API reference is at https://warehouse.pypa.io/api-reference/index.html
+#
 # PyPI XML-RPC API and doc strings are from
 # https://warehouse.pypa.io/api-reference/xml-rpc
 #
