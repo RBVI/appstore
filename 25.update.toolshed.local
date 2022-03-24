@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# Update ChimeraX Toolshed search index
+#
+
+PATH=/usr/local/sbin:/bin:/usr/bin
+export PATH
+
+su cxtoolshed << EOF
+
+cd /usr/local/projects/chimerax/www/production/cxtoolshed3 || exit 1
+source activate.sh
+
+main()
+{
+	echo "Update ChimeraX Toolshed search index:"
+	./manage.py update_index
+}
+
+main ${1+"$@"}
+EOF
+
+exit 0
