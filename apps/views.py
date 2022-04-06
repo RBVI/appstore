@@ -170,7 +170,7 @@ def bundle_developers(request):
 		developers.append((app.display_name, contact))
 	c = {
 		'cx_platform': _cx_platform(request),
-		'total_apps_count': apps.count,
+		'total_apps_count': len(apps),
 		'developers': developers,
 		'go_back_to': 'Bundle Developers',
 	}
