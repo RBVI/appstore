@@ -27,7 +27,7 @@ class AppPending(models.Model):
     created       = models.DateTimeField(auto_now_add=True)
     release_file  = models.FileField(upload_to='pending_releases')
     dependencies  = models.ManyToManyField(Release, related_name='+', blank=True)
-    missing_deps  = ListCharField(base_field=models.CharField(max_length=255), max_length=8192, blank=True)
+    missing_deps  = models.JSONField(default=list)
     javadocs_jar_file = models.FileField(upload_to='pending_releases', blank=True, null=True)
     pom_xml_file      = models.FileField(upload_to='pending_releases', blank=True, null=True)
 
