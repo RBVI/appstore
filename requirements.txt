@@ -1,5 +1,5 @@
 django ~= 3.0
-whoosh
+Whoosh
 haystack
 sqlparse
 Pillow
