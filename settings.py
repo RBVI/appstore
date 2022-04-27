@@ -83,7 +83,12 @@ STATIC_URL = '/static/'
 # (This setting is deprecated since Django 1.4--Samad)
 # ADMIN_MEDIA_PREFIX = urljoin(SITE_URL, 'static/admin/')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+	"cxtoolshed.rbvi.ucsf.edu",
+	# "169.230.27.37",
+	"cxtoolshed-preview.rbvi.ucsf.edu",
+	# "169.230.27.28",
+]
 
 if DJANGO_STATIC_AND_MEDIA:
 	# Additional locations of static files
@@ -153,7 +158,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
-    'whoosh',
+    #'whoosh',
     'haystack',
     'social_django',
     'cxtoolshed3.apps',
@@ -266,6 +271,8 @@ FILE_UPLOAD_PERMISSIONS = 0o664
 
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'Strict'
+LANGUAGE_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Starting with Django 3.2:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
