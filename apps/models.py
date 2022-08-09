@@ -178,7 +178,7 @@ class Release(models.Model):
 
     release_file  = models.FileField(upload_to=release_file_path)
     hexchecksum   = models.CharField(max_length=511, blank=True, null=True)
-    dependencies  = models.ManyToManyField('self', related_name='dependents', symmetrical=False)
+    dependencies  = models.ManyToManyField('self', related_name='dependents', symmetrical=False, blank=True)
 
     def __lt__(self, other):
         return (self.app, self.pip_version, self.platform) < (other.app, other.pip_version, other.platform)
