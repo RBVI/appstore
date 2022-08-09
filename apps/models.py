@@ -170,7 +170,7 @@ def release_file_path(release, filename):
 class Release(models.Model):
     app           = models.ForeignKey(App, models.CASCADE)
     version       = models.CharField(max_length=31)
-    platform      = models.CharField(max_length=15)
+    platform      = models.CharField(max_length=15, blank=True)
     works_with    = models.CharField(max_length=31)
     notes         = models.TextField(blank=True, null=True)
     created       = models.DateTimeField(auto_now_add=True)
