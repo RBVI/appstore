@@ -5,7 +5,7 @@
 #
 from django.views.decorators.csrf import csrf_exempt
 import logging
-from cgi import escape
+from html import escape
 
 
 logger = logging.getLogger(__name__)

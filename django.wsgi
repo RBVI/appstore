@@ -13,13 +13,13 @@ _home = os.path.expanduser("~cxtoolshed")
 # use preview/production-site virtual environment's site-packages
 # instead of local ones to allow them to be updated separately
 _remove_dirs = [
-    f'{_home}/.local/lib/python3.6/site-packages',
-    '/usr/local/lib64/python3.6/site-packages',
-    '/usr/local/lib/python3.6/site-packages',
+    f'{_home}/.local/lib/python3.8/site-packages',
+    '/usr/local/lib64/python3.8/site-packages',
+    '/usr/local/lib/python3.8/site-packages',
 ]
 _venv_packages = [
-    f'{_home}/{_kind}-site/lib64/python3.6/site-packages',
-    f'{_home}/{_kind}-site/lib/python3.6/site-packages',
+    f'{_home}/{_kind}-site/lib64/python3.8/site-packages',
+    f'{_home}/{_kind}-site/lib/python3.8/site-packages',
 ]
 for site_packages in _remove_dirs:
     try:
@@ -32,7 +32,6 @@ if _venv_packages[0] not in sys.path:
 if SITE_PARENT_DIR not in sys.path:
     sys.path.append(SITE_PARENT_DIR)
 os.environ['DJANGO_SETTINGS_MODULE'] = f'{_module_name}.settings'
-
 import django
 django.setup()
 import django.core.handlers.wsgi

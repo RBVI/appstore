@@ -1,7 +1,7 @@
 #
 # vi: set shiftwidth=4 expandtab:
 from django.contrib.auth.decorators import user_passes_test
-from cgi import escape
+from html import escape
 
 REPO_DIR = "/usr/local/projects/chimerax/builds/repo"
 

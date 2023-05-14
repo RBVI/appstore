@@ -316,11 +316,11 @@
 			{% if version %}
 			ChimeraX {{ version }}
 			{% endif %}
-			{% ifnotequal platform "any" %}
+			{% if platform != "any" %}
 			on {{ platform }}.
 			{% else %}
 			this platform.
-			{% endifnotequal %}
+			{% endif %}
 			See <b>Release History</b> for versions available
 			on other ChimeraX versions and platforms.
 		</div>

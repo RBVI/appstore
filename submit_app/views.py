@@ -18,7 +18,7 @@ from .models import AppPending
 from .pomparse import PomAttrNames, parse_pom
 from .processwheel import process_wheel, release_dependencies
 import logging
-from cgi import escape
+from html import escape
 
 logger = logging.getLogger(__name__)
 

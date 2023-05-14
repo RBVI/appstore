@@ -12,6 +12,7 @@ def contact(request):
     c = { 'footer_selected': 'contact' }
     if request.method == 'POST':
         user_email = request.POST.get('user_email')
+	# TODO: do basic error checking on user email address -- must have @known_domain
         message = request.POST.get('message')
         no_robot = request.POST.get('no_robot')
         if not user_email:

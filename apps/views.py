@@ -5,13 +5,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
-from django.utils.text import unescape_entities
+from html import unescape
+from html import escape
 from ..util.view_util import json_response, html_response, obj_to_dict, get_object_or_none
 from ..util.img_util import scale_img
 from ..util.id_util import fullname_to_name
 from .models import Tag, App, Author, OrderedAuthor, Screenshot, Release
 from ..util.chimerax_util import Version, compatible_with, chimerax_user_agent
-from cgi import escape
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Returns a unicode string encoded in a cookie
 def _unescape_and_unquote(s):
 	if not s: return s
-	return unescape_entities(unquote(s))
+	return unescape(unquote(s))
 
 # ============================================
 #      Nav Panel
