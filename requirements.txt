@@ -1,4 +1,4 @@
-django ~= 3.0
+django ~= 4.0
 Whoosh
 haystack
 sqlparse
@@ -6,10 +6,10 @@ Pillow
 geoip2
 # django-geoip2-extras
 django-haystack >= 3.0b1
-Django-MySQL ~= 3.0
+django-mysql ~= 4.0
 mysqlclient ~= 2.0
 wheel_filename ~= 1.2
-social_auth_app_django ~= 4.0
+social_auth_app_django ~= 5.0
 # ChimeraX-specific packages
 pkginfo
 packaging
