@@ -20,8 +20,8 @@
           <tr>
             <td>
               <h4 style="margin: 0">
-                {% ifnavbar_selected_link == "all" %} 
-                  All Apps
+                {% if navbar_selected_link == "all" %} 
+                  All Bundles
                 {% else %}
                   <a href="{% url 'all_apps' %}">All Apps</a>
                 {% endif %}
