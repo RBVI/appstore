@@ -263,6 +263,9 @@ def _pending_app_decline(pending_app, request):
     pending_app.delete_files()
     pending_app.delete()
 
+def _is_ajax(request):
+	 return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
 _PendingAppsActions = {
     'accept': _pending_app_accept,
     'decline': _pending_app_decline,
@@ -277,34 +280,34 @@ def pending_apps(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         if not action:
-            if request.is_ajax():
+            if _is_ajax(request):
                 return json_response('action must be specified')
             return HttpResponseBadRequest('action must be specified')
         logger.debug("submit_app.pending_app action=%s" % action)
         if not action in _PendingAppsActions:
             logger.debug("submit_app.pending_app action invalid" % action)
-            if request.is_ajax():
+            if _is_ajax(request):
                 return json_response(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
             return HttpResponseBadRequest(escape('invalid action--must be: %s' % ', '.join(_PendingAppsActions.keys())))
         pending_id = request.POST.get('pending_id')
         if not pending_id:
-            if request.is_ajax():
+            if _is_ajax(request):
                 return json_response('pending_id must be specified')
             return HttpResponseBadRequest('pending_id must be specified')
         try:
             pending_app = AppPending.objects.get(id = int(pending_id))
         except (AppPending.DoesNotExist, ValueError):
-            if request.is_ajax():
+            if _is_ajax(request):
                 return json_response('invalid pending_id')
             return HttpResponseBadRequest('invalid pending_id')
         logger.debug("submit_app.pending_app function=%s" % _PendingAppsActions[action])
         try:
             _PendingAppsActions[action](pending_app, request)
         except Exception as e:
-            if request.is_ajax():
+            if _is_ajax(request):
                 return json_response(escape('%s: %s' % (action, str(e))))
             return HttpResponseBadRequest(escape('%s: %s' % (action, str(e))))
-        if request.is_ajax():
+        if _is_ajax(request):
             return json_response(True)
 
     pending_apps = AppPending.objects.all()

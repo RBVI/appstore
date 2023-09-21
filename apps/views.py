@@ -324,6 +324,9 @@ def _mk_app_page(app, user, request):
 	}
 	return html_response('app_page.html', c, request)
 
+def _is_ajax(request):
+	 return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
 _AppActions = {
 	'rate':                _app_rate,
 	'ratings_delete_all':  _app_ratings_delete_all,
@@ -345,7 +348,7 @@ def app_page(request, app_name):
 			return HttpResponseBadRequest(escape(str(e)))
 		if isinstance(result, HttpResponse):
 			return result
-		if request.is_ajax():
+		if _is_ajax(request):
 			return json_response(result)
 	return _mk_app_page(app, user, request)
 
@@ -594,7 +597,7 @@ def app_page_edit(request, app_name):
 		except ValueError as e:
 			return HttpResponseBadRequest(escape(str(e)))
 		app.save()
-		if request.is_ajax():
+		if _is_ajax(request):
 			return json_response(result)
 
 	all_tags = [tag.fullname for tag in Tag.objects.all()]
