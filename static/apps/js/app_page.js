@@ -44,7 +44,7 @@ var AppPage = (function($) {
 
         install_btn.off('click');
         install_btn.removeClass('disabled');
-        if (func) {
+        if (func && !btn_text.startsWith('not compatible')) {
             var license_modal = $('#license_modal');
             if (license_modal.size() !== 0) {
                 license_modal.find('.btn-primary').click(function() {
@@ -72,7 +72,7 @@ var AppPage = (function($) {
         var newer_chimerax = is_chimerax && version_compatible(ua_version, "(>=1.2.dev202101282337)");
         if (newer_chimerax) {
             // make request for installable state of wheel
-            wheel_name = app_filename.split("/").pop()
+            wheel_name = app_filename.split("/").pop();
             var xhr = new XMLHttpRequest();
             xhr.open("GET", "installable:" + wheel_name);
             xhr.onreadystatechange = function () {
