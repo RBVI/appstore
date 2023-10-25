@@ -1,4 +1,4 @@
-from django.db.models import Model, CharField, PositiveIntegerField, ForeignKey, DateField, SET_NULL, CASCADE
+from django.db.models import Model, CharField, PositiveIntegerField, ForeignKey, DateField, SET_NULL, CASCADE, UniqueConstraint
 from ..apps.models import App, Release
 from ..util.view_util import ipaddr_long_to_str
 
@@ -15,6 +15,13 @@ class ReleaseDownloadsByDate(Model):
     when    = DateField()
     count   = PositiveIntegerField(default=0)
 
+    class Meta:
+        # avoid race condition in get_or_create(ReleaseDownloadsByDate, ...)
+        # unique_together = ['release', 'when']
+        constraints = [
+            UniqueConstraint(fields=['release', 'when'], name='unique_by_date')
+        ]
+
     def __unicode__(self):
         return unicode(self.release) + u' ' + unicode(self.when) + u': ' + unicode(self.count)
 
@@ -30,6 +37,13 @@ class AppDownloadsByGeoLoc(Model):
     app    = ForeignKey(App, SET_NULL, null=True) # null app has total count across a given geoloc
     geoloc = ForeignKey(GeoLoc, CASCADE)
     count  = PositiveIntegerField(default = 0)
+
+    class Meta:
+        # avoid race condition in get_or_create(AppDownloadsByGeoLoc, ...)
+        #unique_together = ['app', 'geoloc']
+        constraints = [
+            UniqueConstraint(fields=['app', 'geoloc'], name='unique_by_geoloc')
+        ]
 
     def __unicode__(self):
         return unicode(self.app) + u' ' + unicode(self.geoloc) + u': ' + unicode(self.count)
