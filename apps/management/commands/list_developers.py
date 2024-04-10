@@ -26,6 +26,6 @@ class Command(BaseCommand):
                     email_type = "Editor"
                     break
             else:
-                email = None
-                email_type = None
+                email = "MISSING"
+                email_type = "MISSING"
         print('\t'.join([app.display_name, email, email_type]))
