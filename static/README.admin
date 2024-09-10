@@ -1,0 +1,8 @@
+There should either be (1) an admin symbolic link to
+
+$PYTHON_ROOT/lib/python3.*/site-packages/django/contrib/admin/static/admin
+
+or (2) that mapping should be handled by the web server's configuration file.
+
+The latter is preferable so the admin link can be different for different
+instances of the app store.
