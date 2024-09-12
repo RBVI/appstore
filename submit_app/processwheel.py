@@ -9,6 +9,7 @@ from packaging.version import Version
 from packaging.requirements import Requirement, InvalidRequirement
 
 import logging
+
 logger = logging.getLogger(__name__)
 # "logger" messages land in cxtoolshed.log, e.g., logger.warning(msg)
 # Default logging level is WARNING for submit_apps.processwheel (see settings.py)
@@ -19,14 +20,16 @@ def process_wheel(filename, expect_app_name):
     try:
         bundle = Bundle(filename)
     except (BadZipfile, IOError, ValueError) as e:
-        raise ValueError("Not a valid wheel file: \"%s\"" % str(e))
+        raise ValueError('Not a valid wheel file: "%s"' % str(e))
     if bundle.platform == "Unknown":
         raise ValueError("Unsupported platform")
     app_name = smart_str(bundle.package, errors="replace")
     if expect_app_name:
         if app_name != expect_app_name:
-            raise ValueError("App name given as \"%s\" but "
-                             "must be \"%s\"" % (app_name, expect_app_name))
+            raise ValueError(
+                'App name given as "%s" but '
+                'must be "%s"' % (app_name, expect_app_name)
+            )
     app_dependencies = []
     app_works_with = None
     for dep in bundle.requires:
@@ -64,15 +67,17 @@ def release_dependencies(app_dependencies):
 
 def _find_release(app_name, app_version):
     # pip likes '-', but we use '_'
-    app_name = app_name.replace('-', '_')
+    app_name = app_name.replace("-", "_")
     # If the dependency is not within ChimeraX, we trust
     # that it will come from pypi
     if not app_name.startswith("ChimeraX_"):
         return None
     app = get_object_or_none(App, active=True, fullname=app_name)
     if not app:
-        raise ValueError("missing dependency \"%s\": bundle not on toolshed" %
-                         _toolshed_display_name(app_name))
+        raise ValueError(
+            'missing dependency "%s": bundle not on toolshed'
+            % _toolshed_display_name(app_name)
+        )
     requirement = _dependency_requirement(app_name, app_version)
     known_releases = {}
     for r in Release.objects.filter(app=app, active=True):
@@ -80,14 +85,14 @@ def _find_release(app_name, app_version):
     release = _version_match(requirement, known_releases, app_name)
     if not release:
         raise ValueError(
-            "missing dependency on \"%s\" with version \"%s\": "
-            "release not on toolshed" % (
-                _toolshed_display_name(app_name), app_version))
+            'missing dependency on "%s" with version "%s": '
+            "release not on toolshed" % (_toolshed_display_name(app_name), app_version)
+        )
     return release
 
 
 def _toolshed_display_name(app_name):
-    bundle_name = app_name.replace('_', '-')
+    bundle_name = app_name.replace("_", "-")
     if bundle_name.startswith("ChimeraX-"):
         return bundle_name[9:]
     else:
@@ -123,7 +128,7 @@ def sort_bundles_by_dependencies(bundles):
     for bundle in bundles:
         for dependency in bundle.app_dependencies:
             app_name, app_version = dependency
-            app_name = app_name.replace('-', '_')
+            app_name = app_name.replace("-", "_")
             logger.debug(" depends on: %s %s" % (app_name, app_version))
             # Look in cache first
             try:
@@ -193,8 +198,9 @@ def _version_match(requirement: Requirement, known_releases: {str: Release}, nam
         try:
             rv = Version(v)
         except ValueError:
-            raise ValueError("Unsupported version format: \"%s\" (\"%s\") for name %s" %
-                             (v, str(r), name))
+            raise ValueError(
+                'Unsupported version format: "%s" ("%s") for name' % (v, str(r), name)
+            )
         if rv in requirement.specifier:
             if release is None or rv > version:
                 release = r

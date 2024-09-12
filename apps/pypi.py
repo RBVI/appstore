@@ -19,7 +19,7 @@ def handler(request):
         _server_url = "https://" + request.META["SERVER_NAME"]
         port = request.META["SERVER_PORT"]
         if port != "443":
-            _server_url += ':' + port
+            _server_url += ":" + port
     #
     # If method is POST, then we assume it is an XMLRPC request.
     # Otherwise, from
@@ -33,16 +33,18 @@ def handler(request):
     #
     if request.method == "POST":
         from django.http import HttpResponse
+
         d = _get_dispatcher(request)
         data = request.body
         try:
-            response = HttpResponse(d._marshaled_dispatch(data),
-                                    content_type='text/xml')
+            response = HttpResponse(
+                d._marshaled_dispatch(data), content_type="text/xml"
+            )
         except Exception as e:
             logger.exception(e)
             raise
     else:
-        path_parts = request.path_info.split('/')
+        path_parts = request.path_info.split("/")
         # 0 = empty, since path always starts with /
         # 1 = "pypi"
         # 2 = package
@@ -105,6 +107,7 @@ def _get_dispatcher(request):
     global _dispatcher
     if _dispatcher is None:
         from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
+
         _dispatcher = SimpleXMLRPCDispatcher()
         for f in _implemented:
             _dispatcher.register_function(f)
@@ -114,11 +117,12 @@ def _get_dispatcher(request):
 
 def _get_wheel_info(r):
     import os.path
+
     md = {}
     filename = os.path.basename(r.release_file_url)
     md["filename"] = filename
     root, ext = os.path.splitext(filename)  # ext should be ".whl"
-    parts = root.split('-')
+    parts = root.split("-")
     md["distribution"] = parts[0]
     md["version"] = parts[1]
     if len(parts) == 6:
@@ -203,6 +207,7 @@ def _get_classifiers():
         from django.conf import settings
         from ..util.chimerax_util import Bundle
         import os.path
+
         _classifier_map = {}
         releases = Release.objects.filter(active=True)
         for r in releases:
@@ -222,28 +227,30 @@ def _get_classifiers():
 def _format_package_versions(package, version):
     import os.path
     from .models import Release
+
     if not package:
         releases = Release.objects.filter(active=True)
     else:
-        package = ''.join([c for c in package if c not in '-_']).lower()
+        package = "".join([c for c in package if c not in "-_"]).lower()
         if not version:
-            releases = Release.objects.filter(active=True,
-                                              app__name=package)
+            releases = Release.objects.filter(active=True, app__name=package)
         else:
-            releases = Release.objects.filter(active=True,
-                                              app__name=package,
-                                              version=version)
+            releases = Release.objects.filter(
+                active=True, app__name=package, version=version
+            )
     lines = ["<html>", "<body>", "<ul>"]
     for r in releases:
         lines.append("<li>")
         filename = os.path.basename(r.release_file_url)
         url = _server_url + r.release_file_url
-        lines.append("<a href=\"%s\" rel=\"download\">%s</a>" %
-                     (escape(url), escape(filename)))
+        lines.append(
+            '<a href="%s" rel="download">%s</a>' % (escape(url), escape(filename))
+        )
         lines.append("</li>")
     lines.extend(["</ul>", "</body>", "</html>"])
     from django.http import HttpResponse
-    response = HttpResponse('\n'.join(lines), content_type='text/html')
+
+    response = HttpResponse("\n".join(lines), content_type="text/html")
     return response
 
 
@@ -268,6 +275,7 @@ def list_packages():
     """Retrieve a list of the package names registered with the
     package index. Returns a list of name strings."""
     from .models import App
+
     return [app.fullname for app in set(App.objects.filter(active=True))]
 
 
@@ -278,6 +286,7 @@ def package_releases(package_name, show_hidden=False):
 
     The show_hidden flag is now ignored. All versions are returned."""
     from .models import Release
+
     releases = Release.objects.filter(active=True, app__fullname=package_name)
     return [r.version for r in releases]
 
@@ -287,6 +296,7 @@ def package_roles(package_name):
     """Retrieve a list of [role, user] for a given package_name.
     Role is either Maintainer or Owner."""
     from .models import App
+
     apps = App.objects.filter(fullname=package_name)
     roles = []
     for app in apps:
@@ -302,6 +312,7 @@ def user_packages(user):
     """Retrieve a list of [role, package_name] for a given user.
     Role is either Maintainer or Owner."""
     from .models import App
+
     packages = []
     apps = App.objects.filter(authors__name=user)
     for app in apps:
@@ -317,9 +328,10 @@ def release_downloads(package_name, release_version):
     """Retrieve a list of [filename, download_count] for a given
     package_name and release_version."""
     from .models import Release
-    releases = Release.objects.filter(active=True,
-                                      app__fullname=package_name,
-                                      version=release_version)
+
+    releases = Release.objects.filter(
+        active=True, app__fullname=package_name, version=release_version
+    )
     downloads = []
     for r in releases:
         winfo = _get_wheel_info(r)
@@ -338,9 +350,10 @@ def release_urls(package_name, release_version):
     from .models import Release
     from django.conf import settings
     import os
-    releases = Release.objects.filter(active=True,
-                                      app__fullname=package_name,
-                                      version=release_version)
+
+    releases = Release.objects.filter(
+        active=True, app__fullname=package_name, version=release_version
+    )
     urls = []
     for r in releases:
         if not r.active:
@@ -356,7 +369,7 @@ def release_urls(package_name, release_version):
         d["comment_text"] = r.notes or ""
         # These are not useful but we have the information
         # TODO: Need to get MD5 digest from somewhere
-        name, digest = r.hexchecksum.split(':')
+        name, digest = r.hexchecksum.split(":")
         d[name] = digest
         # XXX: These are not correct but they are all we have
         d["downloads"] = r.app.downloads
@@ -373,11 +386,12 @@ def release_data(package_name, release_version):
     Returns a dictionary."""
     # See documentation for dictionary keys
     from .models import Release
-    releases = Release.objects.filter(active=True,
-                                      app__fullname=package_name,
-                                      version=release_version)
+
+    releases = Release.objects.filter(
+        active=True, app__fullname=package_name, version=release_version
+    )
     data = {}
-    for r in releases:      # There should only be one
+    for r in releases:  # There should only be one
         if not r.active:
             continue
         for attr in _ReleaseDataAttrs:
@@ -393,6 +407,7 @@ def search(spec, operator="and"):
     """Search the package database using the indicated search spec."""
     # See URL for detailed description
     from .models import Release
+
     releases = set(Release.objects.filter(active=True))
     or_results = set()
     for attr, values in spec.items():
@@ -417,11 +432,13 @@ def search(spec, operator="and"):
         container = or_results
     results = []
     for r in container:
-        results.append({
-            "name": r.app.fullname,
-            "version": r.version,
-            "summary": str(r.app.description)
-        })
+        results.append(
+            {
+                "name": r.app.fullname,
+                "version": r.version,
+                "summary": str(r.app.description),
+            }
+        )
     return results
 
 
@@ -456,6 +473,7 @@ def top_packages(number=None):
     """Retrieve the sorted list of packages ranked by number of
     downloads. Optionally limit the list to the number given."""
     from .models import App
+
     apps = list(App.objects.filter(active=True))
     apps.sort(key=lambda app: app.downloads)
     apps.reverse()
@@ -469,6 +487,7 @@ def updated_releases(since):
     """Retrieve a list of package releases made since the given
     timestamp. The releases will be listed in descending release date."""
     from .models import Release
+
     releases = Release.objects.filter(active=True)
     keep = []
     for r in releases:
@@ -485,6 +504,7 @@ def changed_packages(since):
     been changed since the given timestamp. The packages will be
     listed in descending date of most recent change."""
     from .models import Release
+
     releases = Release.objects.filter(active=True)
     keep = []
     for r in releases:

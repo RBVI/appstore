@@ -12,6 +12,7 @@ class Command(BaseCommand):
 
     def list_developers(self):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.filter(active=True):
             self.list_developer(app)
 
@@ -28,4 +29,4 @@ class Command(BaseCommand):
             else:
                 email = "MISSING"
                 email_type = "MISSING"
-        print('\t'.join([app.display_name, email, email_type]))
+        print("\t".join([app.display_name, email, email_type]))

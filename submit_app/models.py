@@ -12,24 +12,28 @@ import subprocess
 import datetime
 from django.core.mail import send_mail
 import warnings
+
 try:
     from ..conf.mvn import MVN_BIN_PATH, MVN_SETTINGS_PATH
     from ..conf.emails import EMAIL_ADDR
 except ImportError:
     from ..conf.mock import MVN_BIN_PATH, MVN_SETTINGS_PATH, EMAIL_ADDR
 
+
 class AppPending(models.Model):
-    submitter     = models.ForeignKey(User, models.CASCADE)
-    fullname      = models.CharField(max_length=127)
-    version       = models.CharField(max_length=31)
-    platform      = models.CharField(max_length=15)
+    submitter = models.ForeignKey(User, models.CASCADE)
+    fullname = models.CharField(max_length=127)
+    version = models.CharField(max_length=31)
+    platform = models.CharField(max_length=15)
     cy_works_with = models.CharField(max_length=31)
-    created       = models.DateTimeField(auto_now_add=True)
-    release_file  = models.FileField(upload_to='pending_releases')
-    dependencies  = models.ManyToManyField(Release, related_name='+', blank=True)
-    missing_deps  = models.JSONField(default=list)
-    javadocs_jar_file = models.FileField(upload_to='pending_releases', blank=True, null=True)
-    pom_xml_file      = models.FileField(upload_to='pending_releases', blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    release_file = models.FileField(upload_to="pending_releases")
+    dependencies = models.ManyToManyField(Release, related_name="+", blank=True)
+    missing_deps = models.JSONField(default=list)
+    javadocs_jar_file = models.FileField(
+        upload_to="pending_releases", blank=True, null=True
+    )
+    pom_xml_file = models.FileField(upload_to="pending_releases", blank=True, null=True)
 
     def can_confirm(self, user):
         if user.is_staff or user.is_superuser:
@@ -38,17 +42,19 @@ class AppPending(models.Model):
 
     @property
     def is_new_app(self):
-       name = fullname_to_name(self.fullname)
-       return get_object_or_none(App, name = name) == None
+        name = fullname_to_name(self.fullname)
+        return get_object_or_none(App, name=name) == None
 
     class Meta:
-        ordering = ['created']
+        ordering = ["created"]
 
     def __unicode__(self):
-        return self.fullname + ' ' + self.version + ' from ' + self.submitter.email
+        return self.fullname + " " + self.version + " from " + self.submitter.email
 
     def make_release(self, app):
-        release, _ = Release.objects.get_or_create(app = app, version = self.version, platform = self.platform)
+        release, _ = Release.objects.get_or_create(
+            app=app, version=self.version, platform=self.platform
+        )
         release.works_with = self.cy_works_with
         release.active = True
         release.created = datetime.datetime.today()
@@ -68,14 +74,22 @@ class AppPending(models.Model):
             b = Bundle(path)
             # Get version from bundle data
             md, _ = ReleaseMetadata.objects.get_or_create(
-                        release=release, type="bundle",
-                        name=b.package, key="version", value=b.version)
+                release=release,
+                type="bundle",
+                name=b.package,
+                key="version",
+                value=b.version,
+            )
             md.save()
             try:
                 for req in b.requires:
                     md, _ = ReleaseMetadata.objects.get_or_create(
-                                release=release, type="bundle",
-                                name=b.package, key="requires", value=req)
+                        release=release,
+                        type="bundle",
+                        name=b.package,
+                        key="requires",
+                        value=req,
+                    )
                     md.save()
             except KeyError:
                 pass
@@ -89,14 +103,22 @@ class AppPending(models.Model):
                         # value: either a string or a list
                         if isinstance(value, str):
                             md, _ = ReleaseMetadata.objects.get_or_create(
-                                        release=release, type=info_type,
-                                        name=name, key=key, value=value)
+                                release=release,
+                                type=info_type,
+                                name=name,
+                                key=key,
+                                value=value,
+                            )
                             md.save()
                         else:
                             for v in value:
                                 md, _ = ReleaseMetadata.objects.get_or_create(
-                                            release=release, type=info_type,
-                                            name=name, key=key, value=v)
+                                    release=release,
+                                    type=info_type,
+                                    name=name,
+                                    key=key,
+                                    value=v,
+                                )
                                 md.save()
 
         if not app.has_releases:
@@ -105,8 +127,10 @@ class AppPending(models.Model):
         app.save()
 
         if self.pom_xml_file and self.javadocs_jar_file:
-            api, _ = ReleaseAPI.objects.get_or_create(release = release)
-            api.javadocs_jar_file.save(basename(self.javadocs_jar_file.name), self.javadocs_jar_file)
+            api, _ = ReleaseAPI.objects.get_or_create(release=release)
+            api.javadocs_jar_file.save(
+                basename(self.javadocs_jar_file.name), self.javadocs_jar_file
+            )
             api.pom_xml_file.save(basename(self.pom_xml_file.name), self.pom_xml_file)
             api.save()
             api.extract_javadocs_jar()
@@ -119,23 +143,37 @@ class AppPending(models.Model):
         if self.pom_xml_file:
             self.pom_xml_file.delete()
 
+
 def _deploy_artifact_async(api):
     def run_deploy():
         _deploy_artifact(api)
-    t = Thread(target = run_deploy)
+
+    t = Thread(target=run_deploy)
     t.start()
+
 
 def _deploy_artifact(api):
     pom_path = pathjoin(settings.MEDIA_ROOT, api.pom_xml_file.name)
     jar_path = pathjoin(settings.MEDIA_ROOT, api.release.release_file.name)
-    deploy_cmd = (MVN_BIN_PATH,
-        '-s', MVN_SETTINGS_PATH,
-        'deploy:deploy-file',
-        '-Dpackaging=jar',
-        '-Durl=http://code.cytoscape.org/nexus/content/repositories/apps',
-        '-DpomFile=' + pom_path,
-        '-Dfile=' + jar_path,
-        '-DrepositoryId=apps')
-    cmd = subprocess.Popen(deploy_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    deploy_cmd = (
+        MVN_BIN_PATH,
+        "-s",
+        MVN_SETTINGS_PATH,
+        "deploy:deploy-file",
+        "-Dpackaging=jar",
+        "-Durl=http://code.cytoscape.org/nexus/content/repositories/apps",
+        "-DpomFile=" + pom_path,
+        "-Dfile=" + jar_path,
+        "-DrepositoryId=apps",
+    )
+    cmd = subprocess.Popen(
+        deploy_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False
+    )
     cmdout, _ = cmd.communicate()
-    send_mail('Cytoscape App Store - App Repo Deploy (Release API ID: %d)' % api.id, cmdout, EMAIL_ADDR, settings.CONTACT_EMAILS, fail_silently=False)
+    send_mail(
+        "Cytoscape App Store - App Repo Deploy (Release API ID: %d)" % api.id,
+        cmdout,
+        EMAIL_ADDR,
+        settings.CONTACT_EMAILS,
+        fail_silently=False,
+    )

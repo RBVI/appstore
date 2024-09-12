@@ -21,15 +21,16 @@ from packaging.version import Version
 class Bundle:
     def __init__(self, filename):
         import pkginfo
+
         # do a few sanity checks
-        w = parse_wheel_filename(filename)   # throws ValueError if illegal
+        w = parse_wheel_filename(filename)  # throws ValueError if illegal
         Version(w.version)  # throw ValueError if version isn't legal
         if len(w.platform_tags) != 1:
             raise ValueError("Bundles are limited to one platform")
 
-        self.path = filename    # Used by apps/devel to mass release bundles
+        self.path = filename  # Used by apps/devel to mass release bundles
         self._wheel = pkginfo.Wheel(filename)
-        self._dist_info = self.package + '-' + self.version + '.dist-info'
+        self._dist_info = self.package + "-" + self.version + ".dist-info"
         self._zip = None
         platform = w.platform_tags[0]
         if platform.startswith("macosx_"):
@@ -43,8 +44,11 @@ class Bundle:
         else:
             self.platform = "Unknown"
         if self.platform:
-            self.display_name = "%s (%s, %s)" % (self.package, self.version,
-                                                 self.platform)
+            self.display_name = "%s (%s, %s)" % (
+                self.package,
+                self.version,
+                self.platform,
+            )
         else:
             self.display_name = "%s (%s)" % (self.package, self.version)
 
@@ -56,7 +60,8 @@ class Bundle:
             if not s:
                 return None
             else:
-                return [i.strip() for i in s.split(',')]
+                return [i.strip() for i in s.split(",")]
+
         container = {}
         for classifier in self._wheel.classifiers:
             parts = [s.strip() for s in classifier.split("::")]
@@ -90,9 +95,7 @@ class Bundle:
                 if len(parts) not in (4, 5):
                     continue
                 name = parts[2]
-                value = {
-                    "synopsis": parts[3]
-                }
+                value = {"synopsis": parts[3]}
                 if len(parts) == 5:
                     value["atomic"] = parts[4]
             elif info_type == "dataformat":
@@ -138,28 +141,28 @@ class Bundle:
                 }
                 if len(parts) == 6:
                     value["keywords"] = get_list_items(parts[5])
-            elif info_type == 'manager':
+            elif info_type == "manager":
                 # ChimeraX :: Mangager :: name [:: key:value]*
                 if len(parts) < 3:
                     continue
                 name = parts[2]
                 value = {}
                 for p in parts[3:]:
-                    k, v = p.split(':', 1)
-                    if v[0] in '\'"':
+                    k, v = p.split(":", 1)
+                    if v[0] in "'\"":
                         v = unescape(v[1:-1])
                     else:
                         v = unescape(v)
                     value[k] = v
-            elif info_type == 'provider':
+            elif info_type == "provider":
                 # ChimeraX :: Provider :: name :: manager [:: key:value]*
                 if len(parts) < 4:
                     continue
                 name = f"{parts[3]}/{parts[2]}"  # manager / name
                 value = {}
                 for p in parts[4:]:
-                    k, v = p.split(':', 1)
-                    if v[0] in '\'"':
+                    k, v = p.split(":", 1)
+                    if v[0] in "'\"":
                         v = unescape(v[1:-1])
                     else:
                         v = unescape(v)
@@ -184,7 +187,7 @@ class Bundle:
 
     @property
     def package(self):
-        return self._wheel.name.replace('-', '_')
+        return self._wheel.name.replace("-", "_")
 
     @property
     def version(self):
@@ -202,6 +205,7 @@ class Bundle:
     def zip(self):
         if not self._zip:
             import zipfile
+
             self._zip = zipfile.ZipFile(self.path)
         return self._zip
 
@@ -231,16 +235,18 @@ class Bundle:
 
 
 def compatible_with(version, needed_version):
-    if needed_version.startswith('('):
-        assert needed_version[-1] == ')'
+    if needed_version.startswith("("):
+        assert needed_version[-1] == ")"
         needed_version = needed_version[1:-1]
     from packaging.specifiers import SpecifierSet
+
     spec = SpecifierSet(needed_version, prereleases=True)
     return spec.contains(version)
 
 
-REUAChimeraX = re.compile(r".*UCSF-ChimeraX/(?P<version>\S+) "
-                          r"\((?P<platform>.*)\).*")
+REUAChimeraX = re.compile(
+    r".*UCSF-ChimeraX/(?P<version>\S+) " r"\((?P<platform>.*)\).*"
+)
 
 
 def chimerax_user_agent(request):
@@ -265,15 +271,15 @@ def chimerax_user_agent(request):
 _escape_table = {
     "'": "'",
     '"': '"',
-    '\\': '\\',
-    '\n': '',
-    'a': '\a',  # alarm
-    'b': '\b',  # backspace
-    'f': '\f',  # formfeed
-    'n': '\n',  # newline
-    'r': '\r',  # return
-    't': '\t',  # tab
-    'v': '\v',  # vertical tab
+    "\\": "\\",
+    "\n": "",
+    "a": "\a",  # alarm
+    "b": "\b",  # backspace
+    "f": "\f",  # formfeed
+    "n": "\n",  # newline
+    "r": "\r",  # return
+    "t": "\t",  # tab
+    "v": "\v",  # vertical tab
 }
 
 
@@ -300,68 +306,69 @@ def unescape_with_index_map(text):
     start = 0
     index_map = list(range(len(text)))
     while start < len(text):
-        index = text.find('\\', start)
+        index = text.find("\\", start)
         if index == -1:
             break
         if index == len(text) - 1:
             break
         escaped = text[index + 1]
         if escaped in _escape_table:
-            text = text[:index] + _escape_table[escaped] + text[index + 2:]
+            text = text[:index] + _escape_table[escaped] + text[index + 2 :]
             # Assumes that replacement is a single character
-            index_map = index_map[:index] + index_map[index + 1:]
+            index_map = index_map[:index] + index_map[index + 1 :]
             start = index + 1
-        elif escaped in '01234567':
+        elif escaped in "01234567":
             # up to 3 octal digits
             for count in range(2, 5):
-                if text[index + count] not in '01234567':
+                if text[index + count] not in "01234567":
                     break
             try:
-                char = chr(int(text[index + 1: index + count], 8))
-                text = text[:index] + char + text[index + count:]
-                index_map = index_map[:index] + index_map[index + count - 1:]
+                char = chr(int(text[index + 1 : index + count], 8))
+                text = text[:index] + char + text[index + count :]
+                index_map = index_map[:index] + index_map[index + count - 1 :]
             except ValueError:
                 pass
             start = index + 1
-        elif escaped == 'x':
+        elif escaped == "x":
             # 2 hex digits
             try:
-                char = chr(int(text[index + 2: index + 4], 16))
-                text = text[:index] + char + text[index + 4:]
-                index_map = index_map[:index] + index_map[index + 3:]
+                char = chr(int(text[index + 2 : index + 4], 16))
+                text = text[:index] + char + text[index + 4 :]
+                index_map = index_map[:index] + index_map[index + 3 :]
             except ValueError:
                 pass
             start = index + 1
-        elif escaped == 'u':
+        elif escaped == "u":
             # 4 hex digits
             try:
-                char = chr(int(text[index + 2: index + 6], 16))
-                text = text[:index] + char + text[index + 6:]
-                index_map = index_map[:index] + index_map[index + 5:]
+                char = chr(int(text[index + 2 : index + 6], 16))
+                text = text[:index] + char + text[index + 6 :]
+                index_map = index_map[:index] + index_map[index + 5 :]
             except ValueError:
                 pass
             start = index + 1
-        elif escaped == 'U':
+        elif escaped == "U":
             # 8 hex digits
             try:
-                char = chr(int(text[index + 2: index + 10], 16))
-                text = text[:index] + char + text[index + 10:]
-                index_map = index_map[:index] + index_map[index + 9:]
+                char = chr(int(text[index + 2 : index + 10], 16))
+                text = text[:index] + char + text[index + 10 :]
+                index_map = index_map[:index] + index_map[index + 9 :]
             except ValueError:
                 pass
             start = index + 1
-        elif escaped == 'N':
+        elif escaped == "N":
             # named unicode character
-            if len(text) < index + 2 or text[index + 2] != '{':
+            if len(text) < index + 2 or text[index + 2] != "{":
                 start = index + 1
                 continue
-            end = text.find('}', index + 3)
+            end = text.find("}", index + 3)
             if end > 0:
                 import unicodedata
-                char_name = text[index + 3:end]
+
+                char_name = text[index + 3 : end]
                 try:
                     char = unicodedata.lookup(char_name)
-                    text = text[:index] + char + text[end + 1:]
+                    text = text[:index] + char + text[end + 1 :]
                     index_map = index_map[:index] + index_map[end:]
                 except KeyError:
                     pass
@@ -382,7 +389,7 @@ if __name__ == "__main__":
             "(==0.9.2)",
             "(>0.9.1,<1)",
             "(~=0.9.1)",
-            "(~=0.9.3)"
+            "(~=0.9.3)",
         ]
         print(v)
         for n in need:
@@ -398,6 +405,7 @@ if __name__ == "__main__":
         print(v2 < v1b1, "should be False")
     if True:
         import os
+
         # root = "d:/chimerax/src/bundles"
         root = "testdata"
         for dirpath, dirnames, filenames in os.walk(root):

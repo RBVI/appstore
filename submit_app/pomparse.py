@@ -1,19 +1,25 @@
 import xml.etree.ElementTree as ET
 import re
 
-_NsTagRE = re.compile(r'\{([^\}]+)\}(.+)')
+_NsTagRE = re.compile(r"\{([^\}]+)\}(.+)")
+
+
 def _parse_ns_tag(ns_tag):
     m = _NsTagRE.match(ns_tag)
     return m.groups() if m else (None, None)
 
+
 def _mk_tag(ns, tag):
-    return '{%s}%s' % (ns, tag) if ns else tag
+    return "{%s}%s" % (ns, tag) if ns else tag
+
 
 def _get_value(root, ns, tag):
     elem = root.find(_mk_tag(ns, tag))
     return elem.text if elem != None else None
 
-PomAttrNames = ('groupId', 'artifactId', 'version')
+
+PomAttrNames = ("groupId", "artifactId", "version")
+
 
 def parse_pom(inputfile):
     try:
@@ -22,7 +28,7 @@ def parse_pom(inputfile):
         return dict()
     root = tree.getroot()
     xmlns, _ = _parse_ns_tag(root.tag)
-    parent = root.find(_mk_tag(xmlns, 'parent'))
+    parent = root.find(_mk_tag(xmlns, "parent"))
 
     attrs = dict()
     for name in PomAttrNames:

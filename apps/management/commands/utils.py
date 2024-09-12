@@ -5,15 +5,16 @@ import sys
 def find_bundle(cmd, bundle):
     "Find the specified bundle"
     from cxtoolshed3.apps.models import App
+
     apps = App.objects.filter(name__contains=bundle)
     if len(apps) == 0:
-        print("no match for bundle \"%s\"" % bundle, file=sys.stderr)
+        print('no match for bundle "%s"' % bundle, file=sys.stderr)
         return None
     elif len(apps) > 1:
         for app in apps:
             if app.name == bundle:
                 return app
-        print(cmd.stderr, "too many matches for bundle \"%s\"" % bundle, file=sys.stderr)
+        print(cmd.stderr, 'too many matches for bundle "%s"' % bundle, file=sys.stderr)
         for app in apps:
             print("  ", app.name, file=sys.stderr)
         return None
@@ -27,19 +28,23 @@ def find_bundle_version(cmd, bundle, version, platform, *, return_multiple=True)
     if app is None:
         return None
     from cxtoolshed3.apps.models import Release
+
     if platform:
         rels = Release.objects.filter(app=app, version=version, platform=platform)
     else:
         rels = Release.objects.filter(app=app, version=version)
     if len(rels) == 0:
-        print("no match for bundle \"%s\" version \"%s\"" % (bundle, version),
-              file=sys.stderr)
+        print(
+            'no match for bundle "%s" version "%s"' % (bundle, version), file=sys.stderr
+        )
         return None
     elif return_multiple:
         return rels
     elif len(rels) > 1:
-        print("too many matches for bundle \"%s\" " "version \"%s\"" % (bundle, version),
-              file=sys.stderr)
+        print(
+            'too many matches for bundle "%s" ' 'version "%s"' % (bundle, version),
+            file=sys.stderr,
+        )
         for rel in rels:
             print("  ", app.name, rel.version, rel.platform, file=sys.stderr)
         return None
@@ -50,13 +55,13 @@ def find_bundle_version(cmd, bundle, version, platform, *, return_multiple=True)
 def find_release_by_id(cmd, release_id):
     "Find the specified version of the bundle"
     from cxtoolshed3.apps.models import Release
+
     rels = Release.objects.filter(id=release_id)
     if len(rels) == 0:
-        print("no match for release id \"%s\"" % release_id, file=sys.stderr)
+        print('no match for release id "%s"' % release_id, file=sys.stderr)
         return None
     elif len(rels) > 1:
-        print("too many matches for release id \"%s\" " % release_id,
-              file=sys.stderr)
+        print('too many matches for release id "%s" ' % release_id, file=sys.stderr)
         for rel in rels:
             print("  ", rel.app.name, rel.version, file=sys.stderr)
         return None
@@ -71,6 +76,7 @@ def erase_app(cmd, app, dry_run):
     # is why we do not use "app.releases")
     #
     from cxtoolshed3.apps.models import Release
+
     # TODO: why Release.objects.filter?
     rels = Release.objects.filter(app=app)
     for rel in app.releases:
@@ -95,6 +101,7 @@ def erase_app(cmd, app, dry_run):
     # Remove icon and screenshot files
     #
     from cxtoolshed3.apps.models import Screenshot
+
     if dry_run:
         if app.icon:
             print("delete icon file", app.icon.name)
@@ -117,6 +124,7 @@ def erase_app(cmd, app, dry_run):
     # Remove download references
     #
     from cxtoolshed3.download.models import AppDownloadsByGeoLoc
+
     if dry_run:
         for d in AppDownloadsByGeoLoc.objects.filter(app=app):
             d.delete()
@@ -143,7 +151,8 @@ def erase_release(cmd, rel, dry_run=True):
     #
     # deps = rel.dependencies.all()
     deps = Release.objects.filter(dependencies__app__name=app.name).filter(
-        dependencies__version=rel.version)
+        dependencies__version=rel.version
+    )
     if len(deps) > 0:
         print("cannot delete release with dependencies", file=sys.stderr)
         for dep in deps:
@@ -155,15 +164,18 @@ def erase_release(cmd, rel, dry_run=True):
     #
     all_rels = Release.objects.all()
     if len(all_rels) == 1:
-        print("Warning: \"%s\" is the only release of bundle \"%s\"" % (rel.version, app.name),
-              file=sys.stderr)
+        print(
+            'Warning: "%s" is the only release of bundle "%s"'
+            % (rel.version, app.name),
+            file=sys.stderr,
+        )
 
     #
     # XXX: Might want to get confirmation from caller here
     #
     if dry_run:
         print("Dry run only.  No actual deletion.")
-    print("Delete bundle \"%s\" version \"%s\"" % (app.name, rel.version))
+    print('Delete bundle "%s" version "%s"' % (app.name, rel.version))
 
     #
     # Remove release media file
@@ -179,6 +191,7 @@ def erase_release(cmd, rel, dry_run=True):
     # Remove download references
     #
     from cxtoolshed3.download.models import Download, ReleaseDownloadsByDate
+
     if dry_run:
         for d in Download.objects.filter(release=rel):
             print("delete Download instance", d)
@@ -192,6 +205,7 @@ def erase_release(cmd, rel, dry_run=True):
     # Delete release metadata
     #
     from cxtoolshed3.apps.models import ReleaseMetadata
+
     ReleaseMetadata.objects.filter(release=rel).delete()
 
     #
@@ -214,23 +228,29 @@ def update_metadata(cmd, release):
         print("Release file is not a wheel", rf, file=sys.stderr)
         return
     from cxtoolshed3.util.chimerax_util import Bundle
+
     try:
         b = Bundle(path)
     except IOError:
         print("Release file is missing", path, file=sys.stderr)
         return
     from cxtoolshed3.apps.models import ReleaseMetadata
+
     # XXX: Copied from submit_app/models.py
     # Get version from bundle data
     md, _ = ReleaseMetadata.objects.get_or_create(
-                release=release, type="bundle",
-                name=b.package, key="version", value=b.version)
+        release=release, type="bundle", name=b.package, key="version", value=b.version
+    )
     md.save()
     try:
         for req in b.requires:
             md, _ = ReleaseMetadata.objects.get_or_create(
-                        release=release, type="bundle",
-                        name=b.package, key="requires", value=req)
+                release=release,
+                type="bundle",
+                name=b.package,
+                key="requires",
+                value=req,
+            )
             md.save()
     except KeyError:
         pass
@@ -244,13 +264,13 @@ def update_metadata(cmd, release):
                 # value: either a string or a list
                 if isinstance(value, str):
                     md, _ = ReleaseMetadata.objects.get_or_create(
-                                release=release, type=info_type,
-                                name=name, key=key, value=value)
+                        release=release, type=info_type, name=name, key=key, value=value
+                    )
                     md.save()
                 else:
                     for v in value:
                         md, _ = ReleaseMetadata.objects.get_or_create(
-                                    release=release, type=info_type,
-                                    name=name, key=key, value=v)
+                            release=release, type=info_type, name=name, key=key, value=v
+                        )
                         md.save()
     print("Updated metadata for", release)

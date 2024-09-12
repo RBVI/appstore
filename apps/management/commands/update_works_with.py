@@ -8,25 +8,22 @@ class Command(BaseCommand):
     help = "update bundle's work_with"
 
     def add_arguments(self, parser):
-        parser.add_argument("--replace",
-                            dest="replace",
-                            help="replace existing works_with value")
-        parser.add_argument("--add",
-                            dest="add",
-                            help="add to existing works_with value")
-        parser.add_argument("bundle", # nargs='?',
-                            help="The bundle name")
-        parser.add_argument("version", nargs='?',
-                            help="The bundle version")
-        parser.add_argument("platform", nargs='?',
-                            help="The platform")
+        parser.add_argument(
+            "--replace", dest="replace", help="replace existing works_with value"
+        )
+        parser.add_argument(
+            "--add", dest="add", help="add to existing works_with value"
+        )
+        parser.add_argument("bundle", help="The bundle name")  # nargs='?',
+        parser.add_argument("version", nargs="?", help="The bundle version")
+        parser.add_argument("platform", nargs="?", help="The platform")
 
     def handle(self, *args, **options):
         replace = validated_spec(options["replace"])
         add = validated_spec(options["add"])
-        bundle = options['bundle']
-        version = options['version']
-        platform = options['platform']
+        bundle = options["bundle"]
+        version = options["version"]
+        platform = options["platform"]
         if replace is None == add is None:
             print("must give one of --replace or --add")
             raise SystemExit(2)
@@ -35,6 +32,7 @@ class Command(BaseCommand):
             raise SystemExit(2)
         elif version is None and platform is None:
             from .utils import find_bundle
+
             app = find_bundle(self, bundle)
             if app is None:
                 print("bundle not found")
@@ -42,7 +40,10 @@ class Command(BaseCommand):
             self.update_bundle(app, replace, add)
         elif platform is None:
             from .utils import find_bundle_version
-            rels = find_bundle_version(self, bundle, version, None, return_multiple=True)
+
+            rels = find_bundle_version(
+                self, bundle, version, None, return_multiple=True
+            )
             if rels is None:
                 print("not find bundle with that version")
                 raise SystemExit(1)
@@ -50,6 +51,7 @@ class Command(BaseCommand):
                 self.update_release(rel, replace, add)
         else:
             from .utils import find_bundle_version
+
             rel = find_bundle_version(self, bundle, version, platform)
             if rel is None:
                 print("not find bundle with that version and platform")
@@ -58,11 +60,13 @@ class Command(BaseCommand):
 
     def update_bundle(self, bundle, replace, add):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.filter(name__contains=bundle):
             self.update_all_releases(app, replace, add)
 
     def update_all_releases(self, app, replace, add):
         from cxtoolshed3.apps.models import Release
+
         for rel in Release.objects.filter(app=app):
             self.update_release(rel, replace, add)
 
@@ -71,7 +75,7 @@ class Command(BaseCommand):
         if replace:
             rel.works_with = replace
         else:
-            rel.works_with = rel.works_with[:-1] + ',' + add[1:]
+            rel.works_with = rel.works_with[:-1] + "," + add[1:]
         rel.save()
         print("Updated works_with for", rel)
 
@@ -80,12 +84,13 @@ def validated_spec(spec):
     if spec is None:
         return None
     from packaging.specifiers import Specifier, InvalidSpecifier
+
     spec = spec.strip()
-    if spec.startswith('('):
+    if spec.startswith("("):
         spec = spec[1:]
-    if spec.endswith(')'):
+    if spec.endswith(")"):
         spec = spec[:-1]
-    specs = spec.split(',')
+    specs = spec.split(",")
     for spec in specs:
         try:
             Specifier(spec)

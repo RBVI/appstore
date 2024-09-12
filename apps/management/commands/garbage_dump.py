@@ -22,13 +22,13 @@ def rm_empty_authors():
 
 
 FILE_FIELDS = (
-    (Screenshot, 'screenshot'),
-    (Screenshot, 'thumbnail'),
-    (Release,    'release_file'),
-    (ReleaseAPI, 'javadocs_jar_file'),
-    (ReleaseAPI, 'pom_xml_file'),
-    (AppPending, 'release_file'),
-    (App,        'icon'),
+    (Screenshot, "screenshot"),
+    (Screenshot, "thumbnail"),
+    (Release, "release_file"),
+    (ReleaseAPI, "javadocs_jar_file"),
+    (ReleaseAPI, "pom_xml_file"),
+    (AppPending, "release_file"),
+    (App, "icon"),
 )
 
 
@@ -70,18 +70,18 @@ def rm_unused_media_files():
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        print('Tag:')
+        print("Tag:")
         for tag in rm_empty_tags():
-            print('  ' + tag)
+            print("  " + tag)
         print()
 
-        print('Author:')
+        print("Author:")
         for author in rm_empty_authors():
-            print('  ' + author)
+            print("  " + author)
         print()
 
-        '''
+        """
         print('Media:')
         for file_path in rm_unused_media_files():
             print('  ' + file_path)
-        '''
+        """

@@ -8,11 +8,10 @@ class Command(BaseCommand):
     help = "list all releases of a bundle"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundles", nargs='*',
-                            help="The bundle name")
+        parser.add_argument("bundles", nargs="*", help="The bundle name")
 
     def handle(self, *args, **options):
-        bundles = options['bundles']
+        bundles = options["bundles"]
         if not bundles:
             self.list_all_releases()
         else:
@@ -21,20 +20,25 @@ class Command(BaseCommand):
 
     def list_all_releases(self):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.all():
             self._list_bundle(app)
 
     def list_release(self, bundle):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.filter(name__contains=bundle):
             self._list_bundle(app)
 
     def _list_bundle(self, app):
         from cxtoolshed3.apps.models import Release
+
         for rel in Release.objects.filter(app=app):
             self._list_version(app, rel)
 
     def _list_version(self, app, rel):
-        print(app.name, rel.version, rel.platform, rel.works_with, "active:", rel.active)
+        print(
+            app.name, rel.version, rel.platform, rel.works_with, "active:", rel.active
+        )
         f = rel.release_file
         print("  ", f.storage.path(f.name))

@@ -7,8 +7,10 @@ def wrap_traceback(func):
                 v = func(*args, **kw)
             except:
                 import traceback
+
                 traceback.print_exc(file=f)
                 raise
             else:
                 return v
+
     return wf

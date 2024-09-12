@@ -9,18 +9,17 @@ class Command(BaseCommand):
     help = "extract documentation from bundle"
 
     def add_arguments(self, parser):
-        parser.add_argument("bundle", nargs='?',
-                            help="bundle name")
-        parser.add_argument("version", nargs='?',
-                            help="bundle version")
+        parser.add_argument("bundle", nargs="?", help="bundle name")
+        parser.add_argument("version", nargs="?", help="bundle version")
 
     def handle(self, *args, **options):
-        bundle = options['bundle']
-        version = options['version']
+        bundle = options["bundle"]
+        version = options["version"]
         if bundle is None and version is None:
             self.extract_all_bundles()
         elif version is None:
             from .utils import find_bundle
+
             app = find_bundle(self, bundle)
             if app is None:
                 return
@@ -30,6 +29,7 @@ class Command(BaseCommand):
             if app is None:
                 return
             from .utils import find_bundle_version
+
             rel = find_bundle_version(self, bundle, version, None)
             if rel is None:
                 return
@@ -37,16 +37,19 @@ class Command(BaseCommand):
 
     def extract_all_bundles(self):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.all():
             self.extract_newest_release(app)
 
     def extract_bundle(self, bundle):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.filter(name__contains=bundle):
             self.extract_newest_release(app)
 
     def extract_newest_release(self, app):
         from cxtoolshed3.apps.models import Release
+
         version = None
         release = None
         for rel in Release.objects.filter(app=app):
@@ -63,11 +66,12 @@ class Command(BaseCommand):
         bundle_name = dist["bundle_name"]
         bundle_info = dist["bundle"][bundle_name]
         package = bundle_info["app_package_name"]
-        doc_path = package.replace('.', '/') + "/doc/"
+        doc_path = package.replace(".", "/") + "/doc/"
         skip = len(package) + 1
         import zipfile
         import os
         import settings
+
         with zipfile.ZipFile(rel.release_file.path) as zf:
             save_dir = None
             for zi in zf.infolist():
@@ -75,10 +79,11 @@ class Command(BaseCommand):
                 if n < 0:
                     continue
                 if save_dir is None:
-                    save_dir = os.path.join(settings.SITE_DIR, "bundle_docs",
-                                            bundle_name)
+                    save_dir = os.path.join(
+                        settings.SITE_DIR, "bundle_docs", bundle_name
+                    )
                     makedir_if_missing(save_dir)
-                save_file = os.path.join(save_dir, zi.filename[n + skip:])
+                save_file = os.path.join(save_dir, zi.filename[n + skip :])
                 parent_dir = os.path.dirname(save_file)
                 makedir_if_missing(parent_dir)
                 with open(save_file, "wb") as fo, zf.open(zi, "r") as fi:
@@ -87,6 +92,7 @@ class Command(BaseCommand):
 
 def makedir_if_missing(dirpath):
     import os
+
     if os.path.exists(dirpath):
         return
     parent = os.path.dirname(dirpath)

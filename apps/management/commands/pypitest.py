@@ -8,6 +8,7 @@ class Command(BaseCommand):
     def handle(self, **options):
         from pprint import pprint
         from cxtoolshed3.apps import pypi
+
         # import datetime
         # pprint(pypi.search({"name":["isolde"],
         #                                "description":"blast"}, "or"))

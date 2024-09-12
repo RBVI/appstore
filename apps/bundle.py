@@ -28,7 +28,7 @@ def handler(request):
     # a list of dictionaries, with each dictionary
     # representing metadata for one release of a bundle.
     #
-    path_parts = request.path_info.split('/')
+    path_parts = request.path_info.split("/")
     # indices are:
     #   0 = empty, since path always starts with /
     #   1 = "bundle"
@@ -95,31 +95,40 @@ _ReleaseDataAttrs = [
 # Utility routines
 #
 
+
 def _format_bundle(name, version, cx_version, platform, format_version):
     from .models import Release
+
     if not name:
         releases = Release.objects.filter(active=True)
     else:
-        name = ''.join([c for c in name if c not in '-_']).lower()
+        name = "".join([c for c in name if c not in "-_"]).lower()
         if not version:
-            releases = Release.objects.filter(active=True,
-                                              app__name__contains=name)
+            releases = Release.objects.filter(active=True, app__name__contains=name)
         else:
-            releases = Release.objects.filter(active=True,
-                                              app__name__contains=name,
-                                              version=version)
+            releases = Release.objects.filter(
+                active=True, app__name__contains=name, version=version
+            )
     if platform is not None:
-        releases = releases.filter(active=True, platform=platform) | releases.filter(active=True, platform="")
+        releases = releases.filter(active=True, platform=platform) | releases.filter(
+            active=True, platform=""
+        )
     if cx_version is not None:
         cx_version = Version(cx_version)
-        releases = [rel for rel in releases if compatible_with(cx_version, rel.works_with)]
-    dlist = [d for d in [rel.distribution(format_version) for rel in releases]
-             if d is not None]
+        releases = [
+            rel for rel in releases if compatible_with(cx_version, rel.works_with)
+        ]
+    dlist = [
+        d
+        for d in [rel.distribution(format_version) for rel in releases]
+        if d is not None
+    ]
     if format_version >= 2:
-        dlist.insert(0, ['format_version', format_version])
+        dlist.insert(0, ["format_version", format_version])
     from django.http import HttpResponse
     import json
-    response = HttpResponse(json.dumps(dlist), content_type='application/json')
+
+    response = HttpResponse(json.dumps(dlist), content_type="application/json")
     return response
 
 
@@ -127,6 +136,7 @@ def log_uuid(uuid):
     """Log UUID and return row identifier."""
     import sqlite3
     from datetime import datetime
+
     with sqlite3.connect(DbName) as db:
         _check_table(db, "Request", SQL_CreateTable_Request)
         c = db.cursor()

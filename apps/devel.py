@@ -13,24 +13,26 @@ def staff_required(login_url=None):
 @staff_required()
 def release(request):
     from ..util.view_util import html_response
+
     context = _get_parameters(request)
     new_bundles, new_versions, released = _get_bundles()
     context["new_bundles"] = new_bundles
     context["new_versions"] = new_versions
     context["released"] = released
-    return html_response('devel_release.html', context, request)
+    return html_response("devel_release.html", context, request)
 
 
 @staff_required()
 def clean(request):
     from ..util.view_util import html_response
+
     context = _get_parameters(request)
     errors, expired, current, ignored = _clean_bundles()
     context["expired"] = expired
     context["current"] = current
     context["ignored"] = ignored
     context["errors"] = errors
-    return html_response('devel_clean.html', context, request)
+    return html_response("devel_clean.html", context, request)
 
 
 @staff_required()
@@ -40,6 +42,7 @@ def new_bundle(request):
     from ..util.view_util import html_response
     from ..submit_app.processwheel import process_wheel
     from ..submit_app.processwheel import sort_bundles_by_dependencies
+
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
     filenames = parameters.get("file", [])
@@ -59,7 +62,7 @@ def new_bundle(request):
             error_messages.append("%s: %s" % (filename, str(e)))
     if error_messages:
         context["error_msgs"] = error_messages
-        return html_response('devel_new.html', context, request)
+        return html_response("devel_new.html", context, request)
     try:
         sort_bundles_by_dependencies(bundles)
     except Exception as e:
@@ -75,12 +78,17 @@ def new_bundle(request):
                 # messages.append("  works_with: %s" % str(bundle.works_with))
                 # for dep in bundle.app_dependencies:
                 #     messages.append("  dep: %s" % str(dep))
-                app, msgs = _create_app(request.user, bundle.path, fullname,
-                                        bundle.version, bundle.platform,
-                                        bundle.works_with,
-                                        bundle.app_dependencies,
-                                        bundle.release_notes)
-                messages.append("Bundle \"%s\" released" % bundle.package)
+                app, msgs = _create_app(
+                    request.user,
+                    bundle.path,
+                    fullname,
+                    bundle.version,
+                    bundle.platform,
+                    bundle.works_with,
+                    bundle.app_dependencies,
+                    bundle.release_notes,
+                )
+                messages.append('Bundle "%s" released' % bundle.package)
                 # if msgs:
                 #    messages.extend(msgs)
             except Exception as e:
@@ -89,7 +97,7 @@ def new_bundle(request):
         error_messages.append("error creating new bundles: %s" % str(e))
     context["messages"] = messages
     context["error_msgs"] = error_messages
-    return html_response('devel_new.html', context, request)
+    return html_response("devel_new.html", context, request)
 
 
 @staff_required()
@@ -100,6 +108,7 @@ def new_version(request):
     from ..util.id_util import fullname_to_name
     from ..submit_app.processwheel import process_wheel
     from ..submit_app.processwheel import sort_bundles_by_dependencies
+
     context = _get_parameters(request)
     parameters = dict(request.POST.lists())
     filenames = parameters.get("file", [])
@@ -119,7 +128,7 @@ def new_version(request):
             error_messages.append("%s: %s" % (filename, str(e)))
     if error_messages:
         context["error_msgs"] = error_messages
-        return html_response('devel_new.html', context, request)
+        return html_response("devel_new.html", context, request)
     try:
         sort_bundles_by_dependencies(bundles)
     except Exception as e:
@@ -132,13 +141,19 @@ def new_version(request):
                 if app is None:
                     raise ValueError("%s: no such bundle", fullname)
                 name = fullname_to_name(fullname)
-                msgs = _create_release(app, request.user, full_path,
-                                       name, fullname, bundle.version,
-                                       bundle.platform,
-                                       bundle.works_with,
-                                       bundle.app_dependencies,
-                                       bundle.release_notes)
-                messages.append("Bundle \"%s\" updated" % bundle.package)
+                msgs = _create_release(
+                    app,
+                    request.user,
+                    full_path,
+                    name,
+                    fullname,
+                    bundle.version,
+                    bundle.platform,
+                    bundle.works_with,
+                    bundle.app_dependencies,
+                    bundle.release_notes,
+                )
+                messages.append('Bundle "%s" updated' % bundle.package)
                 # if msgs:
                 #    messages.extend(msgs)
             except Exception as e:
@@ -147,14 +162,15 @@ def new_version(request):
         error_messages.append("error creating new versions: %s" % str(e))
     context["messages"] = messages
     context["error_msgs"] = error_messages
-    return html_response('devel_new.html', context, request)
+    return html_response("devel_new.html", context, request)
 
 
 def _get_parameters(request):
     from .views import _cx_platform
+
     return {
-        'cx_platform': _cx_platform(request),
-        'go_back_to': 'home',
+        "cx_platform": _cx_platform(request),
+        "go_back_to": "home",
     }
 
 
@@ -162,9 +178,12 @@ def _get_bundles():
     import os
     from .models import App
     from ..util.chimerax_util import Bundle
-    bundles = [Bundle(os.path.join(REPO_DIR, filename))
-               for filename in os.listdir(REPO_DIR)
-               if filename.endswith(".whl")]
+
+    bundles = [
+        Bundle(os.path.join(REPO_DIR, filename))
+        for filename in os.listdir(REPO_DIR)
+        if filename.endswith(".whl")
+    ]
     # Group bundles by package name and assign default release state
     candidates = {}
     for bundle in bundles:
@@ -211,6 +230,7 @@ def _get_bundles():
 def _clean_bundles():
     import os
     from datetime import datetime, timedelta
+
     current = 0
     expired = 0
     ignored = 0
@@ -233,10 +253,19 @@ def _clean_bundles():
     return errors, expired, current, ignored
 
 
-def _create_app(submitter, full_path, fullname, version, platform,
-                works_with, app_dependencies, release_notes):
+def _create_app(
+    submitter,
+    full_path,
+    fullname,
+    version,
+    platform,
+    works_with,
+    app_dependencies,
+    release_notes,
+):
     from .models import App
     from ..util.id_util import fullname_to_name
+
     messages = ["%s = %s %s" % (full_path, fullname, version)]
     # Create app (see _pending_app_accept in submit_app/views.py)
     name = fullname_to_name(fullname)
@@ -247,31 +276,55 @@ def _create_app(submitter, full_path, fullname, version, platform,
         app.editors.add(submitter)
         app.save()
     messages.append("app: %s %s" % (app.fullname, app.name))
-    messages.extend(_create_release(app, submitter, full_path, name, fullname,
-                                    version, platform, works_with,
-                                    app_dependencies, release_notes))
+    messages.extend(
+        _create_release(
+            app,
+            submitter,
+            full_path,
+            name,
+            fullname,
+            version,
+            platform,
+            works_with,
+            app_dependencies,
+            release_notes,
+        )
+    )
     return app, messages
 
 
 def _find_app(fullname):
     from .models import App
+
     try:
         return App.objects.get(fullname=fullname)
     except App.DoesNotExist:
         return None
 
 
-def _create_release(app, submitter, full_path, name, fullname, version,
-                    platform, works_with, app_dependencies, release_notes):
+def _create_release(
+    app,
+    submitter,
+    full_path,
+    name,
+    fullname,
+    version,
+    platform,
+    works_with,
+    app_dependencies,
+    release_notes,
+):
     from datetime import datetime
     import os.path
     from django.core.files import File
     from .models import Release
     from ..submit_app.processwheel import release_dependencies
+
     messages = []
     # Create release (see _make_release in submit_app/models.py)
-    release, _ = Release.objects.get_or_create(app=app, version=version,
-                                               platform=platform)
+    release, _ = Release.objects.get_or_create(
+        app=app, version=version, platform=platform
+    )
     release.works_with = works_with
     release.active = True
     release.created = datetime.today()
@@ -284,7 +337,7 @@ def _create_release(app, submitter, full_path, name, fullname, version,
         release.release_file.save(os.path.basename(full_path), File(f))
     releases, missing = release_dependencies(app_dependencies)
     for dependee in releases:
-        messages.append("dependency: \"%s\" [%s]" % (dependee, dependee))
+        messages.append('dependency: "%s" [%s]' % (dependee, dependee))
         release.dependencies.add(dependee)
     # TODO: track missing dependencies?
     release.calc_checksum()
@@ -300,14 +353,17 @@ def _edit_app(app, context, request):
     from .models import Tag
     from .views import _AppPageEditConfig as config
     from ..util.view_util import html_response
+
     all_tags = [tag.fullname for tag in Tag.objects.all()]
-    context.update({
-        'app': app,
-        'all_tags': all_tags,
-        'max_file_img_size_b': config.max_img_size_b,
-        'max_icon_dim_px': config.max_icon_dim_px,
-        'thumbnail_height_px': config.thumbnail_height_px,
-        'app_description_maxlength': config.app_description_maxlength,
-        'release_uploaded': True,
-    })
-    return html_response('app_page_edit.html', context, request)
+    context.update(
+        {
+            "app": app,
+            "all_tags": all_tags,
+            "max_file_img_size_b": config.max_img_size_b,
+            "max_icon_dim_px": config.max_icon_dim_px,
+            "thumbnail_height_px": config.thumbnail_height_px,
+            "app_description_maxlength": config.app_description_maxlength,
+            "release_uploaded": True,
+        }
+    )
+    return html_response("app_page_edit.html", context, request)

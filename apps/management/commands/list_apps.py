@@ -12,6 +12,7 @@ class Command(BaseCommand):
 
     def list_all_bundles(self):
         from cxtoolshed3.apps.models import App
+
         for app in App.objects.all():
             self._list_bundle(app)
 
