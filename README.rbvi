@@ -22,3 +22,12 @@ They are created with the "mk-venvs" shell script.
 
 To avoid cross contamination from ~/.local/lib/python3.6,
 use "python3 -s" whenever doing something from the shell.
+
+
+TODO
+----
+
+Make "manage.py erase_app --delete app-name" clean up the
+directories in media/ as well.
+
+
