@@ -30,18 +30,16 @@ def process_wheel(filename, expect_app_name):
     app_dependencies = []
     app_works_with = None
     for dep in bundle.requires:
-        parts = dep.split(None, 1)
-        if len(parts) == 1:
-            # Version is missing, make something up for now
-            name = parts[0]
-            version = "(~=1.0)"
+        try:
+            req = Requirement(dep)
+        except InvalidRequirement:
+            continue
+        if req.name in ("ChimeraX-Core", "chimerax.core"):
+            app_works_with = str(req.specifier)
         else:
-            name = parts[0]
-            version = parts[1].strip()
-        if name == "ChimeraX-Core" or name == "chimerax.core":
-            app_works_with = version
-        else:
-            app_dependencies.append((name, version))
+            app_dependencies.append((req.name, str(req.specifier)))
+    if app_works_with is None:
+        raise ValueError("Missing dependency on ChimeraX version")
     app_works_with = smart_str(app_works_with, errors="replace")
 
     # Add some computed attributes to bundle and return
@@ -195,7 +193,7 @@ def _version_match(requirement: Requirement, known_releases: {str: Release}, nam
         try:
             rv = Version(v)
         except ValueError:
-            raise ValueError("Unsupported version format: \"%s\" (\"%s\") for name" %
+            raise ValueError("Unsupported version format: \"%s\" (\"%s\") for name %s" %
                              (v, str(r), name))
         if rv in requirement.specifier:
             if release is None or rv > version:
