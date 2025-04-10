@@ -30,4 +30,4 @@ class Command(BaseCommand):
         if rel is None:
             return
         from .utils import erase_release
-        erase_release(self, rel, dry_run)
+        erase_release(self, rel[0], dry_run)

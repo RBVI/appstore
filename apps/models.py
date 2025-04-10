@@ -2,7 +2,7 @@ import re
 import hashlib
 from shutil import rmtree
 import subprocess
-from os import mkdir, devnull
+from os import mkdir, devnull, rmdir
 import os.path
 from os.path import join as pathjoin
 try:
@@ -235,6 +235,12 @@ class Release(models.Model):
             api = self.releaseapi_set.get()
             api.delete_files()
             api.delete()
+        # remove directory so release can be uploaded again
+        dirname = os.path.dirname(self.release_file.path)
+        try:
+            rmdir(dirname)
+        except OSError:
+            pass
 
     def distribution(self, format_version=1):
         "Return metadata as dictionary."
