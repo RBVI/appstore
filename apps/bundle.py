@@ -107,7 +107,9 @@ def _format_bundle(name, version, cx_version, platform, format_version):
     if not name:
         path = ['all_bundles', '_', '_']
         if cx_version is not None:
-            path[1] = cx_version.base_version
+            from packaging.version import Version
+            ver = Version(cx_version)
+            path[1] = ver.base_version
         if platform is not None:
             path[2] = platform
         data = bundle_cache.get_raw(*path)
