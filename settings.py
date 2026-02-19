@@ -62,6 +62,11 @@ USE_L10N = False
 MEDIA_ROOT = filejoin(SITE_DIR, "media")
 # MEDIA_ROOT = os.path.join(SITE_DIR, 'media')
 
+# Absolute filesystem path to the directory that will cached query results
+# Example: "/home/media/media.lawrence.com/cache/"
+CACHE_ROOT = filejoin(SITE_DIR, "cache")
+# CACHE_ROOT = os.path.join(SITE_DIR, 'cache')
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"

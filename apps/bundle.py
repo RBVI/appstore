@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import os.path
 from ..util.chimerax_util import Version, compatible_with, chimerax_user_agent
+from ..util import compute_cache
+from ..settings import CACHE_ROOT
 
 # import logging
 # logger = logging.getLogger(__name__)
@@ -94,12 +96,24 @@ _ReleaseDataAttrs = [
 #
 # Utility routines
 #
+bundle_cache = compute_cache.JSONComputeCache('_timestamp', CACHE_ROOT, max_age=compute_cache.A_DAY)
 
 
 def _format_bundle(name, version, cx_version, platform, format_version):
+    from django.http import HttpResponse
+    import json
     from .models import Release
 
     if not name:
+        path = ['all_bundles', '_', '_']
+        if cx_version is not None:
+            path[1] = cx_version.base_version
+        if platform is not None:
+            path[2] = platform
+        data = bundle_cache.get_raw(*path)
+        if data is not None:
+            response = HttpResponse(data, content_type="application/json")
+            return response
         releases = Release.objects.filter(active=True)
     else:
         name = "".join([c for c in name if c not in "-_"]).lower()
@@ -125,10 +139,10 @@ def _format_bundle(name, version, cx_version, platform, format_version):
     ]
     if format_version >= 2:
         dlist.insert(0, ["format_version", format_version])
-    from django.http import HttpResponse
-    import json
 
-    response = HttpResponse(json.dumps(dlist), content_type="application/json")
+    if not name:
+        bundle_cache.save(dlist, *path)
+    response = HttpResponse(json.dumps(dlist, ensure_ascii=False, separators=(',', ':')), content_type="application/json")
     return response
 
 
