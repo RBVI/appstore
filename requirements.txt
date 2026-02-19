@@ -8,7 +8,7 @@ geoip2
 django-haystack >= 3.0b1
 django-mysql ~= 4.0
 mysqlclient ~= 2.0
-wheel_filename ~= 1.2
+wheel_filename ~= 1.4.2
 social_auth_app_django ~= 5.0
 # ChimeraX-specific packages
 pkginfo
