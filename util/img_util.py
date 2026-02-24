@@ -26,7 +26,7 @@ def scale_img(f, name, max_px, dim):
         else:
             return f
 
-    scaled_img = img.resize((int(w), int(h)), Image.ANTIALIAS)
+    scaled_img = img.resize((int(w), int(h)), Image.Resampling.LANCZOS)
     scaled_buffer = BytesIO()
     scaled_img.save(scaled_buffer, "PNG")
     scaled_f = ImageFile(scaled_buffer, name=name + ".png")
