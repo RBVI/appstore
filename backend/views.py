@@ -6,7 +6,7 @@ def _app_to_obj(app):
     result = obj_to_dict(
         app,
         (
-            "fullname",
+            "display_name",
             "description",
             "icon_url",
             "page_url",
@@ -34,4 +34,5 @@ def _app_to_obj(app):
 def all(request):
     all_apps = App.objects.filter(active=True)
     all_apps_fmt = [_app_to_obj(app) for app in all_apps if app.has_releases]
+    all_apps_fmt.sort(key=lambda x: x.display_name.casefold())
     return json_response(all_apps_fmt)

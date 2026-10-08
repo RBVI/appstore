@@ -140,7 +140,7 @@ def all_apps(request):
 
     apps = App.objects.filter(active=True)
     apps = list(apps)
-    apps.sort(key=operator.attrgetter("display_name"))
+    apps.sort(key=lambda obj: obj.display_name.casefold())
     c = {
         "cx_platform": _cx_platform(request),
         "apps": apps,
